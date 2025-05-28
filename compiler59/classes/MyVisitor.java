@@ -6,6 +6,9 @@ import jdk.dynalink.Operation;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MyVisitor extends typescriptparserBaseVisitor {
 
     SymbolTable symbolTable = new SymbolTable();
@@ -14,6 +17,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     private String currentMethodReturnType = null;
     public MyVisitor() {
         this.errorManager = new SemanticErrorManager(symbolTable);
+        // Add this line:
+        this.errorManager.initializeRequiredImports();
     }
     @Override
     public Program visitProgram(typescriptparser.ProgramContext ctx) {
@@ -51,7 +56,26 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return prog;
     }
+    private boolean shouldCheckForImport(String identifier) {
+        // Define which identifiers typically require imports
+        return identifier.equals("Component") ||
+                identifier.equals("Injectable") ||
+                identifier.equals("OnInit") ||
+                identifier.equals("Router") ||
+                identifier.equals("HttpClient");
+        // Add more based on your needs
+    }
 
+    private String getRequiredImport(String identifier) {
+        Map<String, String> imports = new HashMap<>();
+        imports.put("Component", "@angular/core");
+        imports.put("Injectable", "@angular/core");
+        imports.put("OnInit", "@angular/core");
+        imports.put("Router", "@angular/router");
+        imports.put("HttpClient", "@angular/common/http");
+
+        return imports.get(identifier);
+    }
 
     @Override
     public Statment visitStatement(typescriptparser.StatementContext ctx) {
@@ -165,7 +189,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         if (ctx.ID() != null && ctx.ID().getText() != null) {
             String idValue = ctx.ID().getText();
             importDeclaration.setId(idValue);
-
+            errorManager.registerImport(idValue);
             // Add to symbol table with scope information if not already exists
             if (!symbolTable.existsInCurrentScope(idValue)) {
                 symbolTable.addSymbol("IMPORT_ID", idValue);
@@ -354,6 +378,10 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         if (ctx.ID() != null) {
             String idType = ctx.ID().getText();
             typeV.setString_type(idType);
+
+            // CHECK FOR REQUIRED IMPORT - ADD THIS LINE
+            checkIdentifierForRequiredImport(idType, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+
             Row typeSymbol = symbolTable.lookupSymbol(idType);
             if (!symbolTable.existsInCurrentScope(idType)) {
                 symbolTable.addSymbol("TYPE", idType);
@@ -372,6 +400,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return typeV;
     }
+
 
     @Override
     public Operator visitOperator(typescriptparser.OperatorContext ctx) {
@@ -802,6 +831,9 @@ returnN.setExpressionReturn(visitExpression(ctx.expression()));
             String functionName = ctx.ID().getText();
             functionCall.setNameFun(functionName);
 
+            // CHECK FOR REQUIRED IMPORT - ADD THIS LINE
+            checkIdentifierForRequiredImport(functionName, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+
             // Add function call symbol if not already there
             if (!symbolTable.existsInCurrentScope(functionName)) {
                 symbolTable.addSymbol("FUNCTION_CALL", functionName);
@@ -905,7 +937,17 @@ returnN.setExpressionReturn(visitExpression(ctx.expression()));
 
         return componentBodyElement;
     }
+    private void checkIdentifierForRequiredImport(String identifier, int line, int column) {
+        if (identifier == null) return;
 
+        // Check if this identifier requires an import
+        if (shouldCheckForImport(identifier)) {
+            String requiredImport = getRequiredImport(identifier);
+            if (requiredImport != null && !errorManager.isImported(identifier)) {
+                errorManager.checkMissingImport(identifier, requiredImport, line, column);
+            }
+        }
+    }
     @Override
     public Selector visitSelector(typescriptparser.SelectorContext ctx) {
         Selector selector = new Selector();
@@ -926,13 +968,38 @@ returnN.setExpressionReturn(visitExpression(ctx.expression()));
     public Standalone visitStandalone(typescriptparser.StandaloneContext ctx) {
         Standalone standalone = new Standalone();
 
+        // Add 'standalone' property to symbol table
+        if (!symbolTable.existsInCurrentScope("standalone")) {
+            symbolTable.addSymbol("COMPONENT_PROPERTY", "standalone");
+        }
+
         if (ctx.isboolean() != null) {
             standalone.setIsboolean(visitIsboolean(ctx.isboolean()));
+
+            // Get the boolean value and add it to symbol table
+            String booleanValue = ctx.isboolean().getText();
+            if (booleanValue != null) {
+                // Add the specific boolean value (true/false)
+                if (!symbolTable.existsInCurrentScope(booleanValue)) {
+                    symbolTable.addSymbol("STANDALONE_VALUE", booleanValue);
+                }
+
+                // Semantic validation: Check if the boolean value is valid
+                if (!booleanValue.equals("true") && !booleanValue.equals("false")) {
+                    errorManager.checkInvalidStandaloneValue(booleanValue,
+                            ctx.getStart().getLine(),
+                            ctx.getStart().getCharPositionInLine());
+                }
+            }
+        } else {
+            // Semantic validation: standalone property should have a boolean value
+            errorManager.checkMissingStandaloneValue(
+                    ctx.getStart().getLine(),
+                    ctx.getStart().getCharPositionInLine());
         }
 
         return standalone;
     }
-
     @Override
     public Template visitTemplate(typescriptparser.TemplateContext ctx) {
         Template template = new Template();
@@ -1255,4 +1322,5 @@ returnN.setExpressionReturn(visitExpression(ctx.expression()));
 
         return bodyObject;
     }
+
     }

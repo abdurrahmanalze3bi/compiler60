@@ -12,6 +12,13 @@ public class Row {
         this.scopeId = -1;
         this.scopeName = "UNKNOWN";
     }
+    public Row(String type, String value, int scopeId, String scopeName) {
+        this.type = type;
+        this.value = value;
+        this.scopeId = scopeId;
+        this.scopeName = scopeName;
+        this.dataType = inferTypeFromKind(type); // Infer data type from the kind
+    }
 
     public Row(String type, String value, int scopeId, String scopeName, String dataType) {
         this.type = type;

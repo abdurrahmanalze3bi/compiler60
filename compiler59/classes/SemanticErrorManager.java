@@ -1,19 +1,33 @@
 package classes;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class SemanticErrorManager {
     private List<SemanticError> errors;
     private SymbolTable symbolTable;
     private Map<String, MethodInfo> methodSignatures;
+    private Set<String> importedModules;
+    private Map<String, Set<String>> moduleRequiredTypes;
+    private static final Map<String, String> REQUIRED_IMPORTS = Map.of(
+            "HttpClient", "@angular/common/http",
+            "FormControl", "@angular/forms",
+            "FormGroup", "@angular/forms",
+            "Router", "@angular/router",
+            "ActivatedRoute", "@angular/router",
+            "Observable", "rxjs",
+            "BehaviorSubject", "rxjs",
+            "Subject", "rxjs",
+            "CommonModule", "@angular/common",
+            "ReactiveFormsModule", "@angular/forms"
+    );
 
     public SemanticErrorManager(SymbolTable symbolTable) {
         this.errors = new ArrayList<>();
         this.symbolTable = symbolTable;
         this.methodSignatures = new HashMap<>();
+        this.importedModules = new HashSet<>();  // Add this line
+        this.requiredImports = new HashMap<>();   // Add this line
+        this.initializeRequiredImports();        // This line should already be there
     }
 
     // Inner class to store method information
@@ -198,6 +212,42 @@ public class SemanticErrorManager {
             }
         }
     }
+    public void registerImport(String importName) {
+        importedModules.add(importName);
+    }
+
+    // Add method to check if import exists
+    public boolean isImported(String moduleName) {
+        return importedModules.contains(moduleName);
+    }
+
+    private Map<String, String> requiredImports = new HashMap<>();
+
+    public void initializeRequiredImports() {
+        // Common Angular/TypeScript imports that are typically required
+        requiredImports.put("Component", "@angular/core");
+        requiredImports.put("Injectable", "@angular/core");
+        requiredImports.put("OnInit", "@angular/core");
+        requiredImports.put("Router", "@angular/router");
+        requiredImports.put("HttpClient", "@angular/common/http");
+        // Add more as needed based on your language requirements
+    }
+    public void checkMissingImport(String identifier, String requiredImport, int line, int column) {
+        addError(SemanticErrorType.MISSING_IMPORT,
+                "Identifier '" + identifier + "' requires import '" + requiredImport + "' but it was not imported",
+                line, column,
+                "Missing import for: " + identifier);
+    }
+    public void checkInvalidStandaloneValue(String value, int line, int column) {
+        addError(SemanticErrorType.INVALID_STANDALONE_VALUE,
+                "Invalid standalone value: '" + value + "'. Expected 'true' or 'false'",
+                line, column, value);
+    }
+    public void checkMissingStandaloneValue(int line, int column) {
+        addError(SemanticErrorType.MISSING_STANDALONE_VALUE,
+                "Standalone property requires a boolean value (true or false)",
+                line, column, "standalone");
+    }
 
     // Enhanced check for undefined variables/properties
     public void checkUndefinedReference(String identifier, int line, int column) {
@@ -378,6 +428,8 @@ public class SemanticErrorManager {
     public int getErrorCount(SemanticErrorType type) {
         return (int) errors.stream().filter(error -> error.getType() == type).count();
     }
+
+
 }
 
 // Enhanced enum for different types of semantic errors
@@ -388,11 +440,14 @@ enum SemanticErrorType {
     MISSING_RETURN_TYPE,
     MISSING_COMPONENT_PROPERTY,
     INVALID_ANGULAR_SYNTAX,
-    // Return type related errors
     VOID_METHOD_RETURN_VALUE,
     RETURN_TYPE_MISMATCH,
-    MISSING_RETURN_STATEMENT
+    MISSING_RETURN_STATEMENT,
+    INVALID_STANDALONE_VALUE,      // New
+    MISSING_STANDALONE_VALUE     ,  // New
+    MISSING_IMPORT
 }
+
 
 // Symbol Table Snapshot class
 class SymbolTableSnapshot {
@@ -615,4 +670,12 @@ class SemanticError {
             symbolTableSnapshot.print();
         }
     }
+
+    // Add these fields to SemanticErrorManager class
+
+    // Add method to register imports
+
+
+    // Initialize required imports (add this to constructor or as a method)
+
 }

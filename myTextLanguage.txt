@@ -1,1 +1,32 @@
-x=5;
+// Angular component using imports that aren't declared
+@Component({
+ selector: 'app-test',
+ template: '<div>Test</div>'
+})
+export class TestComponent implements OnInit {
+ 
+ constructor(private http: HttpClient, private router: Router) {}
+ 
+ ngOnInit() {
+   this.loadData();
+ }
+ 
+ loadData(): Observable<any> {
+   return this.http.get('/api/data');
+ }
+ 
+ navigate() {
+   this.router.navigate(['/home']);
+ }
+}
+
+@Injectable()
+export class DataService {
+ private subject = new BehaviorSubject<string>('initial');
+ 
+ constructor(private http: HttpClient) {}
+ 
+ getData(): Observable<any> {
+   return this.http.get('/api/users');
+ }
+}
