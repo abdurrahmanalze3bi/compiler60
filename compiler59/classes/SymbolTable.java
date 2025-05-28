@@ -75,15 +75,54 @@ public class SymbolTable {
         return scopeStack.isEmpty() ? "NONE" : scopeStack.peek().getScopeName();
     }
 
+    // NEW: Get all symbols from all scopes (needed for snapshots)
+    public List<Row> getAllSymbols() {
+        List<Row> allSymbols = new ArrayList<>();
+        for (Scope scope : allScopes) {
+            allSymbols.addAll(scope.getSymbols());
+        }
+        return allSymbols;
+    }
+
+    // NEW: Get all active scopes in the current scope stack (needed for snapshots)
+    public List<ScopeInfo> getCurrentScopeStack() {
+        List<ScopeInfo> scopeInfoList = new ArrayList<>();
+        for (Scope scope : scopeStack) {
+            scopeInfoList.add(new ScopeInfo(
+                    scope.getScopeId(),
+                    scope.getScopeName(),
+                    scope.getParentScopeId(),
+                    scope.getSymbolCount()
+            ));
+        }
+        return scopeInfoList;
+    }
+
+    // NEW: Get all scopes ever created (needed for comprehensive snapshots)
+    public List<ScopeInfo> getAllScopes() {
+        List<ScopeInfo> scopeInfoList = new ArrayList<>();
+        for (Scope scope : allScopes) {
+            scopeInfoList.add(new ScopeInfo(
+                    scope.getScopeId(),
+                    scope.getScopeName(),
+                    scope.getParentScopeId(),
+                    scope.getSymbolCount()
+            ));
+        }
+        return scopeInfoList;
+    }
+
+    // NEW: Get current scope ID (public version)
+    public int getCurrentScopeIdPublic() {
+        return getCurrentScopeId();
+    }
+
     // Print all symbols with improved table formatting - now includes ALL scopes
     public void print() {
         System.out.println("\n=== SYMBOL TABLE ===");
 
         // Collect all symbols from ALL scopes (not just current stack)
-        List<Row> allSymbols = new ArrayList<>();
-        for (Scope scope : allScopes) {
-            allSymbols.addAll(scope.getSymbols());
-        }
+        List<Row> allSymbols = getAllSymbols();
 
         if (allSymbols.isEmpty()) {
             System.out.println("No symbols found.");
@@ -126,7 +165,6 @@ public class SymbolTable {
         return value;
     }
 
-    // Helper method to format kind based on type
     // Helper method to format kind based on type
     private String formatKind(String type) {
         if (type == null) return "Unknown";
@@ -209,12 +247,12 @@ public class SymbolTable {
                 return "Type";
             case "ID_REFERENCE":
                 return "Reference";
-
+            case "UNDEFINED_VARIABLE": return "Variable";
             default:
                 return type;
         }
     }
-    // Helper method to format data type
+
     // Helper method to format data type
     private String formatDataType(String type) {
         if (type == null) return "N/A";
@@ -261,7 +299,7 @@ public class SymbolTable {
                 return "css-selector";
             case "CSS_RULE":
                 return "css-rule";
-
+            case "UNDEFINED_VARIABLE": return "any";
             // HTML-related data types
             case "HTML_ELEMENT":
                 return "html-element";
@@ -347,6 +385,27 @@ public class SymbolTable {
         }
         System.out.println("=======================\n");
     }
+}
+
+// NEW: ScopeInfo class for transferring scope information
+class ScopeInfo {
+    private int scopeId;
+    private String scopeName;
+    private int parentScopeId;
+    private int symbolCount;
+
+    public ScopeInfo(int scopeId, String scopeName, int parentScopeId, int symbolCount) {
+        this.scopeId = scopeId;
+        this.scopeName = scopeName;
+        this.parentScopeId = parentScopeId;
+        this.symbolCount = symbolCount;
+    }
+
+    // Getters
+    public int getScopeId() { return scopeId; }
+    public String getScopeName() { return scopeName; }
+    public int getParentScopeId() { return parentScopeId; }
+    public int getSymbolCount() { return symbolCount; }
 }
 
 // Scope class remains the same

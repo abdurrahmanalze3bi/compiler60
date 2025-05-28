@@ -8,6 +8,25 @@ public class StatementMethod {
     List<String> variable =new ArrayList<>();
     Expression expression ;
 
+    boolean isreturn ;
+    ReturnN returnN ;
+
+    public boolean isIsreturn() {
+        return isreturn;
+    }
+
+    public void setIsreturn(boolean isreturn) {
+        this.isreturn = isreturn;
+    }
+
+    public ReturnN getReturnN() {
+        return returnN;
+    }
+
+    public void setReturnN(ReturnN returnN) {
+        this.returnN = returnN;
+    }
+
     public String getThis() {
         return This;
     }
@@ -46,6 +65,12 @@ public class StatementMethod {
                    "\nStatementMethod{" +
                    ",\n" + expression +
                    "\n}";
+        }
+        if(returnN!=null){
+            return
+                    "\nStatementMethod{" +
+                    "\n" + returnN +
+                    "\n}";
         }
 
         return

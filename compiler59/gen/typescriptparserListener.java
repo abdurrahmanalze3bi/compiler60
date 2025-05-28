@@ -28,6 +28,16 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitStatement(typescriptparser.StatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link typescriptparser#assignmentStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterAssignmentStatement(typescriptparser.AssignmentStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link typescriptparser#assignmentStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitAssignmentStatement(typescriptparser.AssignmentStatementContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link typescriptparser#componentDeclaration}.
 	 * @param ctx the parse tree
 	 */
@@ -177,6 +187,16 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatementMethod(typescriptparser.StatementMethodContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link typescriptparser#return}.
+	 * @param ctx the parse tree
+	 */
+	void enterReturn(typescriptparser.ReturnContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link typescriptparser#return}.
+	 * @param ctx the parse tree
+	 */
+	void exitReturn(typescriptparser.ReturnContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link typescriptparser#interfaceDeclaration}.
 	 * @param ctx the parse tree

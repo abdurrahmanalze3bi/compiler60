@@ -9,12 +9,16 @@ statement   :
              componentDeclaration
             |classDeclaration
             | interfaceDeclaration
-            | methodDeclaration
             | variableDeclaration
+            | assignmentStatement
+            |functionCall
+            | methodDeclaration
             | importDeclaration
-
             ;
-
+            // to do class and visitor
+assignmentStatement
+    : ID ASSIGN expression SEMICOLON?
+    ;
 componentDeclaration
     : DECORATOR COMPONENT LPAREN LBRACE componentDeclarationBody RBRACE RPAREN ;
 componentDeclarationBody
@@ -52,6 +56,7 @@ classDeclarationBody
 classMember
     : methodDeclaration
     | propertyDeclaration
+    | classDeclaration
     ;
 
 
@@ -71,11 +76,17 @@ methodBody :(statementMethod)* ;
 
 
 statementMethod :
-ID ASSIGN expression SEMICOLON
-|THIS DOT ID ASSIGN expression SEMICOLON
-| expression SEMICOLON
+ID ASSIGN expression SEMICOLON return?
+|THIS DOT ID ASSIGN expression SEMICOLON return?
+| expression SEMICOLON  return?
+| return
 
-                     ;
+;
+
+
+ return : RETURN expression SEMICOLON |RETURN ID SEMICOLON | RETURN isboolean SEMICOLON  ;
+
+
 interfaceDeclaration
     : INTERFACE ID LBRACE interfaceMember* RBRACE
     ;
@@ -91,6 +102,9 @@ parameter
 parameterList
     : parameter (COMMA parameter)*
     ;
+    // to do
+    // date type regular
+    // datatype : (int| double | float |final | String | private | public | protected | char | ) ID COLON initialvalue | ID ID COLON initialvalue
 variableDeclaration
     : (CONST | LET | VAR ) ID   (ASSIGN expression)?
     ;

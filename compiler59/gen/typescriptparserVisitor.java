@@ -23,6 +23,12 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatement(typescriptparser.StatementContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link typescriptparser#assignmentStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssignmentStatement(typescriptparser.AssignmentStatementContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link typescriptparser#componentDeclaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -112,6 +118,12 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStatementMethod(typescriptparser.StatementMethodContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link typescriptparser#return}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitReturn(typescriptparser.ReturnContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link typescriptparser#interfaceDeclaration}.
 	 * @param ctx the parse tree

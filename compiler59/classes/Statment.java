@@ -8,9 +8,17 @@ public class Statment {
     MethodDeclaration methodDeclaration ;
     VariableDeclaration variableDeclaration ;
     ImportDeclaration importDeclaration ;
-
+   AssignmentStatement assignmentStatement ;
     public ComponentDeclaration getComponentDeclaration() {
         return componentDeclaration;
+    }
+
+    public AssignmentStatement getAssignmentStatement() {
+        return assignmentStatement;
+    }
+
+    public void setAssignmentStatement(AssignmentStatement assignmentStatement) {
+        this.assignmentStatement = assignmentStatement;
     }
 
     public void setComponentDeclaration(ComponentDeclaration componentDeclaration) {
@@ -93,8 +101,15 @@ public class Statment {
             sb.append("\n  importDeclaration=").append(importDeclaration);
         }
 
+        if (assignmentStatement != null) {
+            if (hasPrevious) sb.append(",");
+            sb.append("\n  assignmentStatement=").append(assignmentStatement);
+        }
         sb.append("\n}");
         return sb.toString();
+
+
+
     }
 
 }
