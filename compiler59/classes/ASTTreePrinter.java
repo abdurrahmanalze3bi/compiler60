@@ -1,6 +1,7 @@
 package classes;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ASTTreePrinter {
     public static void printTree(Program program) {
@@ -62,7 +63,7 @@ public class ASTTreePrinter {
         } else if (node instanceof Selector) {
             return "Selector: " + ((Selector) node).getSTRING_LIT();
         } else if (node instanceof Standalone) {
-            return "Standalone: " + ((Standalone) node).getIsboolean().getTruev();
+            return "Standalone: " + ((Standalone) node).isIsboolean().getTruev();
         } else if (node instanceof Template) {
             return "Template";
         } else if (node instanceof Element) {
@@ -99,6 +100,10 @@ public class ASTTreePrinter {
             MethodDeclaration method = (MethodDeclaration) node;
             return "Method: " + method.getName() +
                     (method.getTypeReturn() != null ? " : " + getTypeName(method.getTypeReturn()) : "");
+        } else if (node instanceof MethodBody) {
+            return "MethodBody";
+        } else if (node instanceof StatementMethod) {
+            return "Statement: " + node.getClass().getSimpleName();
         } else if (node instanceof Styles) {
             return "Styles";
         } else if (node instanceof CssBody) {
@@ -160,6 +165,8 @@ public class ASTTreePrinter {
             return ((CssElement) node).getBodyCssElements();
         } else if (node instanceof MethodDeclaration) {
             return List.of(((MethodDeclaration) node).getMethodBody());
+        } else if (node instanceof MethodBody) {
+            return ((MethodBody) node).getStatementMethods();
         } else if (node instanceof InterfaceMember) {
             InterfaceMember member = (InterfaceMember) node;
             if (member.getPropertyDeclaration() != null) return List.of(member.getPropertyDeclaration());
@@ -168,6 +175,9 @@ public class ASTTreePrinter {
             ClassMember member = (ClassMember) node;
             if (member.getPropertyDeclaration() != null) return List.of(member.getPropertyDeclaration());
             if (member.getMethodDeclaration() != null) return List.of(member.getMethodDeclaration());
+        } else if (node instanceof StatementMethod) {
+            // Handle children of StatementMethod here when implemented
+            return null;
         }
         return null;
     }
