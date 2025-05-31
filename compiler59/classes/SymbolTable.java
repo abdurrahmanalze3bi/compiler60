@@ -1,16 +1,12 @@
 package classes;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 public class SymbolTable {
     private Stack<Scope> scopeStack;
     private List<Scope> allScopes; // Keep track of all scopes created
     private int currentScopeId;
-
+    private List<SemanticError> errors = new ArrayList<>();
     public SymbolTable() {
         this.scopeStack = new Stack<>();
         this.allScopes = new ArrayList<>();
@@ -19,6 +15,88 @@ public class SymbolTable {
         enterScope("GLOBAL");
     }
 
+    // In SymbolTable class
+    // Fixed: Single createSnapshot method with correct implementation
+    public SymbolTableSnapshot createSnapshot(Set<String> relevantTokens) {
+        List<ScopeInfo> currentScopeStackInfo = getCurrentScopeStack();
+        List<Row> relevantSymbols = new ArrayList<>();
+
+        // Expand tokens to include related symbols
+        Set<String> expandedTokens = new HashSet<>(relevantTokens);
+        for (String token : relevantTokens) {
+            expandedTokens.add(token.replace("*", "")); // Add without asterisk
+            expandedTokens.add("*" + token); // Add with asterisk
+        }
+
+        for (Row row : getAllSymbols()) {
+            if (expandedTokens.contains(row.getValue())) {
+                relevantSymbols.add(row);
+            }
+        }
+        return new SymbolTableSnapshot(relevantTokens, relevantSymbols, currentScopeStackInfo);
+    }
+
+
+    public static class SymbolTableSnapshot {
+        private final Set<String> relevantTokens;
+        private final List<Row> relevantSymbols;
+        private final List<ScopeInfo> currentScopeStack;
+
+        // Fixed: Constructor accepts precomputed data
+        public SymbolTableSnapshot(Set<String> relevantTokens, List<Row> relevantSymbols, List<ScopeInfo> currentScopeStack) {
+            this.relevantTokens = relevantTokens;
+            this.relevantSymbols = relevantSymbols;
+            this.currentScopeStack = currentScopeStack;
+
+    }
+
+        public void print() {
+            if (relevantSymbols.isEmpty()) {
+                System.out.println("  No relevant symbols found");
+                return;
+            }
+
+            System.out.println("  | Identifier         | Kind             | Scope                |");
+            System.out.println("  | ------------------ | ---------------- | -------------------- |");
+            for (Row row : relevantSymbols) {
+                String identifier = formatIdentifier(row.getValue());
+                String kind = formatKind(row.getType());
+                String scope = formatScope(row.getScopeName());
+                System.out.printf("  | %-18s | %-16s | %-20s |%n", identifier, kind, scope);
+            }
+
+            System.out.println("  Current scope stack:");
+            for (ScopeInfo scope : currentScopeStack) {
+                System.out.println("    - " + scope.getScopeName() + " (ID: " + scope.getScopeId() + ")");
+            }
+        }
+
+        // Reuse formatting helpers from SymbolTable
+     }
+
+    // Update printErrors() method
+    public void printErrors() {
+        if (errors.isEmpty()) {
+            System.out.println("\n=== SEMANTIC ANALYSIS ===");
+            System.out.println("No semantic errors found.");
+            System.out.println("========================\n");
+            return;
+        }
+
+        System.out.println("\n=== SEMANTIC ERRORS ===");
+        System.out.println("Found " + errors.size() + " semantic error(s):");
+
+        for (SemanticError error : errors) {
+            System.out.println("\n" + error.getType().getDisplayName() + ":");
+            System.out.println("  - Line " + error.getLine() + ", Column " + error.getColumn() + ": " + error.getMessage());
+            if (error.getSnapshot() != null) {
+                error.getSnapshot().print();
+            }
+        }
+
+        System.out.println("\nTotal: " + errors.size() + " semantic error(s)");
+        System.out.println("======================\n");
+    }
     // Enter a new scope
     public void enterScope(String scopeName) {
         Scope newScope = new Scope(currentScopeId++, scopeName, getCurrentScopeId());
@@ -34,6 +112,21 @@ public class SymbolTable {
             // System.out.println("Exited scope: " + exitedScope.getScopeName() + " (ID: " + exitedScope.getScopeId() + ")");
         }
     }
+    // In SymbolTable class
+    public boolean hasAncestorScope(String scopeType) {
+        for (int i = scopeStack.size() - 1; i >= 0; i--) {
+            if (scopeType.equals(scopeStack.get(i).getScopeType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean currentScopeContains(String symbolValue) {
+        if (scopeStack.isEmpty()) return false;
+        Scope current = scopeStack.peek();
+        return current.findSymbol(symbolValue) != null;
+    }
 
     // Get current scope ID
     private int getCurrentScopeId() {
@@ -46,6 +139,20 @@ public class SymbolTable {
             Scope currentScope = scopeStack.peek();
             Row row = new Row(type, value, currentScope.getScopeId(), currentScope.getScopeName());
             currentScope.addSymbol(row);
+        }
+    }
+
+
+    // NEW: Get current scope type (e.g., "GLOBAL", "CLASS", "INTERFACE", "METHOD")
+    public String getCurrentScopeType() {
+        return scopeStack.isEmpty() ? null : scopeStack.peek().getScopeType();
+    }
+
+    // Add this method to SymbolTable
+    public void setCurrentScopeName(String name) {
+        if (!scopeStack.isEmpty()) {
+            Scope currentScope = scopeStack.peek();
+            currentScope.setScopeName(name);
         }
     }
 
@@ -153,7 +260,7 @@ public class SymbolTable {
     }
 
     // Helper method to format identifier (remove quotes if present)
-    private String formatIdentifier(String value) {
+    private static String formatIdentifier(String value) {
         if (value == null) return "N/A";
         // Remove surrounding quotes if present
         if (value.startsWith("'") && value.endsWith("'")) {
@@ -166,7 +273,7 @@ public class SymbolTable {
     }
 
     // Helper method to format kind based on type
-    private String formatKind(String type) {
+    private static String formatKind(String type) {
         if (type == null) return "Unknown";
 
         switch (type.toUpperCase()) {
@@ -346,7 +453,7 @@ public class SymbolTable {
     }
 
     // Helper method to format scope name
-    private String formatScope(String scopeName) {
+    private static String formatScope(String scopeName) {
         if (scopeName == null) return "Unknown";
 
         switch (scopeName.toUpperCase()) {
@@ -422,6 +529,9 @@ class Scope {
         this.symbols = new HashMap<>();
     }
 
+    public void setScopeName(String scopeName) {
+        this.scopeName = scopeName;
+    }
     public void addSymbol(Row symbol) {
         symbols.put(symbol.getValue(), symbol);
     }
@@ -442,4 +552,7 @@ class Scope {
     public int getScopeId() { return scopeId; }
     public String getScopeName() { return scopeName; }
     public int getParentScopeId() { return parentScopeId; }
+    public String getScopeType() {
+        return scopeName;  // Return the scope name which represents the type
+    }
 }
