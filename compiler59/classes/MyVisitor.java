@@ -185,25 +185,44 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         if (ctx.ID() != null && ctx.ID().getText() != null) {
             String className = ctx.ID().getText();
-            // REMOVED: Duplicate check is now handled in visitStatement before entering CLASS scope
-            classDeclaration.setNameClass(className);
-        }
 
-        if (ctx.classDeclarationBody() != null) {
-            classDeclaration.setClassDeclarationBody(
-                    visitClassDeclarationBody(ctx.classDeclarationBody())
-            );
+            // Check for duplicate class in current scope
+            if (symbolTable.existsInCurrentScope(className)) {
+                errorManager.reportDuplicateClass(className,
+                        ctx.getStart().getLine(),
+                        ctx.getStart().getCharPositionInLine());
+            } else {
+                // Add class to current scope (should be Global)
+                symbolTable.addSymbol("CLASS", className);
+            }
+
+            // Enter class scope for processing class body
+            symbolTable.enterScope("CLASS");
+            symbolTable.setCurrentScopeName("CLASS." + className);
+
+            classDeclaration.setNameClass(className);
+
+            // Process class body within the class scope
+            if (ctx.classDeclarationBody() != null) {
+                classDeclaration.setClassDeclarationBody(
+                        visitClassDeclarationBody(ctx.classDeclarationBody())
+                );
+            }
+
+            // Exit class scope after processing
+            symbolTable.exitScope();
         }
 
         return classDeclaration;
     }
+
     @Override
     public ClassDeclarationBody visitClassDeclarationBody(typescriptparser.ClassDeclarationBodyContext ctx) {
         ClassDeclarationBody classDeclarationBody = new ClassDeclarationBody();
 
-        // Don't enter a new scope here - we're already in the CLASS scope from visitStatement
-        // Just process the class members directly in the current CLASS scope
-        if(ctx.classMember() != null) {
+        // We're already in CLASS scope from visitClassDeclaration
+        // Process all class members in this scope
+        if (ctx.classMember() != null) {
             for (int i = 0; i < ctx.classMember().size(); i++) {
                 if (ctx.classMember(i) != null) {
                     ClassMember member = visitClassMember(ctx.classMember(i));
@@ -215,35 +234,21 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         }
 
         return classDeclarationBody;
-
-
-
-
     }
+
 
     @Override
     public ClassMember visitClassMember(typescriptparser.ClassMemberContext ctx) {
         ClassMember classMember = new ClassMember();
 
         if (ctx.methodDeclaration() != null) {
-            // Get class name from parent context
-            String className = "";
-            if (ctx.getParent() != null &&
-                    ctx.getParent().getParent() instanceof typescriptparser.ClassDeclarationContext) {
-                typescriptparser.ClassDeclarationContext classCtx =
-                        (typescriptparser.ClassDeclarationContext) ctx.getParent().getParent();
-                if (classCtx.ID() != null) {
-                    className = classCtx.ID().getText();
-                }
-            }
-
-            // Set class context before processing method
-            symbolTable.setCurrentScopeName("CLASS." + className);
-
+            // We're already in the correct CLASS scope context
             classMember.setMethodDeclaration(visitMethodDeclaration(ctx.methodDeclaration()));
+        }
 
-            // Reset context after processing
-            symbolTable.setCurrentScopeName("CLASS");
+        if (ctx.propertyDeclaration() != null) {
+            // Process property declaration within current CLASS scope
+            classMember.setPropertyDeclaration(visitPropertyDeclaration(ctx.propertyDeclaration()));
         }
 
         return classMember;
@@ -251,59 +256,57 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public PropertyDeclaration visitPropertyDeclaration(typescriptparser.PropertyDeclarationContext ctx) {
         PropertyDeclaration propertyDeclaration = new PropertyDeclaration();
+
         for (TerminalNode idNode : ctx.ID()) {
             String propertyId = idNode.getText();
             propertyDeclaration.getID().add(propertyId);
+
+            // Add to component properties for semantic analysis
             errorManager.addComponentProperty(propertyId);
+
+            // Add property to current scope (should be CLASS scope)
             if (!symbolTable.existsInCurrentScope(propertyId)) {
                 symbolTable.addSymbol("PROPERTY", propertyId);
+
+                        symbolTable.getCurrentScopeName();
             }
         }
+
         if (ctx.type() != null) {
             propertyDeclaration.setTypeV(visitType(ctx.type()));
         }
+
         if (ctx.initvalue() != null) {
             propertyDeclaration.setInitvalue(visitInitvalue(ctx.initvalue()));
         }
+
         return propertyDeclaration;
     }
 
     @Override
     public MethodDeclaration visitMethodDeclaration(typescriptparser.MethodDeclarationContext ctx) {
         MethodDeclaration methodDeclaration = new MethodDeclaration();
-
-        // Get method name
         String methodName = null;
-        if (ctx.ID() != null && ctx.ID().getText() != null) {
+        String returnType = "void";
+
+        if (ctx.ID() != null) {
             methodName = ctx.ID().getText();
             methodDeclaration.setName(methodName);
         }
 
-        // Get return type
-        String returnType = "void"; // default
         if (ctx.type() != null) {
             returnType = ctx.type().getText();
             methodDeclaration.setTypeReturn(visitType(ctx.type()));
         }
 
-        // Get parameters
         List<String> parameterTypes = new ArrayList<>();
         if (ctx.parameterList() != null) {
             methodDeclaration.setParameterLists(visitParameterList(ctx.parameterList()));
-            // Extract parameter types for signature
             parameterTypes = extractParameterTypes(methodDeclaration.getParameterLists());
         }
 
-        // Get current scope info for debugging
-        String currentScopeName = symbolTable.getCurrentScopeName();
-        String currentScopeType = symbolTable.getCurrentScopeType();
-        int currentScopeId = symbolTable.getCurrentScopeIdPublic();
-
-        // Register method declaration with semantic manager
         SemanticErrorManager.MethodInfo methodInfo = null;
         if (methodName != null) {
-
-
             errorManager.registerMethodDeclaration(
                     methodName,
                     returnType,
@@ -312,7 +315,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
                     ctx.getStart().getCharPositionInLine()
             );
 
-            // Get the registered MethodInfo object
+            String currentScopeName = symbolTable.getCurrentScopeName();
             String methodSignature = errorManager.createMethodSignature(
                     currentScopeName + "." + methodName,
                     parameterTypes
@@ -320,41 +323,24 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             methodInfo = errorManager.getMethodInfoBySignature(methodSignature);
         }
 
-        // Create method context for return tracking
         MethodContext methodContext = new MethodContext(methodName, returnType, methodInfo);
         methodContextStack.push(methodContext);
 
-        // Enter method scope
         symbolTable.enterScope("METHOD");
-
-
-        // Register method in symbol table if not duplicate
         if (methodName != null && !symbolTable.existsInCurrentScope(methodName)) {
             symbolTable.addSymbol("METHOD", methodName);
         }
 
-        // Process method body
         if (ctx.methodBody() != null) {
-
-            symbolTable.enterScope("METHOD_BODY");
             methodDeclaration.setMethodBody(visitMethodBody(ctx.methodBody()));
-            symbolTable.exitScope(); // Exit METHOD_BODY scope
-        } else {
-            System.out.println("DEBUG: No method body for: " + methodName);
         }
 
-        // Detect interface context
-        String newScopeType = symbolTable.getCurrentScopeType();
-        boolean isInterfaceMethod = newScopeType != null &&
-                (newScopeType.equals("INTERFACE") ||
-                        newScopeType.equals("INTERFACE_METHOD"));
+        String currentScopeType = symbolTable.getCurrentScopeType();
+        boolean isInterfaceMethod = currentScopeType != null &&
+                (currentScopeType.equals("INTERFACE") || currentScopeType.equals("INTERFACE_METHOD"));
 
-
-
-        // Only check return completeness for non-interface methods
         if (!isInterfaceMethod && methodInfo != null && !methodInfo.isVoidMethod()) {
             if (!methodContext.hasReturnStatement()) {
-                System.out.println("DEBUG: Reporting missing return for: " + methodName);
                 SemanticError error = new SemanticError(
                         SemanticErrorType.MISSING_RETURN_STATEMENT,
                         "Non-void method '" + methodName + "' must return a value",
@@ -366,10 +352,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             }
         }
 
-        // Exit method scope and remove context
-        symbolTable.exitScope(); // Exit METHOD scope
+        symbolTable.exitScope();
         methodContextStack.pop();
-
 
         return methodDeclaration;
     }
@@ -566,11 +550,9 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public ParameterList visitParameterList(typescriptparser.ParameterListContext ctx) {
         ParameterList parameterList = new ParameterList();
-        symbolTable.enterScope("PARAMETERS");
         for (typescriptparser.ParameterContext pCtx : ctx.parameter()) {
             parameterList.getParameters().add(visitParameter(pCtx));
         }
-        symbolTable.exitScope();
         return parameterList;
     }
 
@@ -613,6 +595,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         }
         return methodBody;
     }
+
 
     @Override
     public StatementMethod visitStatementMethod(typescriptparser.StatementMethodContext ctx) {
@@ -791,13 +774,12 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return bodyList;
     }
 
+
     @Override
     public ObjectV visitObject(typescriptparser.ObjectContext ctx) {
         ObjectV object = new ObjectV();
         if (ctx.bodyobject() != null) {
-            symbolTable.enterScope("OBJECT");
             object.setBodyObject(visitBodyobject(ctx.bodyobject()));
-            symbolTable.exitScope();
         }
         return object;
     }
@@ -1346,18 +1328,15 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return interfaceMember;
     }
 
+
     @Override
     public BodyObject visitBodyobject(typescriptparser.BodyobjectContext ctx) {
         BodyObject bodyObject = new BodyObject();
-
         if (!ctx.initvalue().isEmpty()) {
-            symbolTable.enterScope("OBJECT_BODY");
             for (typescriptparser.InitvalueContext ivCtx : ctx.initvalue()) {
                 bodyObject.getInitvalues().add(visitInitvalue(ivCtx));
             }
-            symbolTable.exitScope();
         }
-
         return bodyObject;
     }
 

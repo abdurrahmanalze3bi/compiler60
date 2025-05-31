@@ -4,9 +4,10 @@ import java.util.*;
 
 public class SymbolTable {
     private Stack<Scope> scopeStack;
-    private List<Scope> allScopes; // Keep track of all scopes created
+    private List<Scope> allScopes;
     private int currentScopeId;
     private List<SemanticError> errors = new ArrayList<>();
+
     public SymbolTable() {
         this.scopeStack = new Stack<>();
         this.allScopes = new ArrayList<>();
@@ -15,66 +16,219 @@ public class SymbolTable {
         enterScope("GLOBAL");
     }
 
-    // In SymbolTable class
-    // Fixed: Single createSnapshot method with correct implementation
+    // Enhanced scope management with proper scope types
+    public void enterScope(String scopeName) {
+        enterScope(scopeName, scopeName); // Default: scope name is also the type
+    }
+    public void enterScope(String scopeName, String scopeType) {
+        // Normalize scope names to avoid inconsistencies
+        String normalizedName = normalizeScopeName(scopeName, scopeType);
+
+        Scope newScope = new Scope(currentScopeId++, normalizedName, scopeType, getCurrentScopeId());
+        scopeStack.push(newScope);
+        allScopes.add(newScope);
+    }private String normalizeScopeName(String scopeName, String scopeType) {
+        switch (scopeType.toUpperCase()) {
+            case "CLASS":
+                return "CLASS"; // Don't use specific class names in scope names
+            case "METHOD":
+                return "METHOD"; // Don't use specific method names in scope names
+            case "INTERFACE":
+                return "INTERFACE";
+            case "TEMPLATE":
+                return "TEMPLATE";
+            case "CSS":
+                return "CSS";
+            case "GLOBAL":
+                return "GLOBAL";
+            default:
+                return scopeName;
+        }
+    }
+
+    public void exitScope() {
+        if (!scopeStack.isEmpty() && scopeStack.size() > 1) { // Keep global scope
+            Scope exitedScope = scopeStack.pop();
+        }
+    }
+
+    // Better scope type checking
+    public boolean hasAncestorScope(String scopeType) {
+        for (int i = scopeStack.size() - 1; i >= 0; i--) {
+            if (scopeType.equals(scopeStack.get(i).getScopeType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Enhanced symbol addition with better scope context
+    public void addSymbol(String type, String value) {
+        addSymbol(type, value, getCurrentScopeName());
+    }
+
+    public void addSymbol(String type, String value, String contextScope) {
+        if (!scopeStack.isEmpty()) {
+            Scope currentScope = scopeStack.peek();
+
+            // Use the actual scope type, not a concatenated name
+            String actualScopeName = currentScope.getScopeType();
+
+            Row row = new Row(type, value, currentScope.getScopeId(), actualScopeName);
+            currentScope.addSymbol(row);
+        }
+    }
+    public void addMethodParameter(String paramName, String paramType, String methodName) {
+        if (!scopeStack.isEmpty()) {
+            Scope currentScope = scopeStack.peek();
+            // Add parameters directly to the method scope, not a separate "Parameters" scope
+            Row paramRow = new Row("PARAMETER", paramName, currentScope.getScopeId(), "METHOD");
+            currentScope.addSymbol(paramRow);
+        }
+    }
+    // Snapshot creation with better token expansion
     public SymbolTableSnapshot createSnapshot(Set<String> relevantTokens) {
         List<ScopeInfo> currentScopeStackInfo = getCurrentScopeStack();
         List<Row> relevantSymbols = new ArrayList<>();
 
-        // Expand tokens to include related symbols
+        // Better token expansion logic
         Set<String> expandedTokens = new HashSet<>(relevantTokens);
         for (String token : relevantTokens) {
-            expandedTokens.add(token.replace("*", "")); // Add without asterisk
-            expandedTokens.add("*" + token); // Add with asterisk
+            // Remove quotes and special characters for matching
+            String cleanToken = token.replaceAll("[\"'*]", "");
+            expandedTokens.add(cleanToken);
+            expandedTokens.add("*" + cleanToken);
+            expandedTokens.add(cleanToken + "*");
         }
 
         for (Row row : getAllSymbols()) {
-            if (expandedTokens.contains(row.getValue())) {
+            String cleanRowValue = row.getValue().replaceAll("[\"'*]", "");
+            if (expandedTokens.contains(cleanRowValue) ||
+                    expandedTokens.contains(row.getValue()) ||
+                    relevantTokens.contains(row.getValue())) {
                 relevantSymbols.add(row);
             }
         }
+
         return new SymbolTableSnapshot(relevantTokens, relevantSymbols, currentScopeStackInfo);
     }
 
-
-    public static class SymbolTableSnapshot {
-        private final Set<String> relevantTokens;
-        private final List<Row> relevantSymbols;
-        private final List<ScopeInfo> currentScopeStack;
-
-        // Fixed: Constructor accepts precomputed data
-        public SymbolTableSnapshot(Set<String> relevantTokens, List<Row> relevantSymbols, List<ScopeInfo> currentScopeStack) {
-            this.relevantTokens = relevantTokens;
-            this.relevantSymbols = relevantSymbols;
-            this.currentScopeStack = currentScopeStack;
-
+    // Helper methods
+    public boolean currentScopeContains(String symbolValue) {
+        if (scopeStack.isEmpty()) return false;
+        Scope current = scopeStack.peek();
+        return current.findSymbol(symbolValue) != null;
     }
 
-        public void print() {
-            if (relevantSymbols.isEmpty()) {
-                System.out.println("  No relevant symbols found");
-                return;
-            }
+    private int getCurrentScopeId() {
+        return scopeStack.isEmpty() ? -1 : scopeStack.peek().getScopeId();
+    }
 
-            System.out.println("  | Identifier         | Kind             | Scope                |");
-            System.out.println("  | ------------------ | ---------------- | -------------------- |");
-            for (Row row : relevantSymbols) {
+    public String getCurrentScopeType() {
+        return scopeStack.isEmpty() ? null : scopeStack.peek().getScopeType();
+    }
+
+    public void setCurrentScopeName(String name) {
+        if (!scopeStack.isEmpty()) {
+            Scope currentScope = scopeStack.peek();
+            currentScope.setScopeName(name);
+        }
+    }
+
+    public Row lookupSymbol(String value) {
+        // Search from current scope up to global scope
+        for (int i = scopeStack.size() - 1; i >= 0; i--) {
+            Scope scope = scopeStack.get(i);
+            Row symbol = scope.findSymbol(value);
+            if (symbol != null) {
+                return symbol;
+            }
+        }
+        return null;
+    }
+
+    public boolean existsInCurrentScope(String value) {
+        if (!scopeStack.isEmpty()) {
+            return scopeStack.peek().findSymbol(value) != null;
+        }
+        return false;
+    }
+
+    public String getCurrentScopeName() {
+        return scopeStack.isEmpty() ? "NONE" : scopeStack.peek().getScopeName();
+    }
+
+    public List<Row> getAllSymbols() {
+        List<Row> allSymbols = new ArrayList<>();
+        for (Scope scope : allScopes) {
+            allSymbols.addAll(scope.getSymbols());
+        }
+        return allSymbols;
+    }
+
+    public List<ScopeInfo> getCurrentScopeStack() {
+        List<ScopeInfo> scopeInfoList = new ArrayList<>();
+        for (Scope scope : scopeStack) {
+            scopeInfoList.add(new ScopeInfo(
+                    scope.getScopeId(),
+                    scope.getScopeName(),
+                    scope.getScopeType(),
+                    scope.getParentScopeId(),
+                    scope.getSymbolCount()
+            ));
+        }
+        return scopeInfoList;
+    }
+
+    public List<ScopeInfo> getAllScopes() {
+        List<ScopeInfo> scopeInfoList = new ArrayList<>();
+        for (Scope scope : allScopes) {
+            scopeInfoList.add(new ScopeInfo(
+                    scope.getScopeId(),
+                    scope.getScopeName(),
+                    scope.getScopeType(),
+                    scope.getParentScopeId(),
+                    scope.getSymbolCount()
+            ));
+        }
+        return scopeInfoList;
+    }
+
+    public int getCurrentScopeIdPublic() {
+        return getCurrentScopeId();
+    }
+
+    // Enhanced print method with better scope categorization
+    public void print() {
+        System.out.println("\n=== SYMBOL TABLE ===");
+        List<Row> allSymbols = getAllSymbols();
+
+        if (allSymbols.isEmpty()) {
+            System.out.println("No symbols found.");
+            return;
+        }
+
+        System.out.println("| Identifier         | Kind             | Data Type        | Scope                |");
+        System.out.println("| ------------------ | ---------------- | ---------------- | -------------------- |");
+
+        for (Row row : allSymbols) {
+            if (row != null) {
                 String identifier = formatIdentifier(row.getValue());
                 String kind = formatKind(row.getType());
+                String dataType = formatDataType(row.getType());
                 String scope = formatScope(row.getScopeName());
-                System.out.printf("  | %-18s | %-16s | %-20s |%n", identifier, kind, scope);
-            }
-
-            System.out.println("  Current scope stack:");
-            for (ScopeInfo scope : currentScopeStack) {
-                System.out.println("    - " + scope.getScopeName() + " (ID: " + scope.getScopeId() + ")");
+                System.out.printf("| %-18s | %-16s | %-16s | %-20s |%n",
+                        identifier, kind, dataType, scope);
             }
         }
 
-        // Reuse formatting helpers from SymbolTable
-     }
+        System.out.println();
+        System.out.println("Total symbols: " + allSymbols.size());
+        System.out.println("Current scope: " + getCurrentScopeName() + " (ID: " + getCurrentScopeId() + ")");
+        System.out.println("===================\n");
+    }
 
-    // Update printErrors() method
+    // Enhanced error printing
     public void printErrors() {
         if (errors.isEmpty()) {
             System.out.println("\n=== SEMANTIC ANALYSIS ===");
@@ -88,7 +242,8 @@ public class SymbolTable {
 
         for (SemanticError error : errors) {
             System.out.println("\n" + error.getType().getDisplayName() + ":");
-            System.out.println("  - Line " + error.getLine() + ", Column " + error.getColumn() + ": " + error.getMessage());
+            System.out.println("  - Line " + error.getLine() + ", Column " +
+                    error.getColumn() + ": " + error.getMessage());
             if (error.getSnapshot() != null) {
                 error.getSnapshot().print();
             }
@@ -97,413 +252,238 @@ public class SymbolTable {
         System.out.println("\nTotal: " + errors.size() + " semantic error(s)");
         System.out.println("======================\n");
     }
-    // Enter a new scope
-    public void enterScope(String scopeName) {
-        Scope newScope = new Scope(currentScopeId++, scopeName, getCurrentScopeId());
-        scopeStack.push(newScope);
-        allScopes.add(newScope); // Keep track of all scopes
-        // System.out.println("Entered scope: " + scopeName + " (ID: " + newScope.getScopeId() + ")");
-    }
 
-    // Exit current scope
-    public void exitScope() {
-        if (!scopeStack.isEmpty() && scopeStack.size() > 1) { // Keep global scope
-            Scope exitedScope = scopeStack.pop();
-            // System.out.println("Exited scope: " + exitedScope.getScopeName() + " (ID: " + exitedScope.getScopeId() + ")");
-        }
-    }
-    // In SymbolTable class
-    public boolean hasAncestorScope(String scopeType) {
-        for (int i = scopeStack.size() - 1; i >= 0; i--) {
-            if (scopeType.equals(scopeStack.get(i).getScopeType())) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // Improved scope hierarchy printing
+    public void printScopeHierarchy() {
+        System.out.println("\n=== SCOPE HIERARCHY ===");
+        System.out.println("Current scope stack:");
 
-    public boolean currentScopeContains(String symbolValue) {
-        if (scopeStack.isEmpty()) return false;
-        Scope current = scopeStack.peek();
-        return current.findSymbol(symbolValue) != null;
-    }
-
-    // Get current scope ID
-    private int getCurrentScopeId() {
-        return scopeStack.isEmpty() ? -1 : scopeStack.peek().getScopeId();
-    }
-
-    // Add symbol to current scope
-    public void addSymbol(String type, String value) {
-        if (!scopeStack.isEmpty()) {
-            Scope currentScope = scopeStack.peek();
-            Row row = new Row(type, value, currentScope.getScopeId(), currentScope.getScopeName());
-            currentScope.addSymbol(row);
-        }
-    }
-
-
-    // NEW: Get current scope type (e.g., "GLOBAL", "CLASS", "INTERFACE", "METHOD")
-    public String getCurrentScopeType() {
-        return scopeStack.isEmpty() ? null : scopeStack.peek().getScopeType();
-    }
-
-    // Add this method to SymbolTable
-    public void setCurrentScopeName(String name) {
-        if (!scopeStack.isEmpty()) {
-            Scope currentScope = scopeStack.peek();
-            currentScope.setScopeName(name);
-        }
-    }
-
-    // Look up symbol in current scope and parent scopes
-    public Row lookupSymbol(String value) {
-        // Search from current scope up to global scope
-        for (int i = scopeStack.size() - 1; i >= 0; i--) {
+        for (int i = 0; i < scopeStack.size(); i++) {
             Scope scope = scopeStack.get(i);
-            Row symbol = scope.findSymbol(value);
-            if (symbol != null) {
-                return symbol;
-            }
-        }
-        return null; // Symbol not found
-    }
+            String indent = "  ".repeat(i);
 
-    // Check if symbol exists in current scope only
-    public boolean existsInCurrentScope(String value) {
-        if (!scopeStack.isEmpty()) {
-            return scopeStack.peek().findSymbol(value) != null;
-        }
-        return false;
-    }
+            // Show clear scope relationships
+            String scopeDisplay = String.format("%s%s (ID: %d, Symbols: %d)",
+                    indent, scope.getScopeType(), scope.getScopeId(), scope.getSymbolCount());
 
-    // Get current scope name
-    public String getCurrentScopeName() {
-        return scopeStack.isEmpty() ? "NONE" : scopeStack.peek().getScopeName();
-    }
+            System.out.println(scopeDisplay);
 
-    // NEW: Get all symbols from all scopes (needed for snapshots)
-    public List<Row> getAllSymbols() {
-        List<Row> allSymbols = new ArrayList<>();
-        for (Scope scope : allScopes) {
-            allSymbols.addAll(scope.getSymbols());
-        }
-        return allSymbols;
-    }
-
-    // NEW: Get all active scopes in the current scope stack (needed for snapshots)
-    public List<ScopeInfo> getCurrentScopeStack() {
-        List<ScopeInfo> scopeInfoList = new ArrayList<>();
-        for (Scope scope : scopeStack) {
-            scopeInfoList.add(new ScopeInfo(
-                    scope.getScopeId(),
-                    scope.getScopeName(),
-                    scope.getParentScopeId(),
-                    scope.getSymbolCount()
-            ));
-        }
-        return scopeInfoList;
-    }
-
-    // NEW: Get all scopes ever created (needed for comprehensive snapshots)
-    public List<ScopeInfo> getAllScopes() {
-        List<ScopeInfo> scopeInfoList = new ArrayList<>();
-        for (Scope scope : allScopes) {
-            scopeInfoList.add(new ScopeInfo(
-                    scope.getScopeId(),
-                    scope.getScopeName(),
-                    scope.getParentScopeId(),
-                    scope.getSymbolCount()
-            ));
-        }
-        return scopeInfoList;
-    }
-
-    // NEW: Get current scope ID (public version)
-    public int getCurrentScopeIdPublic() {
-        return getCurrentScopeId();
-    }
-
-    // Print all symbols with improved table formatting - now includes ALL scopes
-    public void print() {
-        System.out.println("\n=== SYMBOL TABLE ===");
-
-        // Collect all symbols from ALL scopes (not just current stack)
-        List<Row> allSymbols = getAllSymbols();
-
-        if (allSymbols.isEmpty()) {
-            System.out.println("No symbols found.");
-            return;
-        }
-
-        // Print table header with proper formatting
-        System.out.println("| Identifier         | Kind             | Data Type        | Scope                |");
-        System.out.println("| ------------------ | ---------------- | ---------------- | -------------------- |");
-
-        // Print each symbol as a table row
-        for (Row row : allSymbols) {
-            if (row != null) {
-                String identifier = formatIdentifier(row.getValue());
-                String kind = formatKind(row.getType());
-                String dataType = formatDataType(row.getType());
-                String scope = formatScope(row.getScopeName());
-
-                System.out.printf("| %-18s | %-16s | %-16s | %-20s |%n",
-                        identifier, kind, dataType, scope);
+            // Show some example symbols in each scope
+            if (scope.getSymbolCount() > 0 && scope.getSymbolCount() <= 5) {
+                for (Row symbol : scope.getSymbols()) {
+                    System.out.println(indent + "  - " + symbol.getValue() + " (" + symbol.getType() + ")");
+                }
             }
         }
 
-        System.out.println();
-        System.out.println("Total symbols: " + allSymbols.size());
-        System.out.println("Current scope: " + getCurrentScopeName() + " (ID: " + getCurrentScopeId() + ")");
-        System.out.println("===================\n");
+        System.out.println("=======================\n");
     }
 
-    // Helper method to format identifier (remove quotes if present)
+    // Enhanced formatting methods
     private static String formatIdentifier(String value) {
         if (value == null) return "N/A";
-        // Remove surrounding quotes if present
-        if (value.startsWith("'") && value.endsWith("'")) {
+
+        // Remove surrounding quotes
+        if ((value.startsWith("'") && value.endsWith("'")) ||
+                (value.startsWith("\"") && value.endsWith("\""))) {
             return value.substring(1, value.length() - 1);
         }
-        if (value.startsWith("\"") && value.endsWith("\"")) {
-            return value.substring(1, value.length() - 1);
+
+        // Truncate very long identifiers for display
+        if (value.length() > 18) {
+            return value.substring(0, 15) + "...";
         }
+
         return value;
     }
 
-    // Helper method to format kind based on type
     private static String formatKind(String type) {
         if (type == null) return "Unknown";
 
         switch (type.toUpperCase()) {
-            // Existing cases
-            case "IMPORT_ID":
-                return "Import";
-            case "IMPORT_PATH":
-                return "Import Path";
-            case "VARIABLE":
-                return "Variable";
-            case "FUNCTION":
-            case "METHOD":
-                return "Function";
-            case "CLASS":
-                return "Class";
-            case "INTERFACE":
-                return "Interface";
-            case "COMPONENT":
-                return "Component";
-            case "PROPERTY":
-                return "Property";
-            case "PARAMETER":
-                return "Parameter";
-
-            // CSS-related kinds
-            case "CSS_PROPERTY":
-                return "CSS Property";
-            case "CSS_VALUE":
-                return "CSS Value";
-            case "CSS_SELECTOR":
-                return "CSS Selector";
-            case "CSS_RULE":
-                return "CSS Rule";
-
-            // HTML-related kinds
-            case "HTML_ELEMENT":
-                return "HTML Element";
-            case "HTML_STRING_ATTRIBUTE":
-                return "HTML Attribute";
-            case "HTML_NAME_ATTRIBUTE":
-                return "HTML Attribute";
-            case "HTML_CLOSING_TAG":
-                return "HTML Tag";
-            case "RESOURCE_BINDING":
-                return "Resource Binding";
-            case "EVENT_BINDING":
-                return "Event Binding";
-            case "INTERPOLATION_ID":
-                return "Interpolation";
-
-            // Angular-specific kinds
-            case "ANGULAR_STRUCTURAL_DIRECTIVE":
-                return "Angular Directive";
-            case "DECORATOR":
-                return "Decorator";
-            case "SELECTOR_STRING":
-                return "Selector";
-
-            // Literal kinds
-            case "STRING_LITERAL":
-                return "String Literal";
-            case "NUMBER_LITERAL":
-                return "Number Literal";
-            case "BOOLEAN_LITERAL":
-                return "Boolean Literal";
-            case "ARITHMETIC_OPERATOR":
-                return "Operator";
-            case "PROPERTY_REFERENCE":
-                return "Property Ref";
-            case "MEMBER_REFERENCE":
-                return "Member Ref";
-            case "MEMBER_ACCESS":
-                return "Member Access";
-            // Other kinds
-            case "LIST_TYPE":
-                return "Array Type";
-            case "TYPE":
-                return "Type";
-            case "ID_REFERENCE":
-                return "Reference";
+            case "IMPORT_ID": return "Import";
+            case "IMPORT_PATH": return "Import Path";
+            case "VARIABLE": return "Variable";
+            case "FUNCTION": case "METHOD": return "Function";
+            case "CLASS": return "Class";
+            case "INTERFACE": return "Interface";
+            case "COMPONENT": return "Component";
+            case "PROPERTY": return "Property";
+            case "PARAMETER": return "Parameter";
+            case "CSS_PROPERTY": return "CSS Property";
+            case "CSS_VALUE": return "CSS Value";
+            case "CSS_SELECTOR": return "CSS Selector";
+            case "CSS_RULE": return "CSS Rule";
+            case "HTML_ELEMENT": return "HTML Element";
+            case "HTML_STRING_ATTRIBUTE": case "HTML_NAME_ATTRIBUTE": return "HTML Attribute";
+            case "HTML_CLOSING_TAG": return "HTML Tag";
+            case "RESOURCE_BINDING": return "Resource Binding";
+            case "EVENT_BINDING": return "Event Binding";
+            case "INTERPOLATION_ID": return "Interpolation";
+            case "ANGULAR_STRUCTURAL_DIRECTIVE": return "Angular Directive";
+            case "DECORATOR": return "Decorator";
+            case "SELECTOR_STRING": return "Selector";
+            case "STRING_LITERAL": return "String Literal";
+            case "NUMBER_LITERAL": return "Number Literal";
+            case "BOOLEAN_LITERAL": return "Boolean Literal";
+            case "ARITHMETIC_OPERATOR": return "Operator";
+            case "PROPERTY_REFERENCE": return "Property Ref";
+            case "MEMBER_REFERENCE": return "Member Ref";
+            case "MEMBER_ACCESS": return "Member Access";
+            case "LIST_TYPE": return "Array Type";
+            case "TYPE": return "Type";
+            case "ID_REFERENCE": return "Reference";
             case "UNDEFINED_VARIABLE": return "Variable";
-            default:
-                return type;
+            case "CSS_LENGTH": return "CSS Length";
+            case "CSS_COLOR": return "CSS Color";
+            case "CSS_PERCENTAGE": return "CSS Percentage";
+            case "CSS_NUMBER": return "CSS Number";
+            case "CSS_BORDER_STYLE": return "CSS Border Style";
+            default: return type;
         }
     }
 
-    // Helper method to format data type
     private String formatDataType(String type) {
         if (type == null) return "N/A";
 
         switch (type.toUpperCase()) {
-            // Existing cases
-            case "IMPORT_ID":
-                return "module";
-            case "IMPORT_PATH":
-                return "string";
-            case "VARIABLE":
-                return "any";
-            case "FUNCTION":
-            case "METHOD":
-                return "function";
-            case "CLASS":
-                return "class";
-            case "INTERFACE":
-                return "interface";
-            case "COMPONENT":
-                return "component";
-            case "PROPERTY":
-                return "property";
-            case "PARAMETER":
-                return "parameter";
-            case "NUMBER_TYPE":
-                return "number";
-            case "BOOLEAN_TYPE":
-                return "boolean";
-            case "ARITHMETIC_OPERATOR":
-                return "operator";
-            case "PROPERTY_REFERENCE":
-                return "property-ref";
-            case "MEMBER_REFERENCE":
-                return "member-ref";
-            case "MEMBER_ACCESS":
-                return "member-access";
-            // CSS-related data types
-            case "CSS_PROPERTY":
-                return "css-property";
-            case "CSS_VALUE":
-                return "css-value";
-            case "CSS_SELECTOR":
-                return "css-selector";
-            case "CSS_RULE":
-                return "css-rule";
-            case "UNDEFINED_VARIABLE": return "any";
-            // HTML-related data types
-            case "HTML_ELEMENT":
-                return "html-element";
-            case "HTML_STRING_ATTRIBUTE":
-                return "html-attribute";
-            case "HTML_NAME_ATTRIBUTE":
-                return "html-attribute";
-            case "HTML_CLOSING_TAG":
-                return "html-tag";
-            case "RESOURCE_BINDING":
-                return "binding";
-            case "EVENT_BINDING":
-                return "event-binding";
-            case "INTERPOLATION_ID":
-                return "interpolation";
+            // Import types
+            case "IMPORT_ID": return "module";
+            case "IMPORT_PATH": return "string";
 
-            // Angular-specific data types
-            case "ANGULAR_STRUCTURAL_DIRECTIVE":
-                return "directive";
-            case "DECORATOR":
-                return "decorator";
-            case "SELECTOR_STRING":
-                return "selector";
+            // Variable and reference types
+            case "VARIABLE": case "UNDEFINED_VARIABLE": return "any";
+            case "ID_REFERENCE": return "reference";
+            case "PROPERTY_REFERENCE": return "property";
+            case "MEMBER_REFERENCE": return "member";
+            case "MEMBER_ACCESS": return "member";
 
-            // Literal data types
-            case "STRING_LITERAL":
-                return "string";
-            case "NUMBER_LITERAL":
-                return "number";
-            case "BOOLEAN_LITERAL":
-                return "boolean";
+            // Function and method types
+            case "FUNCTION": case "METHOD": return "function";
+            case "PARAMETER": return "parameter";
 
-            // Other types
-            case "LIST_TYPE":
-                return "array";
-            case "TYPE":
-                return "type";
-            case "ID_REFERENCE":
-                return "reference";
+            // Class and interface types
+            case "CLASS": return "class";
+            case "INTERFACE": return "interface";
+            case "COMPONENT": return "component";
+            case "PROPERTY": return "property";
 
-            default:
-                return "unknown";
+            // Literal types
+            case "STRING_LITERAL": return "string";
+            case "NUMBER_LITERAL": return "number";
+            case "BOOLEAN_LITERAL": return "boolean";
+
+            // Explicit type declarations
+            case "NUMBER_TYPE": return "number";
+            case "BOOLEAN_TYPE": return "boolean";
+            case "STRING_TYPE": return "string";
+            case "LIST_TYPE": return "array";
+            case "TYPE": return "type";
+
+            // CSS types
+            case "CSS_PROPERTY": return "css-property";
+            case "CSS_VALUE": return "css-value";
+            case "CSS_SELECTOR": return "css-selector";
+            case "CSS_RULE": return "css-rule";
+            case "CSS_LENGTH": return "length";
+            case "CSS_COLOR": return "color";
+            case "CSS_PERCENTAGE": return "percentage";
+            case "CSS_NUMBER": return "css-number";
+            case "CSS_BORDER_STYLE": return "border-style";
+
+            // HTML types
+            case "HTML_ELEMENT": return "html-element";
+            case "HTML_STRING_ATTRIBUTE": return "html-attribute";
+            case "HTML_NAME_ATTRIBUTE": return "html-attribute";
+            case "HTML_CLOSING_TAG": return "html-tag";
+
+            // Angular specific types
+            case "RESOURCE_BINDING": return "binding";
+            case "EVENT_BINDING": return "event-binding";
+            case "INTERPOLATION_ID": return "interpolation";
+            case "ANGULAR_STRUCTURAL_DIRECTIVE": return "directive";
+            case "DECORATOR": return "decorator";
+            case "SELECTOR_STRING": return "selector";
+
+            // Operator types
+            case "ARITHMETIC_OPERATOR": return "operator";
+
+            // Default case
+            default: return "any";
         }
     }
 
-    // Helper method to format scope name
     private static String formatScope(String scopeName) {
         if (scopeName == null) return "Unknown";
 
+        // Better scope name formatting
         switch (scopeName.toUpperCase()) {
-            case "GLOBAL":
-                return "Global";
-            case "CLASS":
-                return "Class";
-            case "INTERFACE":
-                return "Interface";
-            case "METHOD":
-                return "Method";
-            case "COMPONENT":
-                return "Component";
+            case "GLOBAL": return "Global";
+            case "CLASS": return "Class";
+            case "INTERFACE": return "Interface";
+            case "METHOD": return "Method";
+            case "COMPONENT": return "Component";
+            case "TEMPLATE": return "Template";
+            case "CSS_ELEMENT": return "CSS";
+
             default:
-                return scopeName.toLowerCase();
+                // Capitalize first letter and handle underscores
+                String formatted = scopeName.toLowerCase().replace("_", " ");
+                return formatted.substring(0, 1).toUpperCase() + formatted.substring(1);
         }
     }
 
-    // Print scope hierarchy - now shows ALL scopes created
-    public void printScopeHierarchy() {
-        System.out.println("\n=== SCOPE HIERARCHY ===");
-        System.out.println("Current scope stack:");
-        for (int i = 0; i < scopeStack.size(); i++) {
-            Scope scope = scopeStack.get(i);
-            String indent = "  ".repeat(i);
-            System.out.println(indent + "Scope: " + scope.getScopeName() +
-                    " (ID: " + scope.getScopeId() +
-                    ", Symbols: " + scope.getSymbolCount() + ")");
+    // Snapshot class
+    public static class SymbolTableSnapshot {
+        private final Set<String> relevantTokens;
+        private final List<Row> relevantSymbols;
+        private final List<ScopeInfo> currentScopeStack;
+
+        public SymbolTableSnapshot(Set<String> relevantTokens, List<Row> relevantSymbols,
+                                   List<ScopeInfo> currentScopeStack) {
+            this.relevantTokens = relevantTokens;
+            this.relevantSymbols = relevantSymbols;
+            this.currentScopeStack = currentScopeStack;
         }
 
-        System.out.println("\nAll scopes created:");
-        for (Scope scope : allScopes) {
-            System.out.println("  Scope: " + scope.getScopeName() +
-                    " (ID: " + scope.getScopeId() +
-                    ", Symbols: " + scope.getSymbolCount() + ")");
+        public void print() {
+            if (relevantSymbols.isEmpty()) {
+                System.out.println("  No relevant symbols found");
+                return;
+            }
+
+            System.out.println("  | Identifier         | Kind             | Scope                |");
+            System.out.println("  | ------------------ | ---------------- | -------------------- |");
+
+            for (Row row : relevantSymbols) {
+                String identifier = formatIdentifier(row.getValue());
+                String kind = formatKind(row.getType());
+                String scope = formatScope(row.getScopeName());
+                System.out.printf("  | %-18s | %-16s | %-20s |%n", identifier, kind, scope);
+            }
+
+            System.out.println("  Current scope stack:");
+            for (ScopeInfo scope : currentScopeStack) {
+                System.out.println("    - " + scope.getScopeName() +
+                        " [" + scope.getScopeType() + "] (ID: " + scope.getScopeId() + ")");
+            }
         }
-        System.out.println("=======================\n");
     }
 }
 
-// NEW: ScopeInfo class for transferring scope information
+// Enhanced ScopeInfo class
 class ScopeInfo {
     private int scopeId;
     private String scopeName;
+    private String scopeType;
     private int parentScopeId;
     private int symbolCount;
 
-    public ScopeInfo(int scopeId, String scopeName, int parentScopeId, int symbolCount) {
+    public ScopeInfo(int scopeId, String scopeName, String scopeType,
+                     int parentScopeId, int symbolCount) {
         this.scopeId = scopeId;
         this.scopeName = scopeName;
+        this.scopeType = scopeType;
         this.parentScopeId = parentScopeId;
         this.symbolCount = symbolCount;
     }
@@ -511,20 +491,23 @@ class ScopeInfo {
     // Getters
     public int getScopeId() { return scopeId; }
     public String getScopeName() { return scopeName; }
+    public String getScopeType() { return scopeType; }
     public int getParentScopeId() { return parentScopeId; }
     public int getSymbolCount() { return symbolCount; }
 }
 
-// Scope class remains the same
+// Enhanced Scope class
 class Scope {
     private int scopeId;
     private String scopeName;
+    private String scopeType;
     private int parentScopeId;
-    private Map<String, Row> symbols; // Use Map for efficient lookup
+    private Map<String, Row> symbols;
 
-    public Scope(int scopeId, String scopeName, int parentScopeId) {
+    public Scope(int scopeId, String scopeName, String scopeType, int parentScopeId) {
         this.scopeId = scopeId;
         this.scopeName = scopeName;
+        this.scopeType = scopeType;
         this.parentScopeId = parentScopeId;
         this.symbols = new HashMap<>();
     }
@@ -532,6 +515,11 @@ class Scope {
     public void setScopeName(String scopeName) {
         this.scopeName = scopeName;
     }
+
+    public void setScopeType(String scopeType) {
+        this.scopeType = scopeType;
+    }
+
     public void addSymbol(Row symbol) {
         symbols.put(symbol.getValue(), symbol);
     }
@@ -551,8 +539,6 @@ class Scope {
     // Getters
     public int getScopeId() { return scopeId; }
     public String getScopeName() { return scopeName; }
+    public String getScopeType() { return scopeType; }
     public int getParentScopeId() { return parentScopeId; }
-    public String getScopeType() {
-        return scopeName;  // Return the scope name which represents the type
-    }
 }

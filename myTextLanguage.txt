@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-
+import { CommonModule } from '@angular/common';
 
 interface Product {
   id: number;
@@ -57,7 +57,7 @@ interface Product {
       <div class="product-list">
         <h3>Products</h3>
         <ul>
-          <li ngFor="let product of products" (click)="selectProduct(product)">
+          <li *ngFor="let product of products" (click)="selectProduct(product)">
             <img [src]="product.imageUrl" alt="{{ product.name }}" />
             <p>{{ product.name }}</p>
           </li>
