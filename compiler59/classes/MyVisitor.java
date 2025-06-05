@@ -268,7 +268,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             if (!symbolTable.existsInCurrentScope(propertyId)) {
                 symbolTable.addSymbol("PROPERTY", propertyId);
 
-                        symbolTable.getCurrentScopeName();
+                symbolTable.getCurrentScopeName();
             }
         }
 
@@ -648,7 +648,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             }
 
 
-                statementMethod.setReturnN(visitReturn(ctx.return_()));
+            statementMethod.setReturnN(visitReturn(ctx.return_()));
 
         }
 
@@ -1071,6 +1071,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         if (ctx.TAG_CLOSE_START_HTML() != null) {
             String tagName = ctx.TAG_CLOSE_START_HTML().getText();
             closingTag.setNAME_HTML(tagName);
+
             if (!symbolTable.existsInCurrentScope(tagName)) {
                 symbolTable.addSymbol("HTML_CLOSING_TAG", tagName);
             }

@@ -32,7 +32,9 @@ public class ASTTreePrinter {
         if (node == null) return "null";
 
         if (node instanceof Program) {
-            return "Program";
+            Program program = (Program) node;
+            int statementCount = program.getStatments().size();
+            return "Program (" + statementCount + " statement" + (statementCount != 1 ? "s" : "") + ")";
         } else if (node instanceof Statment) {
             Statment stmt = (Statment) node;
             if (stmt.getImportDeclaration() != null) return "ImportStatement";
@@ -43,7 +45,9 @@ public class ASTTreePrinter {
             return "Statement";
         } else if (node instanceof ImportDeclaration) {
             ImportDeclaration imp = (ImportDeclaration) node;
-            return "Import: " + imp.getId() + " from " + imp.getString_lit();
+            String id = imp.getId() != null ? imp.getId() : "(default)";
+            String source = imp.getString_lit() != null ? imp.getString_lit() : "(unknown)";
+            return "Import: " + id + " from " + source;
         } else if (node instanceof ClassDeclaration) {
             return "Class: " + ((ClassDeclaration) node).getNameClass();
         } else if (node instanceof InterfaceDeclaration) {
@@ -51,7 +55,9 @@ public class ASTTreePrinter {
         } else if (node instanceof ComponentDeclaration) {
             return "ComponentDeclaration";
         } else if (node instanceof ComponentDeclarationBody) {
-            return "ComponentBody";
+            ComponentDeclarationBody body = (ComponentDeclarationBody) node;
+            int elementCount = body.getComponentBodyElements().size();
+            return "ComponentBody (" + elementCount + " element" + (elementCount != 1 ? "s" : "") + ")";
         } else if (node instanceof ComponentBodyElement) {
             ComponentBodyElement elem = (ComponentBodyElement) node;
             if (elem.getSelector() != null) return "Selector";
@@ -65,10 +71,14 @@ public class ASTTreePrinter {
         } else if (node instanceof Standalone) {
             return "Standalone: " + ((Standalone) node).isIsboolean().getTruev();
         } else if (node instanceof Template) {
-            return "Template";
+            List<Element> elements = ((Template) node).getElement();
+            int elementCount = elements.size();
+            return "Template (" + elementCount + " root elements)";
         } else if (node instanceof Element) {
             Element elem = (Element) node;
-            if (elem.getHtmlName() != null) return "Element: " + elem.getHtmlName();
+            if (elem.getHtmlName() != null) {
+                return "Element: <" + elem.getHtmlName() + ">";
+            }
             return "Element";
         } else if (node instanceof Interpolation) {
             return "Interpolation: {{ " + ((Interpolation) node).getNAME_HTML() + " }}";
@@ -101,13 +111,26 @@ public class ASTTreePrinter {
             return "Method: " + method.getName() +
                     (method.getTypeReturn() != null ? " : " + getTypeName(method.getTypeReturn()) : "");
         } else if (node instanceof MethodBody) {
-            return "MethodBody";
+            MethodBody body = (MethodBody) node;
+            int statementCount = body.getStatementMethods().size();
+            return "MethodBody (" + statementCount + " statement" + (statementCount != 1 ? "s" : "") + ")";
         } else if (node instanceof StatementMethod) {
-            return "Statement: " + node.getClass().getSimpleName();
+            StatementMethod stmt = (StatementMethod) node;
+            if (stmt.getVariable() != null && !stmt.getVariable().isEmpty()) {
+                return "Assignment: " + String.join(", ", stmt.getVariable()) + " = ...";
+            } else if (stmt.isIsreturn()) {
+                return "Return statement";
+            } else if (stmt.getExpression() != null) {
+                return "Expression statement";
+            }
+            return "StatementMethod";
         } else if (node instanceof Styles) {
             return "Styles";
         } else if (node instanceof CssBody) {
-            return "CSS Body";
+            CssBody cssBody = (CssBody) node;
+            int ruleCount = cssBody.getCssObjects() != null ?
+                    cssBody.getCssObjects().getCssElementlist().size() : 0;
+            return "CSS Body (" + ruleCount + " rule" + (ruleCount != 1 ? "s" : "") + ")";
         } else if (node instanceof CssElement) {
             return "CSS Rule";
         } else if (node instanceof Bodyelement) {
@@ -122,7 +145,11 @@ public class ASTTreePrinter {
         if (type.getIsboolean() != null) return "boolean";
         if (type.getNumber_type() != null) return "number";
         if (type.getString_type() != null) return type.getString_type();
-        if (type.getListV() != null) return "Array";
+        if (type.getListV() != null) {
+            String elementType = type.getListV().getNameList() != null ?
+                    type.getListV().getNameList() : "any";
+            return "Array<" + elementType + ">";
+        }
         return "any";
     }
 
@@ -176,7 +203,6 @@ public class ASTTreePrinter {
             if (member.getPropertyDeclaration() != null) return List.of(member.getPropertyDeclaration());
             if (member.getMethodDeclaration() != null) return List.of(member.getMethodDeclaration());
         } else if (node instanceof StatementMethod) {
-            // Handle children of StatementMethod here when implemented
             return null;
         }
         return null;
