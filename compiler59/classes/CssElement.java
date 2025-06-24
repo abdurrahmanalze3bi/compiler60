@@ -2,22 +2,28 @@ package classes;
 
 import java.util.ArrayList;
 import java.util.List;
-
 public class CssElement {
-    List<Bodyelement> bodyElements =new ArrayList<>();
+    // Existing fields
+    private List<Bodyelement> bodyCssElements = new ArrayList<>();
 
+    // New field for CSS selectors
+    private List<String> selectors = new ArrayList<>();
+
+    // Existing methods
     public List<Bodyelement> getBodyCssElements() {
-        return bodyElements;
+        return bodyCssElements;
     }
 
-    public void setBodyCssElements(List<Bodyelement> bodyCssElements) {
-        this.bodyElements = bodyCssElements;
+    public void addBodyCssElement(Bodyelement element) {
+        bodyCssElements.add(element);
     }
 
-    @Override
-    public String toString() {
-        return "\nCssElement{" +
-                "\nbodyElements=" + bodyElements +
-                "\n}";
+    // New methods for selectors
+    public List<String> getSelectors() {
+        return selectors;
+    }
+
+    public void addSelector(String selector) {
+        selectors.add(selector);
     }
 }

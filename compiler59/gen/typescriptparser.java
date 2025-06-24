@@ -803,6 +803,18 @@ public class typescriptparser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class StylesContext extends ParserRuleContext {
+		public StylesContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_styles; }
+	 
+		public StylesContext() { }
+		public void copyFrom(StylesContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class StylesRuleContext extends StylesContext {
 		public TerminalNode STYLES() { return getToken(typescriptparser.STYLES, 0); }
 		public TerminalNode COLON_CSS() { return getToken(typescriptparser.COLON_CSS, 0); }
 		public TerminalNode OPEN_LIST() { return getToken(typescriptparser.OPEN_LIST, 0); }
@@ -811,21 +823,18 @@ public class typescriptparser extends Parser {
 		}
 		public TerminalNode CLOSE_LIST() { return getToken(typescriptparser.CLOSE_LIST, 0); }
 		public TerminalNode COMMA() { return getToken(typescriptparser.COMMA, 0); }
-		public StylesContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_styles; }
+		public StylesRuleContext(StylesContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterStyles(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterStylesRule(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitStyles(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitStylesRule(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitStyles(this);
+			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitStylesRule(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -834,6 +843,7 @@ public class typescriptparser extends Parser {
 		StylesContext _localctx = new StylesContext(_ctx, getState());
 		enterRule(_localctx, 18, RULE_styles);
 		try {
+			_localctx = new StylesRuleContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(159);
@@ -3417,6 +3427,18 @@ public class typescriptparser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class CssBodyContext extends ParserRuleContext {
+		public CssBodyContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_cssBody; }
+	 
+		public CssBodyContext() { }
+		public void copyFrom(CssBodyContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class CssBodyRuleContext extends CssBodyContext {
 		public List<TerminalNode> BACKTICK_CSS() { return getTokens(typescriptparser.BACKTICK_CSS); }
 		public TerminalNode BACKTICK_CSS(int i) {
 			return getToken(typescriptparser.BACKTICK_CSS, i);
@@ -3425,21 +3447,18 @@ public class typescriptparser extends Parser {
 			return getRuleContext(CssObjectsContext.class,0);
 		}
 		public TerminalNode COMMA_CSS() { return getToken(typescriptparser.COMMA_CSS, 0); }
-		public CssBodyContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_cssBody; }
+		public CssBodyRuleContext(CssBodyContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterCssBody(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterCssBodyRule(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitCssBody(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitCssBodyRule(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitCssBody(this);
+			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitCssBodyRule(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -3449,6 +3468,7 @@ public class typescriptparser extends Parser {
 		enterRule(_localctx, 86, RULE_cssBody);
 		int _la;
 		try {
+			_localctx = new CssBodyRuleContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(485);
@@ -3482,6 +3502,18 @@ public class typescriptparser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class CssObjectsContext extends ParserRuleContext {
+		public CssObjectsContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_cssObjects; }
+	 
+		public CssObjectsContext() { }
+		public void copyFrom(CssObjectsContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class CssObjectsRuleContext extends CssObjectsContext {
 		public List<CsselementContext> csselement() {
 			return getRuleContexts(CsselementContext.class);
 		}
@@ -3492,21 +3524,18 @@ public class typescriptparser extends Parser {
 		public TerminalNode COMMA_CSS(int i) {
 			return getToken(typescriptparser.COMMA_CSS, i);
 		}
-		public CssObjectsContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_cssObjects; }
+		public CssObjectsRuleContext(CssObjectsContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterCssObjects(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterCssObjectsRule(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitCssObjects(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitCssObjectsRule(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitCssObjects(this);
+			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitCssObjectsRule(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -3516,6 +3545,7 @@ public class typescriptparser extends Parser {
 		enterRule(_localctx, 88, RULE_cssObjects);
 		int _la;
 		try {
+			_localctx = new CssObjectsRuleContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(492);
@@ -3567,6 +3597,18 @@ public class typescriptparser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class CsselementContext extends ParserRuleContext {
+		public CsselementContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_csselement; }
+	 
+		public CsselementContext() { }
+		public void copyFrom(CsselementContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class CssElementRuleContext extends CsselementContext {
 		public TerminalNode DOT_CSS() { return getToken(typescriptparser.DOT_CSS, 0); }
 		public TerminalNode LBRACE_CSS() { return getToken(typescriptparser.LBRACE_CSS, 0); }
 		public TerminalNode RBRACE_CSS() { return getToken(typescriptparser.RBRACE_CSS, 0); }
@@ -3580,21 +3622,18 @@ public class typescriptparser extends Parser {
 		public BodyelementContext bodyelement(int i) {
 			return getRuleContext(BodyelementContext.class,i);
 		}
-		public CsselementContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_csselement; }
+		public CssElementRuleContext(CsselementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterCsselement(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterCssElementRule(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitCsselement(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitCssElementRule(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitCsselement(this);
+			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitCssElementRule(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -3604,6 +3643,7 @@ public class typescriptparser extends Parser {
 		enterRule(_localctx, 90, RULE_csselement);
 		int _la;
 		try {
+			_localctx = new CssElementRuleContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(503);
@@ -3655,27 +3695,36 @@ public class typescriptparser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class BodyelementContext extends ParserRuleContext {
+		public BodyelementContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_bodyelement; }
+	 
+		public BodyelementContext() { }
+		public void copyFrom(BodyelementContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
+	public static class CssDeclarationContext extends BodyelementContext {
 		public TerminalNode ID_CSS() { return getToken(typescriptparser.ID_CSS, 0); }
 		public TerminalNode COLON_CSS() { return getToken(typescriptparser.COLON_CSS, 0); }
 		public CssValueContext cssValue() {
 			return getRuleContext(CssValueContext.class,0);
 		}
 		public TerminalNode SEMICOLON_CSS() { return getToken(typescriptparser.SEMICOLON_CSS, 0); }
-		public BodyelementContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_bodyelement; }
+		public CssDeclarationContext(BodyelementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterBodyelement(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).enterCssDeclaration(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitBodyelement(this);
+			if ( listener instanceof typescriptparserListener ) ((typescriptparserListener)listener).exitCssDeclaration(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitBodyelement(this);
+			if ( visitor instanceof typescriptparserVisitor ) return ((typescriptparserVisitor<? extends T>)visitor).visitCssDeclaration(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -3684,6 +3733,7 @@ public class typescriptparser extends Parser {
 		BodyelementContext _localctx = new BodyelementContext(_ctx, getState());
 		enterRule(_localctx, 92, RULE_bodyelement);
 		try {
+			_localctx = new CssDeclarationContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(517);

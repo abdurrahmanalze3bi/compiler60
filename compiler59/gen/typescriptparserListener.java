@@ -98,15 +98,17 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitTemplate(typescriptparser.TemplateContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#styles}.
+	 * Enter a parse tree produced by the {@code StylesRule}
+	 * labeled alternative in {@link typescriptparser#styles}.
 	 * @param ctx the parse tree
 	 */
-	void enterStyles(typescriptparser.StylesContext ctx);
+	void enterStylesRule(typescriptparser.StylesRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#styles}.
+	 * Exit a parse tree produced by the {@code StylesRule}
+	 * labeled alternative in {@link typescriptparser#styles}.
 	 * @param ctx the parse tree
 	 */
-	void exitStyles(typescriptparser.StylesContext ctx);
+	void exitStylesRule(typescriptparser.StylesRuleContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link typescriptparser#isboolean}.
 	 * @param ctx the parse tree
@@ -438,45 +440,53 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitInterpolation(typescriptparser.InterpolationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#cssBody}.
+	 * Enter a parse tree produced by the {@code CssBodyRule}
+	 * labeled alternative in {@link typescriptparser#cssBody}.
 	 * @param ctx the parse tree
 	 */
-	void enterCssBody(typescriptparser.CssBodyContext ctx);
+	void enterCssBodyRule(typescriptparser.CssBodyRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#cssBody}.
+	 * Exit a parse tree produced by the {@code CssBodyRule}
+	 * labeled alternative in {@link typescriptparser#cssBody}.
 	 * @param ctx the parse tree
 	 */
-	void exitCssBody(typescriptparser.CssBodyContext ctx);
+	void exitCssBodyRule(typescriptparser.CssBodyRuleContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#cssObjects}.
+	 * Enter a parse tree produced by the {@code CssObjectsRule}
+	 * labeled alternative in {@link typescriptparser#cssObjects}.
 	 * @param ctx the parse tree
 	 */
-	void enterCssObjects(typescriptparser.CssObjectsContext ctx);
+	void enterCssObjectsRule(typescriptparser.CssObjectsRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#cssObjects}.
+	 * Exit a parse tree produced by the {@code CssObjectsRule}
+	 * labeled alternative in {@link typescriptparser#cssObjects}.
 	 * @param ctx the parse tree
 	 */
-	void exitCssObjects(typescriptparser.CssObjectsContext ctx);
+	void exitCssObjectsRule(typescriptparser.CssObjectsRuleContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#csselement}.
+	 * Enter a parse tree produced by the {@code CssElementRule}
+	 * labeled alternative in {@link typescriptparser#csselement}.
 	 * @param ctx the parse tree
 	 */
-	void enterCsselement(typescriptparser.CsselementContext ctx);
+	void enterCssElementRule(typescriptparser.CssElementRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#csselement}.
+	 * Exit a parse tree produced by the {@code CssElementRule}
+	 * labeled alternative in {@link typescriptparser#csselement}.
 	 * @param ctx the parse tree
 	 */
-	void exitCsselement(typescriptparser.CsselementContext ctx);
+	void exitCssElementRule(typescriptparser.CssElementRuleContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#bodyelement}.
+	 * Enter a parse tree produced by the {@code CssDeclaration}
+	 * labeled alternative in {@link typescriptparser#bodyelement}.
 	 * @param ctx the parse tree
 	 */
-	void enterBodyelement(typescriptparser.BodyelementContext ctx);
+	void enterCssDeclaration(typescriptparser.CssDeclarationContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#bodyelement}.
+	 * Exit a parse tree produced by the {@code CssDeclaration}
+	 * labeled alternative in {@link typescriptparser#bodyelement}.
 	 * @param ctx the parse tree
 	 */
-	void exitBodyelement(typescriptparser.BodyelementContext ctx);
+	void exitCssDeclaration(typescriptparser.CssDeclarationContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code PercentValue}
 	 * labeled alternative in {@link typescriptparser#cssValue}.

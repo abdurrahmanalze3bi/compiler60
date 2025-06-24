@@ -81,7 +81,7 @@ public class typescriptparserBaseVisitor<T> extends AbstractParseTreeVisitor<T> 
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitStyles(typescriptparser.StylesContext ctx) { return visitChildren(ctx); }
+	@Override public T visitStylesRule(typescriptparser.StylesRuleContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -319,28 +319,28 @@ public class typescriptparserBaseVisitor<T> extends AbstractParseTreeVisitor<T> 
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitCssBody(typescriptparser.CssBodyContext ctx) { return visitChildren(ctx); }
+	@Override public T visitCssBodyRule(typescriptparser.CssBodyRuleContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitCssObjects(typescriptparser.CssObjectsContext ctx) { return visitChildren(ctx); }
+	@Override public T visitCssObjectsRule(typescriptparser.CssObjectsRuleContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitCsselement(typescriptparser.CsselementContext ctx) { return visitChildren(ctx); }
+	@Override public T visitCssElementRule(typescriptparser.CssElementRuleContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitBodyelement(typescriptparser.BodyelementContext ctx) { return visitChildren(ctx); }
+	@Override public T visitCssDeclaration(typescriptparser.CssDeclarationContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

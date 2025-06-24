@@ -1200,62 +1200,140 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return selfClosingTag;
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Override
-    public Styles visitStyles(typescriptparser.StylesContext ctx) {
+    public Styles visitStylesRule(typescriptparser.StylesRuleContext ctx) {
         Styles styles = new Styles();
-        if (ctx.cssBody() != null) {
-            styles.setCssBody(visitCssBody(ctx.cssBody()));
-        }
+
+        // Process CSS body (guaranteed to exist)
+        symbolTable.enterScope("STYLES");
+        styles.setCssBody((CssBody) visit(ctx.cssBody()));
+        symbolTable.exitScope();
+
         return styles;
     }
 
     @Override
-    public CssBody visitCssBody(typescriptparser.CssBodyContext ctx) {
+    public CssBody visitCssBodyRule(typescriptparser.CssBodyRuleContext ctx) {
         CssBody cssBody = new CssBody();
-        if (ctx.cssObjects() != null) {
-            symbolTable.enterScope("CSS_OBJECTS");
-            cssBody.setCssObjects(visitCssObjects(ctx.cssObjects()));
-            symbolTable.exitScope();
-        }
+
+        // Process CSS objects (guaranteed to exist)
+        symbolTable.enterScope("CSS_OBJECTS");
+        cssBody.setCssObjects((CssObjects) visit(ctx.cssObjects()));
+        symbolTable.exitScope();
+
         return cssBody;
     }
 
     @Override
-    public CssObjects visitCssObjects(typescriptparser.CssObjectsContext ctx) {
+    public CssObjects visitCssObjectsRule(typescriptparser.CssObjectsRuleContext ctx) {
         CssObjects cssObjects = new CssObjects();
 
+        // Process all CSS elements (guaranteed to be 0 or more)
         for (typescriptparser.CsselementContext eCtx : ctx.csselement()) {
             symbolTable.enterScope("CSS_ELEMENT");
-            cssObjects.getCssElementlist().add(visitCsselement(eCtx));
+            // Dispatch to visitCssElementRule automatically
+            cssObjects.getCssElementlist().add((CssElement) visit(eCtx));
             symbolTable.exitScope();
         }
 
         return cssObjects;
     }
     @Override
-    public CssElement visitCsselement(typescriptparser.CsselementContext ctx) {
+    public CssElement visitCssElementRule(typescriptparser.CssElementRuleContext ctx) {
         CssElement cssElement = new CssElement();
 
+        // Process CSS selectors
+        for (TerminalNode idNode : ctx.ID_CSS()) {
+            String selector = idNode.getText();
+
+            // Add selector to CSS element using new method
+            cssElement.addSelector(selector);
+
+            // Add to symbol table
+            if (!symbolTable.existsInCurrentScope(selector)) {
+                symbolTable.addSymbol("CSS_SELECTOR", selector);
+            }
+        }
+
+
         for (typescriptparser.BodyelementContext beCtx : ctx.bodyelement()) {
-            cssElement.getBodyCssElements().add(visitBodyelement(beCtx));
+            // This will route to visitCssDeclaration
+            Bodyelement bodyElement = (Bodyelement) visit(beCtx);
+            cssElement.addBodyCssElement(bodyElement);
         }
 
         return cssElement;
     }
     @Override
-    public Bodyelement visitBodyelement(typescriptparser.BodyelementContext ctx) {
+    public Bodyelement visitCssDeclaration(typescriptparser.CssDeclarationContext ctx) {
         Bodyelement bodyelement = new Bodyelement();
-        if (ctx.ID_CSS() != null) {
-            String cssId = ctx.ID_CSS().getText();
-            bodyelement.setId_css(cssId);
-            if (!symbolTable.existsInCurrentScope(cssId)) {
-                symbolTable.addSymbol("CSS_PROPERTY", cssId);
-            }
+
+        // Process CSS property name (guaranteed to exist)
+        String cssId = ctx.ID_CSS().getText();
+        bodyelement.setId_css(cssId);
+
+        // Add CSS property to symbol table
+        if (!symbolTable.existsInCurrentScope(cssId)) {
+            symbolTable.addSymbol("CSS_PROPERTY", cssId);
         }
-        if (ctx.cssValue() != null) {
-            // Dispatch to correct labeled alternative (PercentValue/IdValue)
-            bodyelement.setCssValue((CssValue) visit(ctx.cssValue()));
-        }
+
+        // Process CSS value (guaranteed to exist)
+        CssValue cssValue = (CssValue) visit(ctx.cssValue());
+        bodyelement.setCssValue(cssValue);
+
         return bodyelement;
     }
 
@@ -1305,6 +1383,39 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return cssValue;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public InterfaceDeclaration visitInterfaceDeclaration(typescriptparser.InterfaceDeclarationContext ctx) {

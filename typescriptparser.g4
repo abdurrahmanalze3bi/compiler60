@@ -25,21 +25,23 @@ componentDeclarationBody
     : componentBodyElement (COMMA componentBodyElement)* ;
 
 
-    componentBodyElement
-        : selector
-        | standalone
-        | importDeclaration
-        | template
-        | styles;
+   componentBodyElement
+       : selector             # SelectorElement
+       | standalone           # StandaloneElement
+       | importDeclaration    # ImportElement
+       | template             # TemplateElement
+       | styles               # StylesElement
+   ;
+
 selector :SELECTOR COLON STRING_LIT ;
 standalone : STANDALONE COLON isboolean  ;
 template
     : TEMPLATE COLON_HTML BACKTICK_HTML  element* END_TEMPLATE
     ;
 
-styles :STYLES COLON_CSS OPEN_LIST cssBody CLOSE_LIST COMMA? ;
-
-
+styles :
+    STYLES COLON_CSS OPEN_LIST cssBody CLOSE_LIST COMMA? # StylesRule
+;
 
 
 isboolean :TRUE | FALSE;
@@ -213,10 +215,20 @@ interpolation
     ;
 
 
-    cssBody : BACKTICK_CSS  cssObjects  BACKTICK_CSS COMMA_CSS?;
-cssObjects : csselement? (COMMA_CSS? csselement)*;
-    csselement : DOT_CSS ID_CSS+ LBRACE_CSS bodyelement+ RBRACE_CSS;
-    bodyelement : ID_CSS COLON_CSS cssValue SEMICOLON_CSS;
+  cssBody :
+      BACKTICK_CSS cssObjects BACKTICK_CSS COMMA_CSS? # CssBodyRule
+  ;
+cssObjects :
+    csselement? (COMMA_CSS? csselement)* # CssObjectsRule
+;
+
+
+   csselement :
+       DOT_CSS ID_CSS+ LBRACE_CSS bodyelement+ RBRACE_CSS # CssElementRule
+   ;
+ bodyelement :
+     ID_CSS COLON_CSS cssValue SEMICOLON_CSS # CssDeclaration
+ ;
 
 // Updated cssValue rule with labels
 cssValue : PERCENT (ID_CSS ID_CSS?)?     # PercentValue

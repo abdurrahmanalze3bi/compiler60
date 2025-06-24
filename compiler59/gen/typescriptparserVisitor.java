@@ -65,11 +65,12 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitTemplate(typescriptparser.TemplateContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#styles}.
+	 * Visit a parse tree produced by the {@code StylesRule}
+	 * labeled alternative in {@link typescriptparser#styles}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitStyles(typescriptparser.StylesContext ctx);
+	T visitStylesRule(typescriptparser.StylesRuleContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link typescriptparser#isboolean}.
 	 * @param ctx the parse tree
@@ -269,29 +270,33 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitInterpolation(typescriptparser.InterpolationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#cssBody}.
+	 * Visit a parse tree produced by the {@code CssBodyRule}
+	 * labeled alternative in {@link typescriptparser#cssBody}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCssBody(typescriptparser.CssBodyContext ctx);
+	T visitCssBodyRule(typescriptparser.CssBodyRuleContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#cssObjects}.
+	 * Visit a parse tree produced by the {@code CssObjectsRule}
+	 * labeled alternative in {@link typescriptparser#cssObjects}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCssObjects(typescriptparser.CssObjectsContext ctx);
+	T visitCssObjectsRule(typescriptparser.CssObjectsRuleContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#csselement}.
+	 * Visit a parse tree produced by the {@code CssElementRule}
+	 * labeled alternative in {@link typescriptparser#csselement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCsselement(typescriptparser.CsselementContext ctx);
+	T visitCssElementRule(typescriptparser.CssElementRuleContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#bodyelement}.
+	 * Visit a parse tree produced by the {@code CssDeclaration}
+	 * labeled alternative in {@link typescriptparser#bodyelement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBodyelement(typescriptparser.BodyelementContext ctx);
+	T visitCssDeclaration(typescriptparser.CssDeclarationContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code PercentValue}
 	 * labeled alternative in {@link typescriptparser#cssValue}.

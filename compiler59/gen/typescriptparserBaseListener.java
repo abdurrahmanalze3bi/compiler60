@@ -125,13 +125,13 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStyles(typescriptparser.StylesContext ctx) { }
+	@Override public void enterStylesRule(typescriptparser.StylesRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitStyles(typescriptparser.StylesContext ctx) { }
+	@Override public void exitStylesRule(typescriptparser.StylesRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -533,49 +533,49 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCssBody(typescriptparser.CssBodyContext ctx) { }
+	@Override public void enterCssBodyRule(typescriptparser.CssBodyRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCssBody(typescriptparser.CssBodyContext ctx) { }
+	@Override public void exitCssBodyRule(typescriptparser.CssBodyRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCssObjects(typescriptparser.CssObjectsContext ctx) { }
+	@Override public void enterCssObjectsRule(typescriptparser.CssObjectsRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCssObjects(typescriptparser.CssObjectsContext ctx) { }
+	@Override public void exitCssObjectsRule(typescriptparser.CssObjectsRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCsselement(typescriptparser.CsselementContext ctx) { }
+	@Override public void enterCssElementRule(typescriptparser.CssElementRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCsselement(typescriptparser.CsselementContext ctx) { }
+	@Override public void exitCssElementRule(typescriptparser.CssElementRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBodyelement(typescriptparser.BodyelementContext ctx) { }
+	@Override public void enterCssDeclaration(typescriptparser.CssDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBodyelement(typescriptparser.BodyelementContext ctx) { }
+	@Override public void exitCssDeclaration(typescriptparser.CssDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
