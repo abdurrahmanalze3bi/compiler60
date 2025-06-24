@@ -1245,28 +1245,54 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public Bodyelement visitBodyelement(typescriptparser.BodyelementContext ctx) {
         Bodyelement bodyelement = new Bodyelement();
-
         if (ctx.ID_CSS() != null) {
             String cssId = ctx.ID_CSS().getText();
             bodyelement.setId_css(cssId);
-
-            // Add CSS property if not already in current scope
             if (!symbolTable.existsInCurrentScope(cssId)) {
                 symbolTable.addSymbol("CSS_PROPERTY", cssId);
             }
         }
-
         if (ctx.cssValue() != null) {
-            bodyelement.setCssValue(visitCssValue(ctx.cssValue()));
+            // Dispatch to correct labeled alternative (PercentValue/IdValue)
+            bodyelement.setCssValue((CssValue) visit(ctx.cssValue()));
         }
-
         return bodyelement;
     }
 
+    // Remove the old visitCssValue method and replace with these two methods:
+
     @Override
-    public CssValue visitCssValue(typescriptparser.CssValueContext ctx) {
+    public CssValue visitPercentValue(typescriptparser.PercentValueContext ctx) {
         CssValue cssValue = new CssValue();
 
+        // Handle PERCENT token - guaranteed to exist
+        String percentValue = ctx.PERCENT().getText();
+        cssValue.getID_CSS().add(percentValue);
+
+        // Add percent value to symbol table if not already in current scope
+        if (!symbolTable.existsInCurrentScope(percentValue)) {
+            symbolTable.addSymbol("CSS_PERCENT_VALUE", percentValue);
+        }
+
+        // Handle optional ID_CSS tokens
+        for (TerminalNode idCss : ctx.ID_CSS()) {
+            String cssValueId = idCss.getText();
+            cssValue.getID_CSS().add(cssValueId);
+
+            // Add CSS value if not already in current scope
+            if (!symbolTable.existsInCurrentScope(cssValueId)) {
+                symbolTable.addSymbol("CSS_VALUE", cssValueId);
+            }
+        }
+
+        return cssValue;
+    }
+
+    @Override
+    public CssValue visitIdValue(typescriptparser.IdValueContext ctx) {
+        CssValue cssValue = new CssValue();
+
+        // Handle all ID_CSS tokens - first one is guaranteed to exist
         for (TerminalNode idCss : ctx.ID_CSS()) {
             String cssValueId = idCss.getText();
             cssValue.getID_CSS().add(cssValueId);

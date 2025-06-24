@@ -478,13 +478,27 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitBodyelement(typescriptparser.BodyelementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#cssValue}.
+	 * Enter a parse tree produced by the {@code PercentValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
 	 * @param ctx the parse tree
 	 */
-	void enterCssValue(typescriptparser.CssValueContext ctx);
+	void enterPercentValue(typescriptparser.PercentValueContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#cssValue}.
+	 * Exit a parse tree produced by the {@code PercentValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
 	 * @param ctx the parse tree
 	 */
-	void exitCssValue(typescriptparser.CssValueContext ctx);
+	void exitPercentValue(typescriptparser.PercentValueContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code IdValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
+	 * @param ctx the parse tree
+	 */
+	void enterIdValue(typescriptparser.IdValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code IdValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
+	 * @param ctx the parse tree
+	 */
+	void exitIdValue(typescriptparser.IdValueContext ctx);
 }

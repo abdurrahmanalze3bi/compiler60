@@ -347,5 +347,12 @@ public class typescriptparserBaseVisitor<T> extends AbstractParseTreeVisitor<T> 
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitCssValue(typescriptparser.CssValueContext ctx) { return visitChildren(ctx); }
+	@Override public T visitPercentValue(typescriptparser.PercentValueContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitIdValue(typescriptparser.IdValueContext ctx) { return visitChildren(ctx); }
 }

@@ -9,6 +9,12 @@ public class Statment {
     VariableDeclaration variableDeclaration ;
     ImportDeclaration importDeclaration ;
    AssignmentStatement assignmentStatement ;
+    private FunctionCall functionCall;
+
+
+    public void setFunctionCall(FunctionCall functionCall) {
+        this.functionCall = functionCall;
+    }
     public ComponentDeclaration getComponentDeclaration() {
         return componentDeclaration;
     }

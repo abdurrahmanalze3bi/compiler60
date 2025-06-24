@@ -581,13 +581,25 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCssValue(typescriptparser.CssValueContext ctx) { }
+	@Override public void enterPercentValue(typescriptparser.PercentValueContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCssValue(typescriptparser.CssValueContext ctx) { }
+	@Override public void exitPercentValue(typescriptparser.PercentValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterIdValue(typescriptparser.IdValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIdValue(typescriptparser.IdValueContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

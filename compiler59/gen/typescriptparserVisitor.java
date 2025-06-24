@@ -293,9 +293,17 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBodyelement(typescriptparser.BodyelementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#cssValue}.
+	 * Visit a parse tree produced by the {@code PercentValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCssValue(typescriptparser.CssValueContext ctx);
+	T visitPercentValue(typescriptparser.PercentValueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code IdValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIdValue(typescriptparser.IdValueContext ctx);
 }
