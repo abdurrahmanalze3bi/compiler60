@@ -1339,32 +1339,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
     // Remove the old visitCssValue method and replace with these two methods:
 
-    @Override
-    public CssValue visitPercentValue(typescriptparser.PercentValueContext ctx) {
-        CssValue cssValue = new CssValue();
 
-        // Handle PERCENT token - guaranteed to exist
-        String percentValue = ctx.PERCENT().getText();
-        cssValue.getID_CSS().add(percentValue);
-
-        // Add percent value to symbol table if not already in current scope
-        if (!symbolTable.existsInCurrentScope(percentValue)) {
-            symbolTable.addSymbol("CSS_PERCENT_VALUE", percentValue);
-        }
-
-        // Handle optional ID_CSS tokens
-        for (TerminalNode idCss : ctx.ID_CSS()) {
-            String cssValueId = idCss.getText();
-            cssValue.getID_CSS().add(cssValueId);
-
-            // Add CSS value if not already in current scope
-            if (!symbolTable.existsInCurrentScope(cssValueId)) {
-                symbolTable.addSymbol("CSS_VALUE", cssValueId);
-            }
-        }
-
-        return cssValue;
-    }
 
     @Override
     public CssValue visitIdValue(typescriptparser.IdValueContext ctx) {
