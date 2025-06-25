@@ -231,7 +231,7 @@ propertyDeclaration
 methodDeclaration
 methodBody
 statementMethod
-return
+returnStatement
 interfaceDeclaration
 interfaceMember
 parameter

@@ -76,15 +76,15 @@ methodBody :(statementMethod)* ;
 
 
 statementMethod :
-ID ASSIGN expression SEMICOLON return?
-|THIS DOT ID ASSIGN expression SEMICOLON return?
-| expression SEMICOLON  return?
-| return
+ID ASSIGN expression SEMICOLON returnStatement?
+|THIS DOT ID ASSIGN expression SEMICOLON returnStatement?
+| expression SEMICOLON  returnStatement?
+| returnStatement
 
 ;
 
 
- return : RETURN expression SEMICOLON |RETURN ID SEMICOLON | RETURN isboolean SEMICOLON  ;
+ returnStatement : RETURN expression SEMICOLON |RETURN ID SEMICOLON | RETURN isboolean SEMICOLON  ;
 
 
 interfaceDeclaration

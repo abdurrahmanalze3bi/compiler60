@@ -639,7 +639,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             statementMethod.setExpression(visitExpression(ctx.expression()));
         }
         // Handle return statement
-        else if (ctx.return_() != null) {
+        else if (ctx.returnStatement() != null) {
             statementMethod.setIsreturn(true);
 
             // Add 'return' keyword to symbol table
@@ -648,7 +648,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             }
 
 
-            statementMethod.setReturnN(visitReturn(ctx.return_()));
+            statementMethod.setReturnN(visitReturnStatement(ctx.returnStatement()));
 
         }
 
@@ -656,7 +656,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
     @Override
-    public ReturnN visitReturn(typescriptparser.ReturnContext ctx) {
+    public ReturnN visitReturnStatement(typescriptparser.ReturnStatementContext ctx) {
         ReturnN returnN = new ReturnN();
         String returnValue = null;
         String returnType = "void";
