@@ -1,4 +1,4 @@
-// Generated from C:/Users/ALZOUBI/ideaProjecte/compiler2/typescriptparser.g4 by ANTLR 4.13.2
+// Generated from D:/my_projects/compiler60/typescriptparser.g4 by ANTLR 4.13.2
 package gen;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
