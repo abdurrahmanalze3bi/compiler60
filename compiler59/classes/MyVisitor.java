@@ -112,73 +112,61 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
 
     @Override
-    public AssignmentStatement visitAssignmentStatement(typescriptparser.AssignmentStatementContext ctx) {
-        AssignmentStatement assignmentStatement = new AssignmentStatement();
+    public AssignmentStatement visitAssignmentRule(typescriptparser.AssignmentRuleContext ctx) {
+        AssignmentStatement assignment = new AssignmentStatement();
 
-        if (ctx.ID() != null && ctx.ID().getText() != null) {
-            String variableName = ctx.ID().getText();
-            assignmentStatement.setVariable(variableName);
+        // ID is guaranteed by rule structure
+        String variableName = ctx.ID().getText();
+        assignment.setVariable(variableName);
 
-            // NEW: Check for undefined variable
-            errorManager.checkUndefinedVariable(
-                    variableName,
-                    ctx.getStart().getLine(),
-                    ctx.getStart().getCharPositionInLine()
-            );
+        // Error checking
+        errorManager.checkUndefinedVariable(
+                variableName,
+                ctx.ID().getSymbol().getLine(),
+                ctx.ID().getSymbol().getCharPositionInLine()
+        );
 
-            // Existing logic: Check if variable exists
-            Row existingSymbol = symbolTable.lookupSymbol(variableName);
-            if (existingSymbol == null) {
-                // Still add to symbol table as undefined reference
-                symbolTable.addSymbol("UNDEFINED_VARIABLE", variableName);
-            } else {
-                // Variable exists - add as reference if not present
-                if (!symbolTable.existsInCurrentScope(variableName)) {
-                    symbolTable.addSymbol("VARIABLE_REFERENCE", variableName);
-                }
-            }
+        // Symbol table logic
+        Row existingSymbol = symbolTable.lookupSymbol(variableName);
+        if (existingSymbol == null) {
+            symbolTable.addSymbol("UNDEFINED_VARIABLE", variableName);
+        } else if (!symbolTable.existsInCurrentScope(variableName)) {
+            symbolTable.addSymbol("VARIABLE_REFERENCE", variableName);
         }
 
-        if (ctx.expression() != null) {
-            assignmentStatement.setExpression(visitExpression(ctx.expression()));
-        }
+        // Expression is guaranteed
+        assignment.setExpression(visitExpression(ctx.expression()));
 
-        return assignmentStatement;
+        return assignment;
     }
 
 
+
+    // OLD METHOD (DELETE)
+// @Override
+// public ImportDeclaration visitImportDeclaration(ImportDeclarationContext ctx) {...}
+
+    // NEW METHODS
+    @Override
+    public ImportDeclaration visitStandardImportDecl(typescriptparser.StandardImportDeclContext ctx) {
+        ImportDeclaration importDecl = new ImportDeclaration();
+        // Your existing import handling logic here
+        return importDecl;
+    }
 
     @Override
-    public ImportDeclaration visitImportDeclaration(typescriptparser.ImportDeclarationContext ctx) {
-        ImportDeclaration importDeclaration = new ImportDeclaration();
-        String idValue = null;
-        String stringValue = null;
-
-        if (ctx.ID() != null && ctx.ID().getText() != null) {
-            idValue = ctx.ID().getText();
-            importDeclaration.setId(idValue);
-
-            // Add to symbol table with scope information if not already exists
-            if (!symbolTable.existsInCurrentScope(idValue)) {
-                symbolTable.addSymbol("IMPORT_ID", idValue);
-            }
-        }
-
-        if (ctx.STRING_LIT() != null && ctx.STRING_LIT().getText() != null) {
-            stringValue = ctx.STRING_LIT().getText();
-            importDeclaration.setString_lit(stringValue);
-
-            // Add import path to symbol table
-            symbolTable.addSymbol("IMPORT_PATH", stringValue);
-        }
-
-        // THIS IS THE MISSING CALL - Add this line to track imports in the semantic error manager
-        this.errorManager.checkImportDeclaration(idValue, stringValue);
-
-        return importDeclaration;
+    public ImportDeclaration visitComponentImportDecl(typescriptparser.ComponentImportDeclContext ctx) {
+        ImportDeclaration importDecl = new ImportDeclaration();
+        // Your existing import handling logic here
+        return importDecl;
     }
 
-
+    @Override
+    public ImportDeclaration visitImportArrayDecl(typescriptparser.ImportArrayDeclContext ctx) {
+        ImportDeclaration importDecl = new ImportDeclaration();
+        // Your existing import handling logic here
+        return importDecl;
+    }
     @Override
     public ClassDeclaration visitClassDeclaration(typescriptparser.ClassDeclarationContext ctx) {
         ClassDeclaration classDeclaration = new ClassDeclaration();
@@ -253,34 +241,64 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return classMember;
     }
+    // =============== PROPERTY WITH INITIAL VALUE ===============
     @Override
-    public PropertyDeclaration visitPropertyDeclaration(typescriptparser.PropertyDeclarationContext ctx) {
-        PropertyDeclaration propertyDeclaration = new PropertyDeclaration();
+    public PropertyDeclaration visitPropertyWithInit(typescriptparser.PropertyWithInitContext ctx) {
+        PropertyDeclaration prop = new PropertyDeclaration();
 
-        for (TerminalNode idNode : ctx.ID()) {
-            String propertyId = idNode.getText();
-            propertyDeclaration.getID().add(propertyId);
+        // Process ID (guaranteed)
+        String propName = ctx.ID().getText();
+        prop.getID().add(propName);
 
-            // Add to component properties for semantic analysis
-            errorManager.addComponentProperty(propertyId);
+        // Semantic analysis
+        errorManager.addComponentProperty(propName);
 
-            // Add property to current scope (should be CLASS scope)
-            if (!symbolTable.existsInCurrentScope(propertyId)) {
-                symbolTable.addSymbol("PROPERTY", propertyId);
+        // Symbol table
+        if (!symbolTable.existsInCurrentScope(propName)) {
+            symbolTable.addSymbol("PROPERTY", propName);
+        }
 
-                symbolTable.getCurrentScopeName();
+        // Process type (guaranteed)
+        prop.setTypeV((TypeV) visit(ctx.type()));
+
+        // Process initvalue (guaranteed)
+        prop.setInitvalue((Initvalue) visit(ctx.initvalue()));
+
+        return prop;
+    }
+
+    // =============== PROPERTY WITHOUT INITIAL VALUE ===============
+    @Override
+    public PropertyDeclaration visitPropertyWithoutInit(typescriptparser.PropertyWithoutInitContext ctx) {
+        PropertyDeclaration prop = new PropertyDeclaration();
+
+        // Process ID (guaranteed)
+        String propName = ctx.ID().getText();
+        prop.getID().add(propName);
+
+        // Semantic analysis
+        errorManager.addComponentProperty(propName);
+
+        // Symbol table
+        if (!symbolTable.existsInCurrentScope(propName)) {
+            symbolTable.addSymbol("PROPERTY", propName);
+        }
+
+        // Process type (guaranteed)
+        prop.setTypeV((TypeV) visit(ctx.type()));
+
+        // Handle optional union type (OR ID ASSIGN ID)
+        if (ctx.OR() != null && ctx.ID().size() > 1) {
+            String unionType = ctx.ID(1).getText();
+            prop.setUnionType(unionType);  // Add this field to PropertyDeclaration
+
+            // Add union type to symbol table
+            if (!symbolTable.existsInCurrentScope(unionType)) {
+                symbolTable.addSymbol("UNION_TYPE", unionType);
             }
         }
 
-        if (ctx.type() != null) {
-            propertyDeclaration.setTypeV(visitType(ctx.type()));
-        }
-
-        if (ctx.initvalue() != null) {
-            propertyDeclaration.setInitvalue(visitInitvalue(ctx.initvalue()));
-        }
-
-        return propertyDeclaration;
+        return prop;
     }
 
     @Override
@@ -410,37 +428,96 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return "any";
     }
+    // =============== STRING TYPE ===============
     @Override
-    public TypeV visitType(typescriptparser.TypeContext ctx) {
+    public TypeV visitStringType(typescriptparser.StringTypeContext ctx) {
         TypeV typeV = new TypeV();
+        String typeName = ctx.STRING_TYPE().getText();
+        typeV.setString_type(typeName);
 
-        if (ctx.BOOLEAN_TYPE() != null) {
-            String booleanType = ctx.BOOLEAN_TYPE().getText();
-            typeV.setIsboolean(booleanType);
-            if (!symbolTable.existsInCurrentScope(booleanType)) {
-                symbolTable.addSymbol("BOOLEAN_TYPE", booleanType);
-            }
+        if (!symbolTable.existsInCurrentScope(typeName)) {
+            symbolTable.addSymbol("STRING_TYPE", typeName);
         }
 
-        if (ctx.ID() != null) {
-            String idType = ctx.ID().getText();
-            typeV.setString_type(idType);
-            Row typeSymbol = symbolTable.lookupSymbol(idType);
-            if (!symbolTable.existsInCurrentScope(idType)) {
-                symbolTable.addSymbol("TYPE", idType);
-            }
+        return typeV;
+    }
+
+    // =============== NUMBER TYPE ===============
+    @Override
+    public TypeV visitNumberType(typescriptparser.NumberTypeContext ctx) {
+        TypeV typeV = new TypeV();
+        String typeName = ctx.NUMBER_TYPE().getText();
+        typeV.setNumber_type(typeName);
+
+        if (!symbolTable.existsInCurrentScope(typeName)) {
+            symbolTable.addSymbol("NUMBER_TYPE", typeName);
         }
 
-        if (ctx.list() != null) {
-            typeV.setListV(visitList(ctx.list()));
-        } else if (ctx.NUMBER_TYPE() != null) {
-            String numberType = ctx.NUMBER_TYPE().getText();
-            typeV.setNumber_type(numberType);
-            if (!symbolTable.existsInCurrentScope(numberType)) {
-                symbolTable.addSymbol("NUMBER_TYPE", numberType);
-            }
+        return typeV;
+    }
+
+    // =============== BOOLEAN TYPE ===============
+    @Override
+    public TypeV visitBooleanType(typescriptparser.BooleanTypeContext ctx) {
+        TypeV typeV = new TypeV();
+        String typeName = ctx.BOOLEAN_TYPE().getText();
+        typeV.setIsboolean(typeName);
+
+        if (!symbolTable.existsInCurrentScope(typeName)) {
+            symbolTable.addSymbol("BOOLEAN_TYPE", typeName);
         }
 
+        return typeV;
+    }
+
+    // =============== ANY TYPE ===============
+    @Override
+    public TypeV visitAnyType(typescriptparser.AnyTypeContext ctx) {
+        TypeV typeV = new TypeV();
+        String typeName = ctx.ANY_TYPE().getText();
+        typeV.setString_type(typeName);  // Or create a specific field if needed
+
+        if (!symbolTable.existsInCurrentScope(typeName)) {
+            symbolTable.addSymbol("ANY_TYPE", typeName);
+        }
+
+        return typeV;
+    }
+
+    // =============== VOID TYPE ===============
+    @Override
+    public TypeV visitVoidType(typescriptparser.VoidTypeContext ctx) {
+        TypeV typeV = new TypeV();
+        String typeName = ctx.VOID_TYPE().getText();
+        typeV.setString_type(typeName);  // Or create a specific field if needed
+
+        if (!symbolTable.existsInCurrentScope(typeName)) {
+            symbolTable.addSymbol("VOID_TYPE", typeName);
+        }
+
+        return typeV;
+    }
+
+    // =============== ID TYPE ===============
+    @Override
+    public TypeV visitIdType(typescriptparser.IdTypeContext ctx) {
+        TypeV typeV = new TypeV();
+        String typeName = ctx.ID().getText();
+        typeV.setString_type(typeName);
+
+        Row typeSymbol = symbolTable.lookupSymbol(typeName);
+        if (!symbolTable.existsInCurrentScope(typeName)) {
+            symbolTable.addSymbol("TYPE", typeName);
+        }
+
+        return typeV;
+    }
+
+    // =============== LIST TYPE ===============
+    @Override
+    public TypeV visitListType(typescriptparser.ListTypeContext ctx) {
+        TypeV typeV = new TypeV();
+        typeV.setListV(visitList(ctx.list()));
         return typeV;
     }
 
@@ -489,61 +566,61 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
     @Override
-    public MemberAccess visitMemberAccess(typescriptparser.MemberAccessContext ctx) {
+    public MemberAccess visitThisMemberAccess(typescriptparser.ThisMemberAccessContext ctx) {
         MemberAccess memberAccess = new MemberAccess();
 
-        // Handle 'this' keyword
-        if (ctx.THIS() != null && "this".equals(ctx.THIS().getText())) {
-            memberAccess.setThis(true);
+        // THIS is guaranteed
+        memberAccess.setThis(true);
 
-            // Add 'this' keyword to symbol table if not already present
-            if (!symbolTable.existsInCurrentScope("this")) {
-                symbolTable.addSymbol("KEYWORD", "this");
-            }
-
-            // If there's also an ID (like this.propertyName), handle it
-            if (ctx.ID() != null) {
-                String memberName = ctx.ID().getText();
-                memberAccess.setMemberName(memberName);
-
-                // Add the member name as a property reference
-                if (!symbolTable.existsInCurrentScope(memberName)) {
-                    symbolTable.addSymbol("PROPERTY_REFERENCE", memberName);
-                }
-            }
+        // Add 'this' keyword to symbol table
+        if (!symbolTable.existsInCurrentScope("this")) {
+            symbolTable.addSymbol("KEYWORD", "this");
         }
-        // Handle regular member access (without 'this')
-        else if (ctx.ID() != null) {
-            String memberName = ctx.ID().getText();
-            memberAccess.setMemberName(memberName);
 
-            // Look up the symbol to see if it exists in any scope
-            Row existingSymbol = symbolTable.lookupSymbol(memberName);
-            if (existingSymbol != null) {
-                // It's a reference to an existing symbol
-                if (!symbolTable.existsInCurrentScope(memberName)) {
-                    symbolTable.addSymbol("MEMBER_REFERENCE", memberName);
-                }
-            } else {
-                // It's a new member access - could be a property or method call
-                if (!symbolTable.existsInCurrentScope(memberName)) {
-                    symbolTable.addSymbol("MEMBER_ACCESS", memberName);
-                }
+        // ID is guaranteed
+        String memberName = ctx.ID().getText();
+        memberAccess.setMemberName(memberName);
+
+        // Add as property reference
+        if (!symbolTable.existsInCurrentScope(memberName)) {
+            symbolTable.addSymbol("PROPERTY_REFERENCE", memberName);
+        }
+
+        return memberAccess;
+    }
+
+    @Override
+    public MemberAccess visitSimpleMemberAccess(typescriptparser.SimpleMemberAccessContext ctx) {
+        MemberAccess memberAccess = new MemberAccess();
+        String memberName = ctx.ID().getText();
+        memberAccess.setMemberName(memberName);
+
+        // Symbol table logic
+        Row existingSymbol = symbolTable.lookupSymbol(memberName);
+        if (existingSymbol != null) {
+            if (!symbolTable.existsInCurrentScope(memberName)) {
+                symbolTable.addSymbol("MEMBER_REFERENCE", memberName);
+            }
+        } else {
+            if (!symbolTable.existsInCurrentScope(memberName)) {
+                symbolTable.addSymbol("MEMBER_ACCESS", memberName);
             }
         }
 
         return memberAccess;
     }
     @Override
-    public ListV visitList(typescriptparser.ListContext ctx) {
+    public ListV visitListDeclaration(typescriptparser.ListDeclarationContext ctx) {
         ListV listV = new ListV();
-        if (ctx.ID() != null) {
-            String listName = ctx.ID().getText();
-            listV.setNameList(listName);
-            if (!symbolTable.existsInCurrentScope(listName)) {
-                symbolTable.addSymbol("LIST_TYPE", listName);
-            }
+
+        // ID is guaranteed
+        String listName = ctx.ID().getText();
+        listV.setNameList(listName);
+
+        if (!symbolTable.existsInCurrentScope(listName)) {
+            symbolTable.addSymbol("LIST_TYPE", listName);
         }
+
         return listV;
     }
 
@@ -556,34 +633,57 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return parameterList;
     }
 
+    // =============== NUMBER INIT VALUE ===============
     @Override
-    public Initvalue visitInitvalue(typescriptparser.InitvalueContext ctx) {
+    public Initvalue visitNumberInitValue(typescriptparser.NumberInitValueContext ctx) {
         Initvalue initvalue = new Initvalue();
+        String numberValue = ctx.NUMBER_LIT().getText();
+        initvalue.setNumber(numberValue);
 
-        if (ctx.STRING_LIT() != null) {
-            String s = ctx.STRING_LIT().getText();
-            initvalue.setString(s);
-            if (!symbolTable.existsInCurrentScope(s)) {
-                symbolTable.addSymbol("STRING_LITERAL", s);
-            }
-        } else if (ctx.NUMBER_LIT() != null) {
-            String n = ctx.NUMBER_LIT().getText();
-            initvalue.setNumber(n);
-            if (!symbolTable.existsInCurrentScope(n)) {
-                symbolTable.addSymbol("NUMBER_LITERAL", n);
-            }
-        } else if (ctx.isboolean() != null) {
-            initvalue.setIsBoolean(visitIsboolean(ctx.isboolean()));
-        } else if (ctx.bodylist() != null) {
-            initvalue.setBodyList(visitBodylist(ctx.bodylist()));
+        if (!symbolTable.existsInCurrentScope(numberValue)) {
+            symbolTable.addSymbol("NUMBER_LITERAL", numberValue);
         }
 
-        if (ctx.object() != null) {
-            symbolTable.enterScope("OBJECT");
-            initvalue.setObjectV(visitObject(ctx.object()));
-            symbolTable.exitScope();
+        return initvalue;
+    }
+
+    // =============== STRING INIT VALUE ===============
+    @Override
+    public Initvalue visitStringInitValue(typescriptparser.StringInitValueContext ctx) {
+        Initvalue initvalue = new Initvalue();
+        String stringValue = ctx.STRING_LIT().getText();
+        initvalue.setString(stringValue);
+
+        if (!symbolTable.existsInCurrentScope(stringValue)) {
+            symbolTable.addSymbol("STRING_LITERAL", stringValue);
         }
 
+        return initvalue;
+    }
+
+    // =============== BOOLEAN INIT VALUE ===============
+    @Override
+    public Initvalue visitBooleanInitValue(typescriptparser.BooleanInitValueContext ctx) {
+        Initvalue initvalue = new Initvalue();
+        initvalue.setIsBoolean((IsBoolean) visit(ctx.isboolean()));
+        return initvalue;
+    }
+
+    // =============== LIST INIT VALUE ===============
+    @Override
+    public Initvalue visitListInitValue(typescriptparser.ListInitValueContext ctx) {
+        Initvalue initvalue = new Initvalue();
+        initvalue.setBodyList(visitBodylist(ctx.bodylist()));
+        return initvalue;
+    }
+
+    // =============== OBJECT INIT VALUE ===============
+    @Override
+    public Initvalue visitObjectInitValue(typescriptparser.ObjectInitValueContext ctx) {
+        Initvalue initvalue = new Initvalue();
+        symbolTable.enterScope("OBJECT");
+        initvalue.setObjectV(visitObject(ctx.object()));
+        symbolTable.exitScope();
         return initvalue;
     }
 
@@ -722,65 +822,70 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return returnN;
     }
     @Override
-    public Parameter visitParameter(typescriptparser.ParameterContext ctx) {
+    public Parameter visitParameterRule(typescriptparser.ParameterRuleContext ctx) {
         Parameter parameter = new Parameter();
 
-        if (ctx.ID() != null) {
-            String paramName = ctx.ID().getText();
-            parameter.setName(paramName);
-            if (!symbolTable.existsInCurrentScope(paramName)) {
-                symbolTable.addSymbol("PARAMETER", paramName);
-            }
+        // ID is guaranteed by rule structure
+        String paramName = ctx.ID().getText();
+        parameter.setName(paramName);
+
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(paramName)) {
+            symbolTable.addSymbol("PARAMETER", paramName);
         }
-        if (ctx.type() != null) {
-            parameter.setTypeV(visitType(ctx.type()));
-        }
+
+        // Type is guaranteed
+        parameter.setTypeV((TypeV) visit(ctx.type()));
+
         return parameter;
     }
 
     @Override
-    public IsBoolean visitIsboolean(typescriptparser.IsbooleanContext ctx) {
+    public IsBoolean visitTrueBoolean(typescriptparser.TrueBooleanContext ctx) {
         IsBoolean isBoolean = new IsBoolean();
+        String trueValue = ctx.TRUE().getText();
+        isBoolean.setTruev(trueValue);
 
-        if (ctx.TRUE() != null) {
-            String trueValue = ctx.TRUE().getText();
-            isBoolean.setTruev(trueValue);
-
-            // Add boolean literal to symbol table if not already present
-            if (!symbolTable.existsInCurrentScope(trueValue)) {
-                symbolTable.addSymbol("BOOLEAN_LITERAL", trueValue);
-            }
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(trueValue)) {
+            symbolTable.addSymbol("BOOLEAN_LITERAL", trueValue);
         }
-        else if (ctx.FALSE() != null) {
-            String falseValue = ctx.FALSE().getText();
-            isBoolean.setFalsev(falseValue);
 
-            // Add boolean literal to symbol table if not already present
-            if (!symbolTable.existsInCurrentScope(falseValue)) {
-                symbolTable.addSymbol("BOOLEAN_LITERAL", falseValue);
-            }
+        return isBoolean;
+    }
+
+    @Override
+    public IsBoolean visitFalseBoolean(typescriptparser.FalseBooleanContext ctx) {
+        IsBoolean isBoolean = new IsBoolean();
+        String falseValue = ctx.FALSE().getText();
+        isBoolean.setFalsev(falseValue);
+
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(falseValue)) {
+            symbolTable.addSymbol("BOOLEAN_LITERAL", falseValue);
         }
 
         return isBoolean;
     }
     @Override
-    public BodyList visitBodylist(typescriptparser.BodylistContext ctx) {
+    public BodyList visitBodyListRule(typescriptparser.BodyListRuleContext ctx) {
         BodyList bodyList = new BodyList();
         symbolTable.enterScope("BODY_LIST");
+
+        // Process all initvalues
         for (typescriptparser.InitvalueContext ivCtx : ctx.initvalue()) {
-            bodyList.getInitvalues().add(visitInitvalue(ivCtx));
+            bodyList.getInitvalues().add((Initvalue) visit(ivCtx));
         }
+
         symbolTable.exitScope();
         return bodyList;
     }
 
 
     @Override
-    public ObjectV visitObject(typescriptparser.ObjectContext ctx) {
+    public ObjectV visitObjectRule(typescriptparser.ObjectRuleContext ctx) {
         ObjectV object = new ObjectV();
-        if (ctx.bodyobject() != null) {
-            object.setBodyObject(visitBodyobject(ctx.bodyobject()));
-        }
+        object.setBodyObject(visitBodyobject(ctx.bodyobject()));
         return object;
     }
 
@@ -890,191 +995,230 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
 
     @Override
-    public ComponentDeclaration visitComponentDeclaration(typescriptparser.ComponentDeclarationContext ctx) {
+    public ComponentDeclaration visitComponentDeclarationRule(typescriptparser.ComponentDeclarationRuleContext ctx) {
         ComponentDeclaration componentDeclaration = new ComponentDeclaration();
 
-        if (ctx.DECORATOR() != null) {
-            String decoratorValue = ctx.DECORATOR().getText();
-            componentDeclaration.setDecorato(decoratorValue);
+        // DECORATOR is guaranteed by the rule structure
+        String decoratorValue = ctx.DECORATOR().getText();
+        componentDeclaration.setDecorato(decoratorValue);
 
-            // Check for missing @ symbol
-            if (!decoratorValue.startsWith("@")) {
-                errorManager.checkMissingDecoratorSymbol(decoratorValue, ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
-            }
-
-            if (!symbolTable.existsInCurrentScope(decoratorValue)) {
-                symbolTable.addSymbol("DECORATOR", decoratorValue);
-            }
+        // Check for missing @ symbol
+        if (!decoratorValue.startsWith("@")) {
+            errorManager.checkMissingDecoratorSymbol(
+                    decoratorValue,
+                    ctx.getStart().getLine(),
+                    ctx.getStart().getCharPositionInLine()
+            );
         }
 
-        if (ctx.componentDeclarationBody() != null) {
-            ComponentDeclarationBody body = (ComponentDeclarationBody) visitComponentDeclarationBody(ctx.componentDeclarationBody());
-            componentDeclaration.setComponentDeclarationBody(body);
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(decoratorValue)) {
+            symbolTable.addSymbol("DECORATOR", decoratorValue);
         }
+
+        // Process body (guaranteed by rule structure)
+        ComponentDeclarationBody body = (ComponentDeclarationBody) visit(ctx.componentDeclarationBody());
+        componentDeclaration.setComponentDeclarationBody(body);
 
         return componentDeclaration;
     }
 
     @Override
-    public ComponentDeclarationBody visitComponentDeclarationBody(typescriptparser.ComponentDeclarationBodyContext ctx) {
-        ComponentDeclarationBody componentDeclarationBody = new ComponentDeclarationBody();
+    public ComponentDeclarationBody visitComponentBody(typescriptparser.ComponentBodyContext ctx) {
+        ComponentDeclarationBody body = new ComponentDeclarationBody();
 
-        // Process all component body elements
-        for (typescriptparser.ComponentBodyElementContext elementCtx : ctx.componentBodyElement()) {
-            ComponentBodyElement element = visitComponentBodyElement(elementCtx);
+        for (typescriptparser.ComponentBodyElementContext elemCtx : ctx.componentBodyElement()) {
+            // Use automatic dispatching to the correct method
+            ComponentBodyElement element = (ComponentBodyElement) visit(elemCtx);
             if (element != null) {
-                componentDeclarationBody.getComponentBodyElements().add(element);
+                body.getComponentBodyElements().add(element);
             }
         }
 
-        return componentDeclarationBody;
+        return body;
+    }
+
+// OLD METHOD (DELETE)
+// @Override
+// public ComponentBodyElement visitComponentBodyElement(ComponentBodyElementContext ctx) {...}
+
+    // NEW METHODS
+    @Override
+    public ComponentBodyElement visitComponentSelector(typescriptparser.ComponentSelectorContext ctx) {
+        ComponentBodyElement element = new ComponentBodyElement();
+        element.setSelector((Selector) visit(ctx.selector()));
+        return element;
     }
 
     @Override
-    public ComponentBodyElement visitComponentBodyElement(typescriptparser.ComponentBodyElementContext ctx) {
-        ComponentBodyElement componentBodyElement = new ComponentBodyElement();
-
-        if (ctx.selector() != null) {
-            componentBodyElement.setSelector(visitSelector(ctx.selector()));
-        }
-        if (ctx.standalone() != null) {
-            componentBodyElement.setStandalone(visitStandalone(ctx.standalone()));
-        }
-        if (ctx.importDeclaration() != null) {
-            componentBodyElement.setImportDeclaration(
-                    visitImportDeclaration(ctx.importDeclaration())
-            );
-        }
-        if (ctx.template() != null) {
-            symbolTable.enterScope("TEMPLATE");
-            componentBodyElement.setTemplate(visitTemplate(ctx.template()));
-            symbolTable.exitScope();
-        }
-        if (ctx.styles() != null) {
-            symbolTable.enterScope("STYLES");
-            componentBodyElement.setStyles(visitStyles(ctx.styles()));
-            symbolTable.exitScope();
-        }
-
-        return componentBodyElement;
+    public ComponentBodyElement visitComponentStandalone(typescriptparser.ComponentStandaloneContext ctx) {
+        ComponentBodyElement element = new ComponentBodyElement();
+        element.setStandalone((Standalone) visit(ctx.standalone()));
+        return element;
     }
 
     @Override
-    public Selector visitSelector(typescriptparser.SelectorContext ctx) {
+    public ComponentBodyElement visitComponentTemplate(typescriptparser.ComponentTemplateContext ctx) {
+        ComponentBodyElement element = new ComponentBodyElement();
+        symbolTable.enterScope("TEMPLATE");
+        element.setTemplate((Template) visit(ctx.template()));
+        symbolTable.exitScope();
+        return element;
+    }
+
+    @Override
+    public ComponentBodyElement visitComponentStyles(typescriptparser.ComponentStylesContext ctx) {
+        ComponentBodyElement element = new ComponentBodyElement();
+        symbolTable.enterScope("STYLES");
+        element.setStyles((Styles) visit(ctx.styles()));
+        symbolTable.exitScope();
+        return element;
+    }
+
+    @Override
+    public ComponentBodyElement visitComponentImportElement(typescriptparser.ComponentImportElementContext ctx) {
+        ComponentBodyElement element = new ComponentBodyElement();
+        element.setImportDeclaration((ImportDeclaration) visit(ctx.importDeclaration()));
+        return element;
+    }
+    // OLD METHOD (DELETE)
+// @Override
+// public Selector visitSelector(SelectorContext ctx) {...}
+
+    // NEW METHOD
+    @Override
+    public Selector visitSelectorDeclaration(typescriptparser.SelectorDeclarationContext ctx) {
         Selector selector = new Selector();
+        String value = ctx.STRING_LIT().getText();
+        selector.setSTRING_LIT(value);
 
-        if (ctx.STRING_LIT() != null) {
-            String selectorValue = ctx.STRING_LIT().getText();
-            selector.setSTRING_LIT(selectorValue);
-
-            // Add selector string only if new in scope
-            if (!symbolTable.existsInCurrentScope(selectorValue)) {
-                symbolTable.addSymbol("SELECTOR_STRING", selectorValue);
-            }
+        // Symbol table logic remains
+        if (!symbolTable.existsInCurrentScope(value)) {
+            symbolTable.addSymbol("SELECTOR_STRING", value);
         }
 
         return selector;
     }
+    // OLD METHOD (DELETE)
+// @Override
+// public Standalone visitStandalone(StandaloneContext ctx) {...}
+
+    // NEW METHOD
+
     @Override
-    public Standalone visitStandalone(typescriptparser.StandaloneContext ctx) {
+    public Standalone visitStandaloneProperty(typescriptparser.StandalonePropertyContext ctx) {
         Standalone standalone = new Standalone();
 
-        if (ctx.isboolean() != null) {
-            standalone.setIsboolean(visitIsboolean(ctx.isboolean()));
-        }
+        // Use automatic dispatching to visit the isboolean rule
+        standalone.setIsboolean((IsBoolean) visit(ctx.isboolean()));
 
         return standalone;
     }
+    // OLD METHOD (DELETE)
+// @Override
+// public Template visitTemplate(TemplateContext ctx) {...}
 
+    // NEW METHOD
     @Override
-    public Template visitTemplate(typescriptparser.TemplateContext ctx) {
+    public Template visitTemplateDefinition(typescriptparser.TemplateDefinitionContext ctx) {
         Template template = new Template();
-
         for (typescriptparser.ElementContext elemCtx : ctx.element()) {
             template.getElement().add(visitElement(elemCtx));
         }
-
         return template;
     }
 
+    // =============== TAG ELEMENT ===============
     @Override
-    public Element visitElement(typescriptparser.ElementContext ctx) {
+    public Element visitTagElement(typescriptparser.TagElementContext ctx) {
         Element element = new Element();
+        element.setTag(visitTag(ctx.tag()));
+        return element;
+    }
 
-        if (ctx.tag() != null) {
-            element.setTag(visitTag(ctx.tag()));
-        }
-        if (ctx.interpolation() != null) {
-            element.setInterpolation(visitInterpolation(ctx.interpolation()));
-        }
-        if (ctx.NAME_HTML() != null) {
-            String htmlName = ctx.NAME_HTML().getText();
-            element.setHtmlName(htmlName);
-            if (!symbolTable.existsInCurrentScope(htmlName)) {
-                symbolTable.addSymbol("HTML_ELEMENT", htmlName);
-            }
+    // =============== HTML NAME ELEMENT ===============
+    @Override
+    public Element visitHtmlNameElement(typescriptparser.HtmlNameElementContext ctx) {
+        Element element = new Element();
+        String htmlName = ctx.NAME_HTML().getText();
+        element.setHtmlName(htmlName);
+
+        if (!symbolTable.existsInCurrentScope(htmlName)) {
+            symbolTable.addSymbol("HTML_ELEMENT", htmlName);
         }
 
         return element;
     }
 
+    // =============== INTERPOLATION ELEMENT ===============
     @Override
-    public Tag visitTag(typescriptparser.TagContext ctx) {
+    public Element visitInterpolationElement(typescriptparser.InterpolationElementContext ctx) {
+        Element element = new Element();
+        // Cast to specific rule context and use labeled method
+        element.setInterpolation(
+                visitInterpolationRule((typescriptparser.InterpolationRuleContext) ctx.interpolation())
+        );
+        return element;
+    }
+    @Override
+    public Tag visitOpenCloseTag(typescriptparser.OpenCloseTagContext ctx) {
         Tag tag = new Tag();
 
-        if (ctx.openingTag() != null) {
-            tag.setOpeningTag(visitOpeningTag(ctx.openingTag()));
-        }
-        if (ctx.closingTag() != null) {
-            tag.setClosingTag(visitClosingTag(ctx.closingTag()));
-        }
-        if (ctx.selfClosingTag() != null) {
-            tag.setSelfClosingTag(visitSelfClosingTag(ctx.selfClosingTag()));
-        }
+        // Directly use the specific rule contexts
+        tag.setOpeningTag(visitOpeningTagRule((typescriptparser.OpeningTagRuleContext) ctx.openingTag()));
+        tag.setClosingTag(visitClosingTagRule((typescriptparser.ClosingTagRuleContext) ctx.closingTag()));
+
+        // Process nested elements
         for (typescriptparser.ElementContext nested : ctx.element()) {
             tag.getElements().add(visitElement(nested));
         }
 
         return tag;
     }
+    // =============== SELF-CLOSING TAG ===============
+    @Override
+    public Tag visitSelfClosingTagElement(typescriptparser.SelfClosingTagElementContext ctx) {
+        Tag tag = new Tag();
+        // Directly use the specific rule context
+        tag.setSelfClosingTag(visitSelfClosingTagRule((typescriptparser.SelfClosingTagRuleContext) ctx.selfClosingTag()));
+        return tag;
+    }
 
     @Override
-    public Interpolation visitInterpolation(typescriptparser.InterpolationContext ctx) {
+    public Interpolation visitInterpolationRule(typescriptparser.InterpolationRuleContext ctx) {
         Interpolation interpolation = new Interpolation();
+        String name = ctx.NAME_HTML().getText();
+        interpolation.setNAME_HTML(name);
 
-        if (ctx.NAME_HTML() != null) {
-            String name = ctx.NAME_HTML().getText();
-            interpolation.setNAME_HTML(name);
-
-            if (!symbolTable.existsInCurrentScope(name)) {
-                symbolTable.addSymbol("INTERPOLATION_ID", name);
-            }
+        if (!symbolTable.existsInCurrentScope(name)) {
+            symbolTable.addSymbol("INTERPOLATION_ID", name);
         }
 
         return interpolation;
     }
     @Override
-    public OpeningTag visitOpeningTag(typescriptparser.OpeningTagContext ctx) {
+    public OpeningTag visitOpeningTagRule(typescriptparser.OpeningTagRuleContext ctx) {
         OpeningTag openingTag = new OpeningTag();
 
+        // Process all attributes (if any)
         for (typescriptparser.AttributesContext attrCtx : ctx.attributes()) {
-            openingTag.getAttributes().add(visitAttributes(attrCtx));
+            openingTag.getAttributes().add((Attributes) visit(attrCtx));
         }
 
         return openingTag;
     }
 
     @Override
-    public ClosingTag visitClosingTag(typescriptparser.ClosingTagContext ctx) {
+    public ClosingTag visitClosingTagRule(typescriptparser.ClosingTagRuleContext ctx) {
         ClosingTag closingTag = new ClosingTag();
 
-        if (ctx.TAG_CLOSE_START_HTML() != null) {
-            String tagName = ctx.TAG_CLOSE_START_HTML().getText();
-            closingTag.setNAME_HTML(tagName);
+        // NAME_HTML is guaranteed
+        String tagName = ctx.NAME_HTML().getText();
+        closingTag.setNAME_HTML(tagName);
 
-            if (!symbolTable.existsInCurrentScope(tagName)) {
-                symbolTable.addSymbol("HTML_CLOSING_TAG", tagName);
-            }
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(tagName)) {
+            symbolTable.addSymbol("HTML_CLOSING_TAG", tagName);
         }
 
         return closingTag;
@@ -1082,91 +1226,122 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
     // Updated visitAttributes method for your MyVisitor class
 
+    // =============== HTML ATTRIBUTE ===============
     @Override
-    public Attributes visitAttributes(typescriptparser.AttributesContext ctx) {
+    public Attributes visitHtmlAttribute(typescriptparser.HtmlAttributeContext ctx) {
         Attributes attributes = new Attributes();
 
-        // Process NAME_HTML attributes (attribute names)
-        if (ctx.NAME_HTML() != null) {
-            String name = ctx.NAME_HTML().getText();
-            attributes.setHtmlName(name);
+        // Process attribute name (guaranteed)
+        String attrName = ctx.NAME_HTML().getText();
+        attributes.setHtmlName(attrName);
 
-            // Check for structural directives used without asterisk
-            if (isStructuralDirectiveName(name)) {
-                errorManager.checkDirectiveAttribute(
-                        name,
-                        ctx.getStart().getLine(),
-                        ctx.getStart().getCharPositionInLine()
-                );
-            }
-        }
+        // Process attribute value (guaranteed)
+        String attrValue = ctx.STRING_HTML().getText();
+        attributes.setHtmlString(attrValue);
 
-        // Process STRING_HTML attributes (attribute values)
-        if (ctx.STRING_HTML() != null) {
-            String s = ctx.STRING_HTML().getText();
-            attributes.setHtmlString(s);
-
-            // NEW: Check for literal binding of property
-            if (ctx.NAME_HTML() != null) {
-                String attrName = ctx.NAME_HTML().getText();
-                errorManager.checkLiteralBinding(
-                        attrName,
-                        s,
-                        ctx.getStart().getLine(),
-                        ctx.getStart().getCharPositionInLine()
-                );
-            }
-        }
-
-        // Process BINDING_HTML attributes (property bindings)
-        if (ctx.BINDING_HTML() != null) {
-            String bind = ctx.BINDING_HTML().getText();
-            attributes.setBinding(bind);
-
-            // Check for property binding mismatches
-            String propertyName = bind.replace("[", "").replace("]", "");
-            errorManager.checkPropertyBinding(
-                    propertyName,
-                    "RESOURCE_BINDING",
-                    ctx.getStart().getLine(),
-                    ctx.getStart().getCharPositionInLine()
+        // Check for structural directives used without asterisk
+        if (isStructuralDirectiveName(attrName)) {
+            errorManager.checkDirectiveAttribute(
+                    attrName,
+                    ctx.NAME_HTML().getSymbol().getLine(),
+                    ctx.NAME_HTML().getSymbol().getCharPositionInLine()
             );
         }
 
-        // Process STRUCTURAL_DIR_HTML attributes (structural directives)
-        if (ctx.STRUCTURAL_DIR_HTML() != null) {
-            String dir = ctx.STRUCTURAL_DIR_HTML().getText();
-            attributes.setStructuralDir(dir);
-
-            // Check for structural directive errors
-            errorManager.checkStructuralDirectiveVariable(
-                    dir,
-                    ctx.getStart().getLine(),
-                    ctx.getStart().getCharPositionInLine()
+        // Check for literal binding of property
+        String cleanValue = attrValue.replaceAll("['\"]", "");
+        Set<String> bindableProperties = Set.of("src", "href", "value", "class", "style", "id");
+        if (bindableProperties.contains(attrName)) {
+            errorManager.checkLiteralBinding(
+                    attrName,
+                    cleanValue,
+                    ctx.NAME_HTML().getSymbol().getLine(),
+                    ctx.NAME_HTML().getSymbol().getCharPositionInLine()
             );
         }
 
-        // Process EVENT_BINDING_HTML attributes (event bindings)
-        if (ctx.EVENT_BINDING_HTML() != null) {
-            String evt = ctx.EVENT_BINDING_HTML().getText();
-            attributes.setEvent(evt);
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(attrName)) {
+            symbolTable.addSymbol("HTML_ATTRIBUTE", attrName);
         }
 
-        // NEW: Enhanced literal binding detection
-        if (ctx.NAME_HTML() != null && ctx.STRING_HTML() != null) {
-            String attrName = ctx.NAME_HTML().getText();
-            String attrValue = ctx.STRING_HTML().getText().replaceAll("['\"]", "");
+        return attributes;
+    }
 
-            // Check common Angular properties that should use binding
-            Set<String> bindableProperties = Set.of("src", "href", "value", "class", "style", "id");
-            if (bindableProperties.contains(attrName)) {
-                errorManager.checkLiteralBinding(
-                        attrName,
-                        attrValue,
-                        ctx.getStart().getLine(),
-                        ctx.getStart().getCharPositionInLine()
-                );
-            }
+    // =============== STRUCTURAL DIRECTIVE ATTRIBUTE ===============
+    @Override
+    public Attributes visitStructuralDirectiveAttribute(typescriptparser.StructuralDirectiveAttributeContext ctx) {
+        Attributes attributes = new Attributes();
+
+        // Process directive (guaranteed)
+        String directive = ctx.STRUCTURAL_DIR_HTML().getText();
+        attributes.setStructuralDir(directive);
+
+        // Process value (guaranteed)
+        String value = ctx.STRING_HTML().getText();
+        attributes.setHtmlString(value);
+
+        // Check for structural directive errors
+        errorManager.checkStructuralDirectiveVariable(
+                directive,
+                ctx.STRUCTURAL_DIR_HTML().getSymbol().getLine(),
+                ctx.STRUCTURAL_DIR_HTML().getSymbol().getCharPositionInLine()
+        );
+
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(directive)) {
+            symbolTable.addSymbol("STRUCTURAL_DIRECTIVE", directive);
+        }
+
+        return attributes;
+    }
+
+    // =============== BINDING ATTRIBUTE ===============
+    @Override
+    public Attributes visitBindingAttribute(typescriptparser.BindingAttributeContext ctx) {
+        Attributes attributes = new Attributes();
+
+        // Process binding (guaranteed)
+        String binding = ctx.BINDING_HTML().getText();
+        attributes.setBinding(binding);
+
+        // Process value (guaranteed)
+        String value = ctx.STRING_HTML().getText();
+        attributes.setHtmlString(value);
+
+        // Check for property binding mismatches
+        String propertyName = binding.replace("[", "").replace("]", "");
+        errorManager.checkPropertyBinding(
+                propertyName,
+                "RESOURCE_BINDING",
+                ctx.BINDING_HTML().getSymbol().getLine(),
+                ctx.BINDING_HTML().getSymbol().getCharPositionInLine()
+        );
+
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(propertyName)) {
+            symbolTable.addSymbol("BINDING_PROPERTY", propertyName);
+        }
+
+        return attributes;
+    }
+
+    // =============== EVENT BINDING ATTRIBUTE ===============
+    @Override
+    public Attributes visitEventBindingAttribute(typescriptparser.EventBindingAttributeContext ctx) {
+        Attributes attributes = new Attributes();
+
+        // Process event binding (guaranteed)
+        String event = ctx.EVENT_BINDING_HTML().getText();
+        attributes.setEvent(event);
+
+        // Process value (guaranteed)
+        String value = ctx.STRING_HTML().getText();
+        attributes.setHtmlString(value);
+
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(event)) {
+            symbolTable.addSymbol("EVENT_BINDING", event);
         }
 
         return attributes;
@@ -1190,11 +1365,12 @@ public class MyVisitor extends typescriptparserBaseVisitor {
                 name.equals("ngSwitchDefault");
     }
     @Override
-    public SelfClosingTag visitSelfClosingTag(typescriptparser.SelfClosingTagContext ctx) {
+    public SelfClosingTag visitSelfClosingTagRule(typescriptparser.SelfClosingTagRuleContext ctx) {
         SelfClosingTag selfClosingTag = new SelfClosingTag();
 
+        // Process all attributes (if any)
         for (typescriptparser.AttributesContext attrCtx : ctx.attributes()) {
-            selfClosingTag.getAttributes().add(visitAttributes(attrCtx));
+            selfClosingTag.getAttributes().add((Attributes) visit(attrCtx));
         }
 
         return selfClosingTag;
@@ -1253,15 +1429,17 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
 
 
-    @Override
-    public Styles visitStylesRule(typescriptparser.StylesRuleContext ctx) {
-        Styles styles = new Styles();
+    // OLD METHOD (DELETE)
+// @Override
+// public Styles visitStyles(StylesContext ctx) {...}
 
-        // Process CSS body (guaranteed to exist)
+    // NEW METHOD
+    @Override
+    public Styles visitStylesBlock(typescriptparser.StylesBlockContext ctx) {
+        Styles styles = new Styles();
         symbolTable.enterScope("STYLES");
         styles.setCssBody((CssBody) visit(ctx.cssBody()));
         symbolTable.exitScope();
-
         return styles;
     }
 
@@ -1467,15 +1645,34 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
 
+    // ====================== OBJECT BODY RULE ======================
     @Override
-    public BodyObject visitBodyobject(typescriptparser.BodyobjectContext ctx) {
+    public BodyObject visitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) {
         BodyObject bodyObject = new BodyObject();
-        if (!ctx.initvalue().isEmpty()) {
-            for (typescriptparser.InitvalueContext ivCtx : ctx.initvalue()) {
-                bodyObject.getInitvalues().add(visitInitvalue(ivCtx));
-            }
+
+        for (typescriptparser.KeyValuePairContext kvCtx : ctx.keyValuePair()) {
+            // Visit each key-value pair and add to bodyObject
+            bodyObject.getInitvalues().add((Initvalue) visit(kvCtx));
         }
+
         return bodyObject;
+    }
+
+    // ====================== KEY VALUE PAIR ======================
+    @Override
+    public Initvalue visitKeyValue(typescriptparser.KeyValueContext ctx) {
+        // Create a special Initvalue that preserves key information
+        Initvalue initvalue = (Initvalue) visit(ctx.initvalue());
+
+        // Store the key in the initvalue object
+        initvalue.setObjectKey(ctx.ID().getText());
+
+        // Add key to symbol table
+        if (!symbolTable.existsInCurrentScope(initvalue.getObjectKey())) {
+            symbolTable.addSymbol("OBJECT_KEY", initvalue.getObjectKey());
+        }
+
+        return initvalue;
     }
 
 

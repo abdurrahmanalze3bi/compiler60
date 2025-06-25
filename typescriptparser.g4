@@ -17,34 +17,102 @@ statement   :
             ;
             // to do class and visitor
 assignmentStatement
-    : ID ASSIGN expression SEMICOLON?
+    : ID ASSIGN expression SEMICOLON? # AssignmentRule
     ;
 componentDeclaration
-    : DECORATOR COMPONENT LPAREN LBRACE componentDeclarationBody RBRACE RPAREN ;
-componentDeclarationBody
-    : componentBodyElement (COMMA componentBodyElement)* ;
-
-
-   componentBodyElement
-       : selector             # SelectorElement
-       | standalone           # StandaloneElement
-       | importDeclaration    # ImportElement
-       | template             # TemplateElement
-       | styles               # StylesElement
-   ;
-
-selector :SELECTOR COLON STRING_LIT ;
-standalone : STANDALONE COLON isboolean  ;
-template
-    : TEMPLATE COLON_HTML BACKTICK_HTML  element* END_TEMPLATE
+    : DECORATOR COMPONENT LPAREN LBRACE componentDeclarationBody RBRACE RPAREN
+      # ComponentDeclarationRule
     ;
 
+componentDeclarationBody
+    : (componentBodyElement (COMMA componentBodyElement)*)? # ComponentBody
+    ;
+
+   // ====================== MAIN RULES ======================
+selector :
+    SELECTOR COLON STRING_LIT # SelectorDeclaration
+;
+
+standalone :
+    STANDALONE COLON isboolean # StandaloneProperty
+;
+
+template :
+    TEMPLATE COLON_HTML BACKTICK_HTML element* END_TEMPLATE # TemplateDefinition
+;
+
 styles :
-    STYLES COLON_CSS OPEN_LIST cssBody CLOSE_LIST COMMA? # StylesRule
+    STYLES COLON_CSS OPEN_LIST cssBody CLOSE_LIST COMMA? # StylesBlock
+;
+
+importDeclaration
+    : IMPORT LBRACE ID RBRACE FROM STRING_LIT SEMICOLON     # StandardImportDecl
+    | IMPORT LBRACE COMPONENT RBRACE FROM STRING_LIT SEMICOLON  # ComponentImportDecl  // Changed
+    | IMPORTS COLON LBRACKET ID? RBRACKET                   # ImportArrayDecl         // Changed
 ;
 
 
-isboolean :TRUE | FALSE;
+   // ================= COMPONENT BODY ELEMENT =================
+
+
+
+   componentBodyElement
+       : selector             # ComponentSelector
+       | standalone           # ComponentStandalone
+       | importDeclaration    # ComponentImportElement  // Changed
+       | template             # ComponentTemplate
+       | styles               # ComponentStyles
+       ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+isboolean
+    : TRUE   # TrueBoolean
+    | FALSE  # FalseBoolean
+    ;
+
+
+
 
 
 classDeclaration :
@@ -65,9 +133,8 @@ classMember
 
 
 propertyDeclaration
-    : ID COLON type ASSIGN initvalue SEMICOLON?
-    | ID COLON type  (OR ID ASSIGN ID)? SEMICOLON ?
-
+    : ID COLON type ASSIGN initvalue SEMICOLON?   # PropertyWithInit
+    | ID COLON type (OR ID ASSIGN ID)? SEMICOLON?  # PropertyWithoutInit
     ;
 
 methodDeclaration
@@ -99,7 +166,7 @@ interfaceMember
     ;
 
 parameter
-    : ID COLON type
+    : ID COLON type   # ParameterRule
     ;
 parameterList
     : parameter (COMMA parameter)*
@@ -111,47 +178,46 @@ variableDeclaration
     : (CONST | LET | VAR ) ID   (ASSIGN expression)?
     ;
 
-importDeclaration
-    : IMPORT LBRACE ID RBRACE FROM STRING_LIT SEMICOLON
-    | IMPORT LBRACE COMPONENT RBRACE FROM STRING_LIT SEMICOLON
-    | IMPORTS COLON LBRACKET ID? RBRACKET
+
+type
+    : STRING_TYPE   # StringType
+    | NUMBER_TYPE   # NumberType
+    | BOOLEAN_TYPE  # BooleanType
+    | ANY_TYPE      # AnyType
+    | VOID_TYPE     # VoidType
+    | ID            # IdType
+    | list          # ListType
     ;
-
-
-
-type        : STRING_TYPE
-            | NUMBER_TYPE
-            | BOOLEAN_TYPE
-            | ANY_TYPE
-            | VOID_TYPE
-            | ID
-            | list;
-
-memberAccess: THIS DOT ID;
+memberAccess
+    : THIS DOT ID   # ThisMemberAccess
+    | ID            # SimpleMemberAccess  // Added alternative for regular member access
+    ;
 
 list
-    : ID LBRACKET RBRACKET
+    : ID LBRACKET RBRACKET   # ListDeclaration
     ;
 bodylist
-    : (initvalue (COMMA initvalue)*)?
+    : (initvalue (COMMA initvalue)*)?   # BodyListRule
     ;
-
 object
-    : LBRACE bodyobject RBRACE COMMA?
+    : LBRACE bodyobject RBRACE COMMA?   # ObjectRule
     ;
-
 bodyobject
-    : (ID COLON initvalue (COMMA ID COLON initvalue COMMA?)*)?
+    : (keyValuePair (COMMA keyValuePair)*)?   # ObjectBodyRule
+    ;
+
+keyValuePair
+    : ID COLON initvalue   # KeyValue
 
     ;
 
-   initvalue
-     : NUMBER_LIT
-     | STRING_LIT
-     | isboolean
-     | LBRACKET bodylist RBRACKET
-     | object
- ;
+ initvalue
+     : NUMBER_LIT                   # NumberInitValue
+     | STRING_LIT                   # StringInitValue
+     | isboolean                    # BooleanInitValue
+     | LBRACKET bodylist RBRACKET   # ListInitValue
+     | object                       # ObjectInitValue
+     ;
 
 expression
     : STRING_LIT
@@ -180,39 +246,69 @@ functionCall
 
 argument    : expression
             ;
+
+
+
+
+
+
 element
-    : tag
-    | NAME_HTML (COLON_HTML)?
-    | interpolation
+    : tag                       # TagElement
+    | NAME_HTML (COLON_HTML)?   # HtmlNameElement
+    | interpolation             # InterpolationElement
     ;
 
 tag
-    : openingTag element* closingTag
-    | selfClosingTag
+    : openingTag element* closingTag   # OpenCloseTag
+    | selfClosingTag                   # SelfClosingTagElement
     ;
-
 openingTag
-    : TAG_OPEN_START_HTML attributes* TAG_CLOSE_END_HTML
+    : TAG_OPEN_START_HTML attributes* TAG_CLOSE_END_HTML   # OpeningTagRule
     ;
 
 closingTag
-    : TAG_CLOSE_START_HTML NAME_HTML TAG_CLOSE_END_HTML
+    : TAG_CLOSE_START_HTML NAME_HTML TAG_CLOSE_END_HTML    # ClosingTagRule
     ;
 
 selfClosingTag
-    : TAG_OPEN_START_HTML attributes* TAG_END_HTML
+    : TAG_OPEN_START_HTML attributes* TAG_END_HTML         # SelfClosingTagRule
     ;
-
 attributes
-    : NAME_HTML ATTRIBUTE_EQUALS_HTML STRING_HTML
-    | STRUCTURAL_DIR_HTML ATTRIBUTE_EQUALS_HTML STRING_HTML
-    | BINDING_HTML ATTRIBUTE_EQUALS_HTML STRING_HTML
-    | EVENT_BINDING_HTML ATTRIBUTE_EQUALS_HTML STRING_HTML
+    : NAME_HTML ATTRIBUTE_EQUALS_HTML STRING_HTML          # HtmlAttribute
+    | STRUCTURAL_DIR_HTML ATTRIBUTE_EQUALS_HTML STRING_HTML # StructuralDirectiveAttribute
+    | BINDING_HTML ATTRIBUTE_EQUALS_HTML STRING_HTML        # BindingAttribute
+    | EVENT_BINDING_HTML ATTRIBUTE_EQUALS_HTML STRING_HTML  # EventBindingAttribute
+    ;
+interpolation
+    : INTERPOLATION_START_HTML NAME_HTML INTERPOLATION_END_HTML   # InterpolationRule
     ;
 
-interpolation
-    : INTERPOLATION_START_HTML NAME_HTML INTERPOLATION_END_HTML
-    ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   cssBody :

@@ -23,60 +23,124 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatement(typescriptparser.StatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#assignmentStatement}.
+	 * Visit a parse tree produced by the {@code AssignmentRule}
+	 * labeled alternative in {@link typescriptparser#assignmentStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitAssignmentStatement(typescriptparser.AssignmentStatementContext ctx);
+	T visitAssignmentRule(typescriptparser.AssignmentRuleContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#componentDeclaration}.
+	 * Visit a parse tree produced by the {@code ComponentDeclarationRule}
+	 * labeled alternative in {@link typescriptparser#componentDeclaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitComponentDeclaration(typescriptparser.ComponentDeclarationContext ctx);
+	T visitComponentDeclarationRule(typescriptparser.ComponentDeclarationRuleContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#componentDeclarationBody}.
+	 * Visit a parse tree produced by the {@code ComponentBody}
+	 * labeled alternative in {@link typescriptparser#componentDeclarationBody}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitComponentDeclarationBody(typescriptparser.ComponentDeclarationBodyContext ctx);
+	T visitComponentBody(typescriptparser.ComponentBodyContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#componentBodyElement}.
+	 * Visit a parse tree produced by the {@code SelectorDeclaration}
+	 * labeled alternative in {@link typescriptparser#selector}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitComponentBodyElement(typescriptparser.ComponentBodyElementContext ctx);
+	T visitSelectorDeclaration(typescriptparser.SelectorDeclarationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#selector}.
+	 * Visit a parse tree produced by the {@code StandaloneProperty}
+	 * labeled alternative in {@link typescriptparser#standalone}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSelector(typescriptparser.SelectorContext ctx);
+	T visitStandaloneProperty(typescriptparser.StandalonePropertyContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#standalone}.
+	 * Visit a parse tree produced by the {@code TemplateDefinition}
+	 * labeled alternative in {@link typescriptparser#template}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitStandalone(typescriptparser.StandaloneContext ctx);
+	T visitTemplateDefinition(typescriptparser.TemplateDefinitionContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#template}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitTemplate(typescriptparser.TemplateContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StylesRule}
+	 * Visit a parse tree produced by the {@code StylesBlock}
 	 * labeled alternative in {@link typescriptparser#styles}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitStylesRule(typescriptparser.StylesRuleContext ctx);
+	T visitStylesBlock(typescriptparser.StylesBlockContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#isboolean}.
+	 * Visit a parse tree produced by the {@code StandardImportDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitIsboolean(typescriptparser.IsbooleanContext ctx);
+	T visitStandardImportDecl(typescriptparser.StandardImportDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ComponentImportDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComponentImportDecl(typescriptparser.ComponentImportDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ImportArrayDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitImportArrayDecl(typescriptparser.ImportArrayDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ComponentSelector}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComponentSelector(typescriptparser.ComponentSelectorContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ComponentStandalone}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComponentStandalone(typescriptparser.ComponentStandaloneContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ComponentImportElement}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComponentImportElement(typescriptparser.ComponentImportElementContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ComponentTemplate}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComponentTemplate(typescriptparser.ComponentTemplateContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ComponentStyles}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComponentStyles(typescriptparser.ComponentStylesContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code TrueBoolean}
+	 * labeled alternative in {@link typescriptparser#isboolean}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTrueBoolean(typescriptparser.TrueBooleanContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FalseBoolean}
+	 * labeled alternative in {@link typescriptparser#isboolean}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFalseBoolean(typescriptparser.FalseBooleanContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link typescriptparser#classDeclaration}.
 	 * @param ctx the parse tree
@@ -96,11 +160,19 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitClassMember(typescriptparser.ClassMemberContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#propertyDeclaration}.
+	 * Visit a parse tree produced by the {@code PropertyWithInit}
+	 * labeled alternative in {@link typescriptparser#propertyDeclaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPropertyDeclaration(typescriptparser.PropertyDeclarationContext ctx);
+	T visitPropertyWithInit(typescriptparser.PropertyWithInitContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code PropertyWithoutInit}
+	 * labeled alternative in {@link typescriptparser#propertyDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPropertyWithoutInit(typescriptparser.PropertyWithoutInitContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link typescriptparser#methodDeclaration}.
 	 * @param ctx the parse tree
@@ -138,11 +210,12 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitInterfaceMember(typescriptparser.InterfaceMemberContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#parameter}.
+	 * Visit a parse tree produced by the {@code ParameterRule}
+	 * labeled alternative in {@link typescriptparser#parameter}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitParameter(typescriptparser.ParameterContext ctx);
+	T visitParameterRule(typescriptparser.ParameterRuleContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link typescriptparser#parameterList}.
 	 * @param ctx the parse tree
@@ -156,53 +229,138 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVariableDeclaration(typescriptparser.VariableDeclarationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#importDeclaration}.
+	 * Visit a parse tree produced by the {@code StringType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitImportDeclaration(typescriptparser.ImportDeclarationContext ctx);
+	T visitStringType(typescriptparser.StringTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#type}.
+	 * Visit a parse tree produced by the {@code NumberType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitType(typescriptparser.TypeContext ctx);
+	T visitNumberType(typescriptparser.NumberTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#memberAccess}.
+	 * Visit a parse tree produced by the {@code BooleanType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitMemberAccess(typescriptparser.MemberAccessContext ctx);
+	T visitBooleanType(typescriptparser.BooleanTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#list}.
+	 * Visit a parse tree produced by the {@code AnyType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitList(typescriptparser.ListContext ctx);
+	T visitAnyType(typescriptparser.AnyTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#bodylist}.
+	 * Visit a parse tree produced by the {@code VoidType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBodylist(typescriptparser.BodylistContext ctx);
+	T visitVoidType(typescriptparser.VoidTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#object}.
+	 * Visit a parse tree produced by the {@code IdType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitObject(typescriptparser.ObjectContext ctx);
+	T visitIdType(typescriptparser.IdTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#bodyobject}.
+	 * Visit a parse tree produced by the {@code ListType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBodyobject(typescriptparser.BodyobjectContext ctx);
+	T visitListType(typescriptparser.ListTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#initvalue}.
+	 * Visit a parse tree produced by the {@code ThisMemberAccess}
+	 * labeled alternative in {@link typescriptparser#memberAccess}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitInitvalue(typescriptparser.InitvalueContext ctx);
+	T visitThisMemberAccess(typescriptparser.ThisMemberAccessContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code SimpleMemberAccess}
+	 * labeled alternative in {@link typescriptparser#memberAccess}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSimpleMemberAccess(typescriptparser.SimpleMemberAccessContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ListDeclaration}
+	 * labeled alternative in {@link typescriptparser#list}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitListDeclaration(typescriptparser.ListDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BodyListRule}
+	 * labeled alternative in {@link typescriptparser#bodylist}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBodyListRule(typescriptparser.BodyListRuleContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ObjectRule}
+	 * labeled alternative in {@link typescriptparser#object}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectRule(typescriptparser.ObjectRuleContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ObjectBodyRule}
+	 * labeled alternative in {@link typescriptparser#bodyobject}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code KeyValue}
+	 * labeled alternative in {@link typescriptparser#keyValuePair}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitKeyValue(typescriptparser.KeyValueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code NumberInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNumberInitValue(typescriptparser.NumberInitValueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StringInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStringInitValue(typescriptparser.StringInitValueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BooleanInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBooleanInitValue(typescriptparser.BooleanInitValueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ListInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitListInitValue(typescriptparser.ListInitValueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ObjectInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectInitValue(typescriptparser.ObjectInitValueContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link typescriptparser#expression}.
 	 * @param ctx the parse tree
@@ -228,47 +386,96 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitArgument(typescriptparser.ArgumentContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#element}.
+	 * Visit a parse tree produced by the {@code TagElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitElement(typescriptparser.ElementContext ctx);
+	T visitTagElement(typescriptparser.TagElementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#tag}.
+	 * Visit a parse tree produced by the {@code HtmlNameElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTag(typescriptparser.TagContext ctx);
+	T visitHtmlNameElement(typescriptparser.HtmlNameElementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#openingTag}.
+	 * Visit a parse tree produced by the {@code InterpolationElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOpeningTag(typescriptparser.OpeningTagContext ctx);
+	T visitInterpolationElement(typescriptparser.InterpolationElementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#closingTag}.
+	 * Visit a parse tree produced by the {@code OpenCloseTag}
+	 * labeled alternative in {@link typescriptparser#tag}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitClosingTag(typescriptparser.ClosingTagContext ctx);
+	T visitOpenCloseTag(typescriptparser.OpenCloseTagContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#selfClosingTag}.
+	 * Visit a parse tree produced by the {@code SelfClosingTagElement}
+	 * labeled alternative in {@link typescriptparser#tag}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSelfClosingTag(typescriptparser.SelfClosingTagContext ctx);
+	T visitSelfClosingTagElement(typescriptparser.SelfClosingTagElementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#attributes}.
+	 * Visit a parse tree produced by the {@code OpeningTagRule}
+	 * labeled alternative in {@link typescriptparser#openingTag}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitAttributes(typescriptparser.AttributesContext ctx);
+	T visitOpeningTagRule(typescriptparser.OpeningTagRuleContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link typescriptparser#interpolation}.
+	 * Visit a parse tree produced by the {@code ClosingTagRule}
+	 * labeled alternative in {@link typescriptparser#closingTag}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitInterpolation(typescriptparser.InterpolationContext ctx);
+	T visitClosingTagRule(typescriptparser.ClosingTagRuleContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code SelfClosingTagRule}
+	 * labeled alternative in {@link typescriptparser#selfClosingTag}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSelfClosingTagRule(typescriptparser.SelfClosingTagRuleContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code HtmlAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitHtmlAttribute(typescriptparser.HtmlAttributeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StructuralDirectiveAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructuralDirectiveAttribute(typescriptparser.StructuralDirectiveAttributeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BindingAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBindingAttribute(typescriptparser.BindingAttributeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code EventBindingAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEventBindingAttribute(typescriptparser.EventBindingAttributeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code InterpolationRule}
+	 * labeled alternative in {@link typescriptparser#interpolation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInterpolationRule(typescriptparser.InterpolationRuleContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code CssBodyRule}
 	 * labeled alternative in {@link typescriptparser#cssBody}.

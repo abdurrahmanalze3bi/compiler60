@@ -41,109 +41,205 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAssignmentStatement(typescriptparser.AssignmentStatementContext ctx) { }
+	@Override public void enterAssignmentRule(typescriptparser.AssignmentRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitAssignmentStatement(typescriptparser.AssignmentStatementContext ctx) { }
+	@Override public void exitAssignmentRule(typescriptparser.AssignmentRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterComponentDeclaration(typescriptparser.ComponentDeclarationContext ctx) { }
+	@Override public void enterComponentDeclarationRule(typescriptparser.ComponentDeclarationRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitComponentDeclaration(typescriptparser.ComponentDeclarationContext ctx) { }
+	@Override public void exitComponentDeclarationRule(typescriptparser.ComponentDeclarationRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterComponentDeclarationBody(typescriptparser.ComponentDeclarationBodyContext ctx) { }
+	@Override public void enterComponentBody(typescriptparser.ComponentBodyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitComponentDeclarationBody(typescriptparser.ComponentDeclarationBodyContext ctx) { }
+	@Override public void exitComponentBody(typescriptparser.ComponentBodyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterComponentBodyElement(typescriptparser.ComponentBodyElementContext ctx) { }
+	@Override public void enterSelectorDeclaration(typescriptparser.SelectorDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitComponentBodyElement(typescriptparser.ComponentBodyElementContext ctx) { }
+	@Override public void exitSelectorDeclaration(typescriptparser.SelectorDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterSelector(typescriptparser.SelectorContext ctx) { }
+	@Override public void enterStandaloneProperty(typescriptparser.StandalonePropertyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitSelector(typescriptparser.SelectorContext ctx) { }
+	@Override public void exitStandaloneProperty(typescriptparser.StandalonePropertyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStandalone(typescriptparser.StandaloneContext ctx) { }
+	@Override public void enterTemplateDefinition(typescriptparser.TemplateDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitStandalone(typescriptparser.StandaloneContext ctx) { }
+	@Override public void exitTemplateDefinition(typescriptparser.TemplateDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTemplate(typescriptparser.TemplateContext ctx) { }
+	@Override public void enterStylesBlock(typescriptparser.StylesBlockContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTemplate(typescriptparser.TemplateContext ctx) { }
+	@Override public void exitStylesBlock(typescriptparser.StylesBlockContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStylesRule(typescriptparser.StylesRuleContext ctx) { }
+	@Override public void enterStandardImportDecl(typescriptparser.StandardImportDeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitStylesRule(typescriptparser.StylesRuleContext ctx) { }
+	@Override public void exitStandardImportDecl(typescriptparser.StandardImportDeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterIsboolean(typescriptparser.IsbooleanContext ctx) { }
+	@Override public void enterComponentImportDecl(typescriptparser.ComponentImportDeclContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitIsboolean(typescriptparser.IsbooleanContext ctx) { }
+	@Override public void exitComponentImportDecl(typescriptparser.ComponentImportDeclContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterImportArrayDecl(typescriptparser.ImportArrayDeclContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitImportArrayDecl(typescriptparser.ImportArrayDeclContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterComponentSelector(typescriptparser.ComponentSelectorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComponentSelector(typescriptparser.ComponentSelectorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterComponentStandalone(typescriptparser.ComponentStandaloneContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComponentStandalone(typescriptparser.ComponentStandaloneContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterComponentImportElement(typescriptparser.ComponentImportElementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComponentImportElement(typescriptparser.ComponentImportElementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterComponentTemplate(typescriptparser.ComponentTemplateContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComponentTemplate(typescriptparser.ComponentTemplateContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterComponentStyles(typescriptparser.ComponentStylesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComponentStyles(typescriptparser.ComponentStylesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterTrueBoolean(typescriptparser.TrueBooleanContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTrueBoolean(typescriptparser.TrueBooleanContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFalseBoolean(typescriptparser.FalseBooleanContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFalseBoolean(typescriptparser.FalseBooleanContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -185,13 +281,25 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterPropertyDeclaration(typescriptparser.PropertyDeclarationContext ctx) { }
+	@Override public void enterPropertyWithInit(typescriptparser.PropertyWithInitContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitPropertyDeclaration(typescriptparser.PropertyDeclarationContext ctx) { }
+	@Override public void exitPropertyWithInit(typescriptparser.PropertyWithInitContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterPropertyWithoutInit(typescriptparser.PropertyWithoutInitContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitPropertyWithoutInit(typescriptparser.PropertyWithoutInitContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -269,13 +377,13 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterParameter(typescriptparser.ParameterContext ctx) { }
+	@Override public void enterParameterRule(typescriptparser.ParameterRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitParameter(typescriptparser.ParameterContext ctx) { }
+	@Override public void exitParameterRule(typescriptparser.ParameterRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -305,97 +413,229 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterImportDeclaration(typescriptparser.ImportDeclarationContext ctx) { }
+	@Override public void enterStringType(typescriptparser.StringTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitImportDeclaration(typescriptparser.ImportDeclarationContext ctx) { }
+	@Override public void exitStringType(typescriptparser.StringTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterType(typescriptparser.TypeContext ctx) { }
+	@Override public void enterNumberType(typescriptparser.NumberTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitType(typescriptparser.TypeContext ctx) { }
+	@Override public void exitNumberType(typescriptparser.NumberTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterMemberAccess(typescriptparser.MemberAccessContext ctx) { }
+	@Override public void enterBooleanType(typescriptparser.BooleanTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitMemberAccess(typescriptparser.MemberAccessContext ctx) { }
+	@Override public void exitBooleanType(typescriptparser.BooleanTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterList(typescriptparser.ListContext ctx) { }
+	@Override public void enterAnyType(typescriptparser.AnyTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitList(typescriptparser.ListContext ctx) { }
+	@Override public void exitAnyType(typescriptparser.AnyTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBodylist(typescriptparser.BodylistContext ctx) { }
+	@Override public void enterVoidType(typescriptparser.VoidTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBodylist(typescriptparser.BodylistContext ctx) { }
+	@Override public void exitVoidType(typescriptparser.VoidTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterObject(typescriptparser.ObjectContext ctx) { }
+	@Override public void enterIdType(typescriptparser.IdTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitObject(typescriptparser.ObjectContext ctx) { }
+	@Override public void exitIdType(typescriptparser.IdTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBodyobject(typescriptparser.BodyobjectContext ctx) { }
+	@Override public void enterListType(typescriptparser.ListTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBodyobject(typescriptparser.BodyobjectContext ctx) { }
+	@Override public void exitListType(typescriptparser.ListTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterInitvalue(typescriptparser.InitvalueContext ctx) { }
+	@Override public void enterThisMemberAccess(typescriptparser.ThisMemberAccessContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitInitvalue(typescriptparser.InitvalueContext ctx) { }
+	@Override public void exitThisMemberAccess(typescriptparser.ThisMemberAccessContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSimpleMemberAccess(typescriptparser.SimpleMemberAccessContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSimpleMemberAccess(typescriptparser.SimpleMemberAccessContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterListDeclaration(typescriptparser.ListDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitListDeclaration(typescriptparser.ListDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBodyListRule(typescriptparser.BodyListRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBodyListRule(typescriptparser.BodyListRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterObjectRule(typescriptparser.ObjectRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectRule(typescriptparser.ObjectRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterKeyValue(typescriptparser.KeyValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitKeyValue(typescriptparser.KeyValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterNumberInitValue(typescriptparser.NumberInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitNumberInitValue(typescriptparser.NumberInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterStringInitValue(typescriptparser.StringInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitStringInitValue(typescriptparser.StringInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBooleanInitValue(typescriptparser.BooleanInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBooleanInitValue(typescriptparser.BooleanInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterListInitValue(typescriptparser.ListInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitListInitValue(typescriptparser.ListInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterObjectInitValue(typescriptparser.ObjectInitValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectInitValue(typescriptparser.ObjectInitValueContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -449,85 +689,157 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterElement(typescriptparser.ElementContext ctx) { }
+	@Override public void enterTagElement(typescriptparser.TagElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitElement(typescriptparser.ElementContext ctx) { }
+	@Override public void exitTagElement(typescriptparser.TagElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTag(typescriptparser.TagContext ctx) { }
+	@Override public void enterHtmlNameElement(typescriptparser.HtmlNameElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTag(typescriptparser.TagContext ctx) { }
+	@Override public void exitHtmlNameElement(typescriptparser.HtmlNameElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOpeningTag(typescriptparser.OpeningTagContext ctx) { }
+	@Override public void enterInterpolationElement(typescriptparser.InterpolationElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitOpeningTag(typescriptparser.OpeningTagContext ctx) { }
+	@Override public void exitInterpolationElement(typescriptparser.InterpolationElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterClosingTag(typescriptparser.ClosingTagContext ctx) { }
+	@Override public void enterOpenCloseTag(typescriptparser.OpenCloseTagContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitClosingTag(typescriptparser.ClosingTagContext ctx) { }
+	@Override public void exitOpenCloseTag(typescriptparser.OpenCloseTagContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterSelfClosingTag(typescriptparser.SelfClosingTagContext ctx) { }
+	@Override public void enterSelfClosingTagElement(typescriptparser.SelfClosingTagElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitSelfClosingTag(typescriptparser.SelfClosingTagContext ctx) { }
+	@Override public void exitSelfClosingTagElement(typescriptparser.SelfClosingTagElementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAttributes(typescriptparser.AttributesContext ctx) { }
+	@Override public void enterOpeningTagRule(typescriptparser.OpeningTagRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitAttributes(typescriptparser.AttributesContext ctx) { }
+	@Override public void exitOpeningTagRule(typescriptparser.OpeningTagRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterInterpolation(typescriptparser.InterpolationContext ctx) { }
+	@Override public void enterClosingTagRule(typescriptparser.ClosingTagRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitInterpolation(typescriptparser.InterpolationContext ctx) { }
+	@Override public void exitClosingTagRule(typescriptparser.ClosingTagRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSelfClosingTagRule(typescriptparser.SelfClosingTagRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSelfClosingTagRule(typescriptparser.SelfClosingTagRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterHtmlAttribute(typescriptparser.HtmlAttributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitHtmlAttribute(typescriptparser.HtmlAttributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterStructuralDirectiveAttribute(typescriptparser.StructuralDirectiveAttributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitStructuralDirectiveAttribute(typescriptparser.StructuralDirectiveAttributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBindingAttribute(typescriptparser.BindingAttributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBindingAttribute(typescriptparser.BindingAttributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterEventBindingAttribute(typescriptparser.EventBindingAttributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitEventBindingAttribute(typescriptparser.EventBindingAttributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterInterpolationRule(typescriptparser.InterpolationRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInterpolationRule(typescriptparser.InterpolationRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

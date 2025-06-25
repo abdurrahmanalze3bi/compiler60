@@ -1,15 +1,15 @@
 package classes;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PropertyDeclaration {
-    private List<String> ID = new ArrayList<>();  // Initialize the list to avoid null pointer exception
+    private List<String> ID = new ArrayList<>();
     private TypeV typeV;
     private Initvalue initvalue;
+    private String unionType;  // New field for union types
 
-    // Getters and Setters
+    // ================= GETTERS & SETTERS =================
     public List<String> getID() {
         return ID;
     }
@@ -34,26 +34,37 @@ public class PropertyDeclaration {
         this.initvalue = initvalue;
     }
 
+    // New getter and setter for unionType
+    public String getUnionType() {
+        return unionType;
+    }
+
+    public void setUnionType(String unionType) {
+        this.unionType = unionType;
+    }
+
+    // ================= TOSTRING =================
     @Override
     public String toString() {
+        StringBuilder sb = new StringBuilder("\nPropertyDeclaration{");
+
+        if (!ID.isEmpty()) {
+            sb.append("\n  ID=").append(ID);
+        }
+
+        if (typeV != null) {
+            sb.append("\n  typeV=").append(typeV);
+        }
+
         if (initvalue != null) {
-            return "\nPropertyDeclaration{" +
-                     initvalue + '\'' +
-                    "\n}";
+            sb.append("\n  initvalue=").append(initvalue);
         }
 
-  if(ID!=null){
-      return  "\nPropertyDeclaration{" +
-             "\nID=" + ID + '\'' +
-              "\n}";
-
+        if (unionType != null) {
+            sb.append("\n  unionType='").append(unionType).append('\'');
         }
-            return  "\nPropertyDeclaration{" +
-                    typeV + '\'' +
-                    "\n}";
 
-
-
-
+        sb.append("\n}");
+        return sb.toString();
     }
 }

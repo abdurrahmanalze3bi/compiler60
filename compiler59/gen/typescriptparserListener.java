@@ -28,97 +28,209 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitStatement(typescriptparser.StatementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#assignmentStatement}.
+	 * Enter a parse tree produced by the {@code AssignmentRule}
+	 * labeled alternative in {@link typescriptparser#assignmentStatement}.
 	 * @param ctx the parse tree
 	 */
-	void enterAssignmentStatement(typescriptparser.AssignmentStatementContext ctx);
+	void enterAssignmentRule(typescriptparser.AssignmentRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#assignmentStatement}.
+	 * Exit a parse tree produced by the {@code AssignmentRule}
+	 * labeled alternative in {@link typescriptparser#assignmentStatement}.
 	 * @param ctx the parse tree
 	 */
-	void exitAssignmentStatement(typescriptparser.AssignmentStatementContext ctx);
+	void exitAssignmentRule(typescriptparser.AssignmentRuleContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#componentDeclaration}.
+	 * Enter a parse tree produced by the {@code ComponentDeclarationRule}
+	 * labeled alternative in {@link typescriptparser#componentDeclaration}.
 	 * @param ctx the parse tree
 	 */
-	void enterComponentDeclaration(typescriptparser.ComponentDeclarationContext ctx);
+	void enterComponentDeclarationRule(typescriptparser.ComponentDeclarationRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#componentDeclaration}.
+	 * Exit a parse tree produced by the {@code ComponentDeclarationRule}
+	 * labeled alternative in {@link typescriptparser#componentDeclaration}.
 	 * @param ctx the parse tree
 	 */
-	void exitComponentDeclaration(typescriptparser.ComponentDeclarationContext ctx);
+	void exitComponentDeclarationRule(typescriptparser.ComponentDeclarationRuleContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#componentDeclarationBody}.
+	 * Enter a parse tree produced by the {@code ComponentBody}
+	 * labeled alternative in {@link typescriptparser#componentDeclarationBody}.
 	 * @param ctx the parse tree
 	 */
-	void enterComponentDeclarationBody(typescriptparser.ComponentDeclarationBodyContext ctx);
+	void enterComponentBody(typescriptparser.ComponentBodyContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#componentDeclarationBody}.
+	 * Exit a parse tree produced by the {@code ComponentBody}
+	 * labeled alternative in {@link typescriptparser#componentDeclarationBody}.
 	 * @param ctx the parse tree
 	 */
-	void exitComponentDeclarationBody(typescriptparser.ComponentDeclarationBodyContext ctx);
+	void exitComponentBody(typescriptparser.ComponentBodyContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#componentBodyElement}.
+	 * Enter a parse tree produced by the {@code SelectorDeclaration}
+	 * labeled alternative in {@link typescriptparser#selector}.
 	 * @param ctx the parse tree
 	 */
-	void enterComponentBodyElement(typescriptparser.ComponentBodyElementContext ctx);
+	void enterSelectorDeclaration(typescriptparser.SelectorDeclarationContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#componentBodyElement}.
+	 * Exit a parse tree produced by the {@code SelectorDeclaration}
+	 * labeled alternative in {@link typescriptparser#selector}.
 	 * @param ctx the parse tree
 	 */
-	void exitComponentBodyElement(typescriptparser.ComponentBodyElementContext ctx);
+	void exitSelectorDeclaration(typescriptparser.SelectorDeclarationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#selector}.
+	 * Enter a parse tree produced by the {@code StandaloneProperty}
+	 * labeled alternative in {@link typescriptparser#standalone}.
 	 * @param ctx the parse tree
 	 */
-	void enterSelector(typescriptparser.SelectorContext ctx);
+	void enterStandaloneProperty(typescriptparser.StandalonePropertyContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#selector}.
+	 * Exit a parse tree produced by the {@code StandaloneProperty}
+	 * labeled alternative in {@link typescriptparser#standalone}.
 	 * @param ctx the parse tree
 	 */
-	void exitSelector(typescriptparser.SelectorContext ctx);
+	void exitStandaloneProperty(typescriptparser.StandalonePropertyContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#standalone}.
+	 * Enter a parse tree produced by the {@code TemplateDefinition}
+	 * labeled alternative in {@link typescriptparser#template}.
 	 * @param ctx the parse tree
 	 */
-	void enterStandalone(typescriptparser.StandaloneContext ctx);
+	void enterTemplateDefinition(typescriptparser.TemplateDefinitionContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#standalone}.
+	 * Exit a parse tree produced by the {@code TemplateDefinition}
+	 * labeled alternative in {@link typescriptparser#template}.
 	 * @param ctx the parse tree
 	 */
-	void exitStandalone(typescriptparser.StandaloneContext ctx);
+	void exitTemplateDefinition(typescriptparser.TemplateDefinitionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#template}.
-	 * @param ctx the parse tree
-	 */
-	void enterTemplate(typescriptparser.TemplateContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link typescriptparser#template}.
-	 * @param ctx the parse tree
-	 */
-	void exitTemplate(typescriptparser.TemplateContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code StylesRule}
+	 * Enter a parse tree produced by the {@code StylesBlock}
 	 * labeled alternative in {@link typescriptparser#styles}.
 	 * @param ctx the parse tree
 	 */
-	void enterStylesRule(typescriptparser.StylesRuleContext ctx);
+	void enterStylesBlock(typescriptparser.StylesBlockContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code StylesRule}
+	 * Exit a parse tree produced by the {@code StylesBlock}
 	 * labeled alternative in {@link typescriptparser#styles}.
 	 * @param ctx the parse tree
 	 */
-	void exitStylesRule(typescriptparser.StylesRuleContext ctx);
+	void exitStylesBlock(typescriptparser.StylesBlockContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#isboolean}.
+	 * Enter a parse tree produced by the {@code StandardImportDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
 	 * @param ctx the parse tree
 	 */
-	void enterIsboolean(typescriptparser.IsbooleanContext ctx);
+	void enterStandardImportDecl(typescriptparser.StandardImportDeclContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#isboolean}.
+	 * Exit a parse tree produced by the {@code StandardImportDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
 	 * @param ctx the parse tree
 	 */
-	void exitIsboolean(typescriptparser.IsbooleanContext ctx);
+	void exitStandardImportDecl(typescriptparser.StandardImportDeclContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ComponentImportDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterComponentImportDecl(typescriptparser.ComponentImportDeclContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComponentImportDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitComponentImportDecl(typescriptparser.ComponentImportDeclContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ImportArrayDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterImportArrayDecl(typescriptparser.ImportArrayDeclContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ImportArrayDecl}
+	 * labeled alternative in {@link typescriptparser#importDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitImportArrayDecl(typescriptparser.ImportArrayDeclContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ComponentSelector}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterComponentSelector(typescriptparser.ComponentSelectorContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComponentSelector}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitComponentSelector(typescriptparser.ComponentSelectorContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ComponentStandalone}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterComponentStandalone(typescriptparser.ComponentStandaloneContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComponentStandalone}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitComponentStandalone(typescriptparser.ComponentStandaloneContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ComponentImportElement}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterComponentImportElement(typescriptparser.ComponentImportElementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComponentImportElement}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitComponentImportElement(typescriptparser.ComponentImportElementContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ComponentTemplate}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterComponentTemplate(typescriptparser.ComponentTemplateContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComponentTemplate}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitComponentTemplate(typescriptparser.ComponentTemplateContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ComponentStyles}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void enterComponentStyles(typescriptparser.ComponentStylesContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComponentStyles}
+	 * labeled alternative in {@link typescriptparser#componentBodyElement}.
+	 * @param ctx the parse tree
+	 */
+	void exitComponentStyles(typescriptparser.ComponentStylesContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code TrueBoolean}
+	 * labeled alternative in {@link typescriptparser#isboolean}.
+	 * @param ctx the parse tree
+	 */
+	void enterTrueBoolean(typescriptparser.TrueBooleanContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code TrueBoolean}
+	 * labeled alternative in {@link typescriptparser#isboolean}.
+	 * @param ctx the parse tree
+	 */
+	void exitTrueBoolean(typescriptparser.TrueBooleanContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code FalseBoolean}
+	 * labeled alternative in {@link typescriptparser#isboolean}.
+	 * @param ctx the parse tree
+	 */
+	void enterFalseBoolean(typescriptparser.FalseBooleanContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code FalseBoolean}
+	 * labeled alternative in {@link typescriptparser#isboolean}.
+	 * @param ctx the parse tree
+	 */
+	void exitFalseBoolean(typescriptparser.FalseBooleanContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link typescriptparser#classDeclaration}.
 	 * @param ctx the parse tree
@@ -150,15 +262,29 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitClassMember(typescriptparser.ClassMemberContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#propertyDeclaration}.
+	 * Enter a parse tree produced by the {@code PropertyWithInit}
+	 * labeled alternative in {@link typescriptparser#propertyDeclaration}.
 	 * @param ctx the parse tree
 	 */
-	void enterPropertyDeclaration(typescriptparser.PropertyDeclarationContext ctx);
+	void enterPropertyWithInit(typescriptparser.PropertyWithInitContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#propertyDeclaration}.
+	 * Exit a parse tree produced by the {@code PropertyWithInit}
+	 * labeled alternative in {@link typescriptparser#propertyDeclaration}.
 	 * @param ctx the parse tree
 	 */
-	void exitPropertyDeclaration(typescriptparser.PropertyDeclarationContext ctx);
+	void exitPropertyWithInit(typescriptparser.PropertyWithInitContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code PropertyWithoutInit}
+	 * labeled alternative in {@link typescriptparser#propertyDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterPropertyWithoutInit(typescriptparser.PropertyWithoutInitContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code PropertyWithoutInit}
+	 * labeled alternative in {@link typescriptparser#propertyDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitPropertyWithoutInit(typescriptparser.PropertyWithoutInitContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link typescriptparser#methodDeclaration}.
 	 * @param ctx the parse tree
@@ -220,15 +346,17 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitInterfaceMember(typescriptparser.InterfaceMemberContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#parameter}.
+	 * Enter a parse tree produced by the {@code ParameterRule}
+	 * labeled alternative in {@link typescriptparser#parameter}.
 	 * @param ctx the parse tree
 	 */
-	void enterParameter(typescriptparser.ParameterContext ctx);
+	void enterParameterRule(typescriptparser.ParameterRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#parameter}.
+	 * Exit a parse tree produced by the {@code ParameterRule}
+	 * labeled alternative in {@link typescriptparser#parameter}.
 	 * @param ctx the parse tree
 	 */
-	void exitParameter(typescriptparser.ParameterContext ctx);
+	void exitParameterRule(typescriptparser.ParameterRuleContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link typescriptparser#parameterList}.
 	 * @param ctx the parse tree
@@ -250,85 +378,233 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitVariableDeclaration(typescriptparser.VariableDeclarationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#importDeclaration}.
+	 * Enter a parse tree produced by the {@code StringType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void enterImportDeclaration(typescriptparser.ImportDeclarationContext ctx);
+	void enterStringType(typescriptparser.StringTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#importDeclaration}.
+	 * Exit a parse tree produced by the {@code StringType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void exitImportDeclaration(typescriptparser.ImportDeclarationContext ctx);
+	void exitStringType(typescriptparser.StringTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#type}.
+	 * Enter a parse tree produced by the {@code NumberType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void enterType(typescriptparser.TypeContext ctx);
+	void enterNumberType(typescriptparser.NumberTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#type}.
+	 * Exit a parse tree produced by the {@code NumberType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void exitType(typescriptparser.TypeContext ctx);
+	void exitNumberType(typescriptparser.NumberTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#memberAccess}.
+	 * Enter a parse tree produced by the {@code BooleanType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void enterMemberAccess(typescriptparser.MemberAccessContext ctx);
+	void enterBooleanType(typescriptparser.BooleanTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#memberAccess}.
+	 * Exit a parse tree produced by the {@code BooleanType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void exitMemberAccess(typescriptparser.MemberAccessContext ctx);
+	void exitBooleanType(typescriptparser.BooleanTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#list}.
+	 * Enter a parse tree produced by the {@code AnyType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void enterList(typescriptparser.ListContext ctx);
+	void enterAnyType(typescriptparser.AnyTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#list}.
+	 * Exit a parse tree produced by the {@code AnyType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void exitList(typescriptparser.ListContext ctx);
+	void exitAnyType(typescriptparser.AnyTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#bodylist}.
+	 * Enter a parse tree produced by the {@code VoidType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void enterBodylist(typescriptparser.BodylistContext ctx);
+	void enterVoidType(typescriptparser.VoidTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#bodylist}.
+	 * Exit a parse tree produced by the {@code VoidType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void exitBodylist(typescriptparser.BodylistContext ctx);
+	void exitVoidType(typescriptparser.VoidTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#object}.
+	 * Enter a parse tree produced by the {@code IdType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void enterObject(typescriptparser.ObjectContext ctx);
+	void enterIdType(typescriptparser.IdTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#object}.
+	 * Exit a parse tree produced by the {@code IdType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void exitObject(typescriptparser.ObjectContext ctx);
+	void exitIdType(typescriptparser.IdTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#bodyobject}.
+	 * Enter a parse tree produced by the {@code ListType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void enterBodyobject(typescriptparser.BodyobjectContext ctx);
+	void enterListType(typescriptparser.ListTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#bodyobject}.
+	 * Exit a parse tree produced by the {@code ListType}
+	 * labeled alternative in {@link typescriptparser#type}.
 	 * @param ctx the parse tree
 	 */
-	void exitBodyobject(typescriptparser.BodyobjectContext ctx);
+	void exitListType(typescriptparser.ListTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#initvalue}.
+	 * Enter a parse tree produced by the {@code ThisMemberAccess}
+	 * labeled alternative in {@link typescriptparser#memberAccess}.
 	 * @param ctx the parse tree
 	 */
-	void enterInitvalue(typescriptparser.InitvalueContext ctx);
+	void enterThisMemberAccess(typescriptparser.ThisMemberAccessContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#initvalue}.
+	 * Exit a parse tree produced by the {@code ThisMemberAccess}
+	 * labeled alternative in {@link typescriptparser#memberAccess}.
 	 * @param ctx the parse tree
 	 */
-	void exitInitvalue(typescriptparser.InitvalueContext ctx);
+	void exitThisMemberAccess(typescriptparser.ThisMemberAccessContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code SimpleMemberAccess}
+	 * labeled alternative in {@link typescriptparser#memberAccess}.
+	 * @param ctx the parse tree
+	 */
+	void enterSimpleMemberAccess(typescriptparser.SimpleMemberAccessContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SimpleMemberAccess}
+	 * labeled alternative in {@link typescriptparser#memberAccess}.
+	 * @param ctx the parse tree
+	 */
+	void exitSimpleMemberAccess(typescriptparser.SimpleMemberAccessContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ListDeclaration}
+	 * labeled alternative in {@link typescriptparser#list}.
+	 * @param ctx the parse tree
+	 */
+	void enterListDeclaration(typescriptparser.ListDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ListDeclaration}
+	 * labeled alternative in {@link typescriptparser#list}.
+	 * @param ctx the parse tree
+	 */
+	void exitListDeclaration(typescriptparser.ListDeclarationContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code BodyListRule}
+	 * labeled alternative in {@link typescriptparser#bodylist}.
+	 * @param ctx the parse tree
+	 */
+	void enterBodyListRule(typescriptparser.BodyListRuleContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BodyListRule}
+	 * labeled alternative in {@link typescriptparser#bodylist}.
+	 * @param ctx the parse tree
+	 */
+	void exitBodyListRule(typescriptparser.BodyListRuleContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ObjectRule}
+	 * labeled alternative in {@link typescriptparser#object}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectRule(typescriptparser.ObjectRuleContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectRule}
+	 * labeled alternative in {@link typescriptparser#object}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectRule(typescriptparser.ObjectRuleContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ObjectBodyRule}
+	 * labeled alternative in {@link typescriptparser#bodyobject}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectBodyRule}
+	 * labeled alternative in {@link typescriptparser#bodyobject}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code KeyValue}
+	 * labeled alternative in {@link typescriptparser#keyValuePair}.
+	 * @param ctx the parse tree
+	 */
+	void enterKeyValue(typescriptparser.KeyValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code KeyValue}
+	 * labeled alternative in {@link typescriptparser#keyValuePair}.
+	 * @param ctx the parse tree
+	 */
+	void exitKeyValue(typescriptparser.KeyValueContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code NumberInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void enterNumberInitValue(typescriptparser.NumberInitValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code NumberInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void exitNumberInitValue(typescriptparser.NumberInitValueContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code StringInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void enterStringInitValue(typescriptparser.StringInitValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code StringInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void exitStringInitValue(typescriptparser.StringInitValueContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code BooleanInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void enterBooleanInitValue(typescriptparser.BooleanInitValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BooleanInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void exitBooleanInitValue(typescriptparser.BooleanInitValueContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ListInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void enterListInitValue(typescriptparser.ListInitValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ListInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void exitListInitValue(typescriptparser.ListInitValueContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ObjectInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectInitValue(typescriptparser.ObjectInitValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectInitValue}
+	 * labeled alternative in {@link typescriptparser#initvalue}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectInitValue(typescriptparser.ObjectInitValueContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link typescriptparser#expression}.
 	 * @param ctx the parse tree
@@ -370,75 +646,161 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitArgument(typescriptparser.ArgumentContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#element}.
+	 * Enter a parse tree produced by the {@code TagElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 */
-	void enterElement(typescriptparser.ElementContext ctx);
+	void enterTagElement(typescriptparser.TagElementContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#element}.
+	 * Exit a parse tree produced by the {@code TagElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 */
-	void exitElement(typescriptparser.ElementContext ctx);
+	void exitTagElement(typescriptparser.TagElementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#tag}.
+	 * Enter a parse tree produced by the {@code HtmlNameElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 */
-	void enterTag(typescriptparser.TagContext ctx);
+	void enterHtmlNameElement(typescriptparser.HtmlNameElementContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#tag}.
+	 * Exit a parse tree produced by the {@code HtmlNameElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 */
-	void exitTag(typescriptparser.TagContext ctx);
+	void exitHtmlNameElement(typescriptparser.HtmlNameElementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#openingTag}.
+	 * Enter a parse tree produced by the {@code InterpolationElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 */
-	void enterOpeningTag(typescriptparser.OpeningTagContext ctx);
+	void enterInterpolationElement(typescriptparser.InterpolationElementContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#openingTag}.
+	 * Exit a parse tree produced by the {@code InterpolationElement}
+	 * labeled alternative in {@link typescriptparser#element}.
 	 * @param ctx the parse tree
 	 */
-	void exitOpeningTag(typescriptparser.OpeningTagContext ctx);
+	void exitInterpolationElement(typescriptparser.InterpolationElementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#closingTag}.
+	 * Enter a parse tree produced by the {@code OpenCloseTag}
+	 * labeled alternative in {@link typescriptparser#tag}.
 	 * @param ctx the parse tree
 	 */
-	void enterClosingTag(typescriptparser.ClosingTagContext ctx);
+	void enterOpenCloseTag(typescriptparser.OpenCloseTagContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#closingTag}.
+	 * Exit a parse tree produced by the {@code OpenCloseTag}
+	 * labeled alternative in {@link typescriptparser#tag}.
 	 * @param ctx the parse tree
 	 */
-	void exitClosingTag(typescriptparser.ClosingTagContext ctx);
+	void exitOpenCloseTag(typescriptparser.OpenCloseTagContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#selfClosingTag}.
+	 * Enter a parse tree produced by the {@code SelfClosingTagElement}
+	 * labeled alternative in {@link typescriptparser#tag}.
 	 * @param ctx the parse tree
 	 */
-	void enterSelfClosingTag(typescriptparser.SelfClosingTagContext ctx);
+	void enterSelfClosingTagElement(typescriptparser.SelfClosingTagElementContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#selfClosingTag}.
+	 * Exit a parse tree produced by the {@code SelfClosingTagElement}
+	 * labeled alternative in {@link typescriptparser#tag}.
 	 * @param ctx the parse tree
 	 */
-	void exitSelfClosingTag(typescriptparser.SelfClosingTagContext ctx);
+	void exitSelfClosingTagElement(typescriptparser.SelfClosingTagElementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#attributes}.
+	 * Enter a parse tree produced by the {@code OpeningTagRule}
+	 * labeled alternative in {@link typescriptparser#openingTag}.
 	 * @param ctx the parse tree
 	 */
-	void enterAttributes(typescriptparser.AttributesContext ctx);
+	void enterOpeningTagRule(typescriptparser.OpeningTagRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#attributes}.
+	 * Exit a parse tree produced by the {@code OpeningTagRule}
+	 * labeled alternative in {@link typescriptparser#openingTag}.
 	 * @param ctx the parse tree
 	 */
-	void exitAttributes(typescriptparser.AttributesContext ctx);
+	void exitOpeningTagRule(typescriptparser.OpeningTagRuleContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link typescriptparser#interpolation}.
+	 * Enter a parse tree produced by the {@code ClosingTagRule}
+	 * labeled alternative in {@link typescriptparser#closingTag}.
 	 * @param ctx the parse tree
 	 */
-	void enterInterpolation(typescriptparser.InterpolationContext ctx);
+	void enterClosingTagRule(typescriptparser.ClosingTagRuleContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link typescriptparser#interpolation}.
+	 * Exit a parse tree produced by the {@code ClosingTagRule}
+	 * labeled alternative in {@link typescriptparser#closingTag}.
 	 * @param ctx the parse tree
 	 */
-	void exitInterpolation(typescriptparser.InterpolationContext ctx);
+	void exitClosingTagRule(typescriptparser.ClosingTagRuleContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code SelfClosingTagRule}
+	 * labeled alternative in {@link typescriptparser#selfClosingTag}.
+	 * @param ctx the parse tree
+	 */
+	void enterSelfClosingTagRule(typescriptparser.SelfClosingTagRuleContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SelfClosingTagRule}
+	 * labeled alternative in {@link typescriptparser#selfClosingTag}.
+	 * @param ctx the parse tree
+	 */
+	void exitSelfClosingTagRule(typescriptparser.SelfClosingTagRuleContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code HtmlAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void enterHtmlAttribute(typescriptparser.HtmlAttributeContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code HtmlAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void exitHtmlAttribute(typescriptparser.HtmlAttributeContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code StructuralDirectiveAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void enterStructuralDirectiveAttribute(typescriptparser.StructuralDirectiveAttributeContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code StructuralDirectiveAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void exitStructuralDirectiveAttribute(typescriptparser.StructuralDirectiveAttributeContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code BindingAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void enterBindingAttribute(typescriptparser.BindingAttributeContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BindingAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void exitBindingAttribute(typescriptparser.BindingAttributeContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code EventBindingAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void enterEventBindingAttribute(typescriptparser.EventBindingAttributeContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code EventBindingAttribute}
+	 * labeled alternative in {@link typescriptparser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void exitEventBindingAttribute(typescriptparser.EventBindingAttributeContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code InterpolationRule}
+	 * labeled alternative in {@link typescriptparser#interpolation}.
+	 * @param ctx the parse tree
+	 */
+	void enterInterpolationRule(typescriptparser.InterpolationRuleContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code InterpolationRule}
+	 * labeled alternative in {@link typescriptparser#interpolation}.
+	 * @param ctx the parse tree
+	 */
+	void exitInterpolationRule(typescriptparser.InterpolationRuleContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code CssBodyRule}
 	 * labeled alternative in {@link typescriptparser#cssBody}.

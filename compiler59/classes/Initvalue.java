@@ -1,12 +1,24 @@
 package classes;
 
 public class Initvalue {
-    String number ;
-    String string ;
-    IsBoolean isBoolean ;
-    BodyList bodyList ;
-    ObjectV objectV ;
+    // Existing fields
+    private String string;
+    private String number;
+    private IsBoolean isBoolean;
+    private BodyList bodyList;
+    private ObjectV objectV;
 
+    // New field to store object keys
+    private String objectKey;
+
+    // Getters and setters
+    public String getObjectKey() {
+        return objectKey;
+    }
+
+    public void setObjectKey(String objectKey) {
+        this.objectKey = objectKey;
+    }
     public String getNumber() {
         return number;
     }
