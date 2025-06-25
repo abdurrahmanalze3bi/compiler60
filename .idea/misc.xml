@@ -26,8 +26,8 @@
         <PerGrammarGenerationSettings>
           <option name="fileName" value="$PROJECT_DIR$/typescriptparser.g4" />
           <option name="autoGen" value="true" />
-          <option name="outputDir" value="C:\Users\ALZOUBI\ideaProjecte\compiler2\compiler59" />
-          <option name="libDir" value="C:\Users\ALZOUBI\ideaProjecte\compiler2\compiler59" />
+          <option name="outputDir" value="C:\Users\ALZOUBI\ideaProjecte\compiler2" />
+          <option name="libDir" value="C:\Users\ALZOUBI\ideaProjecte\compiler2" />
           <option name="encoding" value="" />
           <option name="pkg" value="gen" />
           <option name="language" value="" />
@@ -36,8 +36,8 @@
         <PerGrammarGenerationSettings>
           <option name="fileName" value="$PROJECT_DIR$/typescriptlexer.g4" />
           <option name="autoGen" value="true" />
-          <option name="outputDir" value="C:\Users\ALZOUBI\ideaProjecte\compiler2\compiler59" />
-          <option name="libDir" value="C:\Users\ALZOUBI\ideaProjecte\compiler2\compiler59" />
+          <option name="outputDir" value="C:\Users\ALZOUBI\ideaProjecte\compiler2" />
+          <option name="libDir" value="C:\Users\ALZOUBI\ideaProjecte\compiler2" />
           <option name="encoding" value="" />
           <option name="pkg" value="gen" />
           <option name="language" value="" />

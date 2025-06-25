@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { CommonModule } from '@angular/common';
 interface Product {
   id: number;
   name: string;
@@ -64,7 +64,7 @@ interface Product {
         </ul>
       </div>
 
-      <div class="product-details" ngIf="selectedProduct">
+      <div class="product-details" *ngIf="selectedProduct">
         <h3>Product Details</h3>
         <img [src]="selectedProduct!.imageUrl" alt="{{ selectedProduct!.name }}" />
         <h4>{{ selectedProduct!.name }}</h4>

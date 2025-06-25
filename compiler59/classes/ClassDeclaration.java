@@ -3,6 +3,16 @@ package classes;
 public class ClassDeclaration {
     String id;
     ClassDeclarationBody classDeclarationBody ;
+    private boolean exported;  // Add this field
+
+    // Getters and setters
+    public void setExported(boolean exported) {
+        this.exported = exported;
+    }
+
+    public boolean isExported() {
+        return exported;
+    }
 
     public ClassDeclarationBody getClassDeclarationBody() {
         return classDeclarationBody;

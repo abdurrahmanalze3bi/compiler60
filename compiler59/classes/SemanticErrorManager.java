@@ -92,9 +92,6 @@ public class SemanticErrorManager {
         System.err.println("SEMANTIC ERROR [Line " + line + ", Column " + column + "]: " + error.getMessage());
     }
 
-    public boolean isComponentProperty(String name) {
-        return componentProperties.contains(name);
-    }
 
     // ========================================
     // METHOD SEMANTIC CHECKS (NEW FUNCTIONALITY)
@@ -130,18 +127,7 @@ public class SemanticErrorManager {
         }
         // In SemanticErrorManager class
 
-        private String extractNgForVariable(String directiveContent) {
-            if (directiveContent == null) return null;
 
-            // Extract content: "let item of products" -> look for "of" keyword
-            String[] parts = directiveContent.split("\\s+");
-            for (int i = 0; i < parts.length - 1; i++) {
-                if ("of".equals(parts[i]) || "in".equals(parts[i])) {
-                    return parts[i + 1].replace(";", "").trim();
-                }
-            }
-            return null;
-        }
 
         public void setParameterTypes(List<String> parameterTypes) {
             this.parameterTypes = parameterTypes != null ? new ArrayList<>(parameterTypes) : new ArrayList<>();
@@ -237,25 +223,7 @@ public class SemanticErrorManager {
     }
 
 
-    private MethodInfo findMethodInfo(String methodName) {
-        if (methodName == null) return null;
-        String currentScope = symbolTable.getCurrentScopeName();
 
-        // Build scope-specific keys
-        String[] lookupKeys = {
-                currentScope + "." + methodName,  // Most specific
-                "CLASS." + methodName,            // Class-level
-                "METHOD." + methodName,           // Method-level
-                "GLOBAL." + methodName            // Global
-        };
-
-        for (String key : lookupKeys) {
-            MethodInfo methodInfo = methodSignatures.get(key);
-            if (methodInfo != null) return methodInfo;
-        }
-
-        return null;
-    }
 
     public static boolean isTypeCompatible(String declaredType, String actualType) {
         if (declaredType == null || actualType == null) return false;
@@ -292,17 +260,7 @@ public class SemanticErrorManager {
         return false;
     }
 
-    private boolean isTypeConvertible(String declaredType, String actualType) {
-        Map<String, List<String>> typeCompatibility = new HashMap<>();
-        typeCompatibility.put("string", List.of("string", "string_literal", "text"));
-        typeCompatibility.put("number", List.of("int", "integer", "number", "number_literal", "float", "double"));
-        typeCompatibility.put("boolean", List.of("boolean", "boolean_literal", "bool"));
-        typeCompatibility.put("object", List.of("object", "any", "class"));
-        typeCompatibility.put("any", List.of("string", "number", "boolean", "object", "any"));
 
-        List<String> compatibleTypes = typeCompatibility.get(declaredType);
-        return compatibleTypes != null && compatibleTypes.contains(actualType);
-    }
 
     // Check for missing return statements
     private void checkMethodReturnCompleteness(MethodInfo method) {
@@ -325,23 +283,6 @@ public class SemanticErrorManager {
     // ========================================
 
     // Track when decorators are used
-    public void trackDecoratorUsage(String decoratorName, int line, int column) {
-        if (decoratorName != null) {
-            String cleanDecorator = decoratorName.replace("@", "");
-            usedDecorators.add(cleanDecorator);
-
-            // Check if the decorator is imported
-            if (!importedIdentifiers.contains(cleanDecorator)) {
-                SemanticError error = new SemanticError(
-                        SemanticErrorType.MISSING_DECORATOR_IMPORT,
-                        "Decorator '@" + cleanDecorator + "' is used but not imported. Add: import { " + cleanDecorator + " } from '@angular/core';",
-                        line, column, cleanDecorator
-                );
-                errors.add(error);
-                System.err.println("SEMANTIC ERROR [Line " + line + ", Column " + column + "]: " + error.getMessage());
-            }
-        }
-    }
 
     // Check undefined variables
     public void checkUndefinedVariable(String variableName, int line, int column) {
@@ -403,46 +344,7 @@ public class SemanticErrorManager {
     }
 
     // DEPRECATED: Use checkDirectiveAttribute instead
-    public void checkMissingStructuralDirective(String directiveName, int line, int column) {
-        checkDirectiveAttribute(directiveName, line, column);
-    }
 
-    // FIXED: Check for missing CommonModule import when structural directives are used
-    public void checkMissingCommonModule() {
-        System.out.println("DEBUG: Final check - Structural directives: " + structuralDirectivesUsed +
-                ", CommonModule imported: " + hasCommonModuleImport);
-        System.out.println("DEBUG: Imported identifiers: " + importedIdentifiers);
-
-        // Only check if we actually have structural directives AND no CommonModule import
-        if (!structuralDirectivesUsed.isEmpty() && !hasCommonModuleImport) {
-            SemanticError error = new SemanticError(
-                    SemanticErrorType.MISSING_COMMON_MODULE,
-                    "Missing CommonModule import. Structural directives like *ngFor, *ngIf require CommonModule to be imported. Add: import { CommonModule } from '@angular/common';",
-                    0, 0, // Global error
-                    String.join(", ", structuralDirectivesUsed)
-            );
-            errors.add(error);
-            System.err.println("SEMANTIC ERROR: " + error.getMessage());
-        }
-
-        // Additional validation: if CommonModule is not in imported identifiers but we think it's imported
-        if (hasCommonModuleImport && !importedIdentifiers.contains("CommonModule")) {
-            System.out.println("DEBUG: WARNING - hasCommonModuleImport is true but CommonModule not in importedIdentifiers");
-            hasCommonModuleImport = false; // Reset the flag
-
-            // Re-check after reset
-            if (!structuralDirectivesUsed.isEmpty()) {
-                SemanticError error = new SemanticError(
-                        SemanticErrorType.MISSING_COMMON_MODULE,
-                        "Missing CommonModule import. Structural directives like *ngFor, *ngIf require CommonModule to be imported. Add: import { CommonModule } from '@angular/common';",
-                        0, 0, // Global error
-                        String.join(", ", structuralDirectivesUsed)
-                );
-                errors.add(error);
-                System.err.println("SEMANTIC ERROR: " + error.getMessage());
-            }
-        }
-    }
 
     // Check for property binding mismatches
     public void checkPropertyBinding(String propertyName, String bindingType, int line, int column) {
@@ -473,26 +375,7 @@ public class SemanticErrorManager {
     }
 
 
-    // Check interpolation variables
-    public void checkInterpolationVariable(String variableName, int line, int column) {
-        if (variableName == null) return;
 
-        Set<String> relevantTokens = new HashSet<>();
-        String cleanVariable = variableName.replaceAll("['\"]", "");
-        relevantTokens.add(cleanVariable);
-
-        Row variableSymbol = symbolTable.lookupSymbol(cleanVariable);
-        if (variableSymbol == null) {
-            SemanticError error = new SemanticError(
-                    SemanticErrorType.UNDEFINED_INTERPOLATION_VARIABLE,
-                    "Interpolation variable '{{ " + cleanVariable + " }}' is not defined in component",
-                    line, column, cleanVariable,
-                    createSnapshot(relevantTokens)
-            );
-            errors.add(error);
-            System.err.println("SEMANTIC ERROR [Line " + line + ", Column " + column + "]: " + error.getMessage());
-        }
-    }
 
 
     // Check for missing decorator symbol (@)
@@ -545,41 +428,7 @@ public class SemanticErrorManager {
     }
 
     // NEW: Method to simulate detecting directives without CommonModule import
-    public void simulateDirectiveUsageWithoutCommonModule() {
-        // This method can be used for testing
-        // Force check structural directives without CommonModule
-        hasCommonModuleImport = false;
-        importedIdentifiers.remove("CommonModule");
 
-        // Add some structural directives to trigger the error
-        structuralDirectivesUsed.add("ngFor");
-        structuralDirectivesUsed.add("ngIf");
-
-        System.out.println("DEBUG: Simulating directive usage without CommonModule");
-        System.out.println("DEBUG: hasCommonModuleImport: " + hasCommonModuleImport);
-        System.out.println("DEBUG: structuralDirectivesUsed: " + structuralDirectivesUsed);
-    }
-
-    // FIXED: Check for missing required imports at the end of analysis
-    public void checkImportDeclaration(String importId, String importPath) {
-        if (importId != null) {
-            String cleanId = importId.replaceAll("['\"]", "").trim();
-            importedIdentifiers.add(cleanId);
-
-        }
-
-        if (importPath != null) {
-            String cleanPath = importPath.replaceAll("['\"]", "").trim();
-            importedModules.add(cleanPath);
-
-
-            // Only set hasCommonModuleImport if it's an actual import path
-            if (cleanPath.contains("@angular/common")) {
-                hasCommonModuleImport = true;
-
-            }
-        }
-    }
 
     public void finalizeAnalysis() {
 
@@ -767,48 +616,14 @@ public class SemanticErrorManager {
             return null;
         }
     }
-    // Print errors with symbol table information
-    public void printErrorsWithSymbolTable() {
-        printErrors();
-        if (!errors.isEmpty()) {
-            System.out.println("=== ANALYSIS SUMMARY ===");
-            System.out.println("Structural directives used: " + (structuralDirectivesUsed.isEmpty() ? "None" : String.join(", ", structuralDirectivesUsed)));
-            System.out.println("CommonModule imported: " + hasCommonModuleImport);
-            System.out.println("Used decorators: " + (usedDecorators.isEmpty() ? "None" : String.join(", ", usedDecorators)));
-            System.out.println("Imported identifiers: " + (importedIdentifiers.isEmpty() ? "None" : String.join(", ", importedIdentifiers)));
-            System.out.println("All imported modules: " + (importedModules.isEmpty() ? "None" : String.join(", ", importedModules)));
-            System.out.println("=======================\n");
-        }
-    }
+
 
     // Getters
     public List<SemanticError> getErrors() {
         return new ArrayList<>(errors);
     }
 
-    public boolean hasErrors() {
-        return !errors.isEmpty();
-    }
 
-    public int getErrorCount() {
-        return errors.size();
-    }
-
-    public Set<String> getUsedDecorators() {
-        return new HashSet<>(usedDecorators);
-    }
-
-    public Set<String> getImportedIdentifiers() {
-        return new HashSet<>(importedIdentifiers);
-    }
-
-    public Set<String> getStructuralDirectivesUsed() {
-        return new HashSet<>(structuralDirectivesUsed);
-    }
-
-    public boolean hasCommonModuleImport() {
-        return hasCommonModuleImport;
-    }
 
     public void reportDuplicateClass(String className, int line, int column) {
         SemanticError error = new SemanticError(
@@ -901,10 +716,6 @@ class SemanticError {
 
     public int getColumn() {
         return column;
-    }
-
-    public String getContext() {
-        return context;
     }
 
     @Override

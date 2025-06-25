@@ -1,5 +1,7 @@
 package classes;
-
+import gen.typescriptlexer;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import gen.typescriptparser;
 import gen.typescriptparserBaseVisitor;
 import jdk.dynalink.Operation;
@@ -26,7 +28,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         for (int i = 0; i < ctx.statement().size(); i++) {
             if (ctx.statement(i) != null) {
-                prog.getStatments().add(visitStatement(ctx.statement(i)));
+                // Use generic visit() instead of visitStatement()
+                prog.getStatments().add((Statment) visit(ctx.statement(i)));
             }
         }
 
@@ -36,81 +39,112 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return prog;
     }
 
+    // =============== COMPONENT STATEMENT ===============
     @Override
-    public Statment visitStatement(typescriptparser.StatementContext ctx) {
+    public Statment visitComponentStmt(typescriptparser.ComponentStmtContext ctx) {
         Statment statment = new Statment();
+        symbolTable.enterScope("COMPONENT");
+        // Use generic visit() instead of specific method
+        statment.setComponentDeclaration((ComponentDeclaration) visit(ctx.componentDeclaration()));
+        symbolTable.exitScope();
+        return statment;
+    }
+    // =============== CLASS STATEMENT ===============
+    @Override
+    public Statment visitClassStmt(typescriptparser.ClassStmtContext ctx) {
+        Statment statment = new Statment();
+        typescriptparser.ClassDeclarationContext classCtx = ctx.classDeclaration();
 
-        if (ctx.assignmentStatement() != null) {
-            statment.setAssignmentStatement(visitAssignmentStatement(ctx.assignmentStatement()));
-        }
-        if (ctx.componentDeclaration() != null) {
-            symbolTable.enterScope("COMPONENT");
-            statment.setComponentDeclaration(visitComponentDeclaration(ctx.componentDeclaration()));
-            symbolTable.exitScope();
-        }
-        if (ctx.importDeclaration() != null) {
-            statment.setImportDeclaration(visitImportDeclaration(ctx.importDeclaration()));
-        }
-        if (ctx.classDeclaration() != null) {
-            // Handle class declaration with duplicate check
-            typescriptparser.ClassDeclarationContext classCtx = ctx.classDeclaration();
-            String className = null;
-            if (classCtx.ID() != null) {
-                className = classCtx.ID().getText();
+        // Cast to specific context to access ID
+        typescriptparser.ClassDeclRuleContext classRuleCtx = (typescriptparser.ClassDeclRuleContext) classCtx;
+        String className = classRuleCtx.ID().getText();
 
-                // Check for duplicate in current scope
-                if (symbolTable.existsInCurrentScope(className)) {
-                    // Report semantic error
-                    int line = classCtx.ID().getSymbol().getLine();
-                    int column = classCtx.ID().getSymbol().getCharPositionInLine();
-                    errorManager.reportDuplicateClass(className, line, column);
-                } else {
-                    // Only add to symbol table if not duplicate
-                    symbolTable.addSymbol("CLASS", className);
-                }
-            }
+        // Check for duplicate in current scope
+        if (symbolTable.existsInCurrentScope(className)) {
+            int line = classRuleCtx.ID().getSymbol().getLine();
+            int column = classRuleCtx.ID().getSymbol().getCharPositionInLine();
+            errorManager.reportDuplicateClass(className, line, column);
+        } else {
+            symbolTable.addSymbol("CLASS", className);
+        }
 
-            // Process class body regardless of duplicate name
-            symbolTable.enterScope("CLASS");
-            statment.setClassDeclaration(visitClassDeclaration(classCtx));
-            symbolTable.exitScope();
-        }
-        if (ctx.methodDeclaration() != null) {
-            symbolTable.enterScope("METHOD");
-            statment.setMethodDeclaration(visitMethodDeclaration(ctx.methodDeclaration()));
-            symbolTable.exitScope();
-        }
-        if (ctx.variableDeclaration() != null) {
-            statment.setVariableDeclaration(visitVariableDeclaration(ctx.variableDeclaration()));
-        }
-        if (ctx.interfaceDeclaration() != null) {
-            // Handle interface declaration with duplicate check
-            typescriptparser.InterfaceDeclarationContext interfaceCtx = ctx.interfaceDeclaration();
-            String interfaceName = null;
-            if (interfaceCtx.ID() != null) {
-                interfaceName = interfaceCtx.ID().getText();
-
-                // Check for duplicate in current scope
-                if (symbolTable.existsInCurrentScope(interfaceName)) {
-                    // Report semantic error
-                    int line = interfaceCtx.ID().getSymbol().getLine();
-                    int column = interfaceCtx.ID().getSymbol().getCharPositionInLine();
-                    errorManager.reportDuplicateInterface(interfaceName, line, column);
-                } else {
-                    // Only add to symbol table if not duplicate
-                    symbolTable.addSymbol("INTERFACE", interfaceName);
-                }
-            }
-
-            // Process interface body regardless of duplicate name
-            symbolTable.enterScope("INTERFACE");
-            statment.setInterfaceDeclaration(visitInterfaceDeclaration(interfaceCtx));
-            symbolTable.exitScope();
-        }
+        // Process class body
+        symbolTable.enterScope("CLASS");
+        // Use generic visit() instead of specific method
+        statment.setClassDeclaration((ClassDeclaration) visit(classCtx));
+        symbolTable.exitScope();
         return statment;
     }
 
+    // =============== INTERFACE STATEMENT ===============
+    @Override
+    public Statment visitInterfaceStmt(typescriptparser.InterfaceStmtContext ctx) {
+        Statment statment = new Statment();
+        typescriptparser.InterfaceDeclarationContext interfaceCtx = ctx.interfaceDeclaration();
+        String interfaceName = interfaceCtx.ID().getText();
 
+        // Check for duplicate in current scope
+        if (symbolTable.existsInCurrentScope(interfaceName)) {
+            int line = interfaceCtx.ID().getSymbol().getLine();
+            int column = interfaceCtx.ID().getSymbol().getCharPositionInLine();
+            errorManager.reportDuplicateInterface(interfaceName, line, column);
+        } else {
+            symbolTable.addSymbol("INTERFACE", interfaceName);
+        }
+
+        // Process interface body
+        symbolTable.enterScope("INTERFACE");
+        // Use generic visit() instead of specific method
+        statment.setInterfaceDeclaration((InterfaceDeclaration) visit(interfaceCtx));
+        symbolTable.exitScope();
+        return statment;
+    }
+
+    // =============== VARIABLE DECLARATION STATEMENT ===============
+    @Override
+    public Statment visitVariableDeclStmt(typescriptparser.VariableDeclStmtContext ctx) {
+        Statment statment = new Statment();
+        // Use generic visit() instead of specific method
+        statment.setVariableDeclaration((VariableDeclaration) visit(ctx.variableDeclaration()));
+        return statment;
+    }
+
+    // =============== ASSIGNMENT STATEMENT ===============
+    @Override
+    public Statment visitAssignmentStmt(typescriptparser.AssignmentStmtContext ctx) {
+        Statment statment = new Statment();
+        // Use generic visit() instead of specific method
+        statment.setAssignmentStatement((AssignmentStatement) visit(ctx.assignmentStatement()));
+        return statment;
+    }
+    // =============== FUNCTION CALL STATEMENT ===============
+    @Override
+    public Statment visitFunctionCallStmt(typescriptparser.FunctionCallStmtContext ctx) {
+        Statment statment = new Statment();
+        // Use generic visit() instead of specific method
+        statment.setFunctionCall((FunctionCall) visit(ctx.functionCall()));
+        return statment;
+    }
+
+    // =============== METHOD STATEMENT ===============
+    @Override
+    public Statment visitMethodStmt(typescriptparser.MethodStmtContext ctx) {
+        Statment statment = new Statment();
+        symbolTable.enterScope("METHOD");
+        // Use generic visit() instead of specific method
+        statment.setMethodDeclaration((MethodDeclaration) visit(ctx.methodDeclaration()));
+        symbolTable.exitScope();
+        return statment;
+    }
+
+    // =============== IMPORT STATEMENT ===============
+    @Override
+    public Statment visitImportStmt(typescriptparser.ImportStmtContext ctx) {
+        Statment statement = new Statment();
+        // Use generic visit with casting
+        statement.setImportDeclaration((ImportDeclaration) visit(ctx.importDeclaration()));
+        return statement;
+    }
     @Override
     public AssignmentStatement visitAssignmentRule(typescriptparser.AssignmentRuleContext ctx) {
         AssignmentStatement assignment = new AssignmentStatement();
@@ -135,7 +169,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         }
 
         // Expression is guaranteed
-        assignment.setExpression(visitExpression(ctx.expression()));
+        assignment.setExpression((Expression) visit(ctx.expression()));
 
         return assignment;
     }
@@ -168,76 +202,99 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return importDecl;
     }
     @Override
-    public ClassDeclaration visitClassDeclaration(typescriptparser.ClassDeclarationContext ctx) {
+    public ClassDeclaration visitClassDeclRule(typescriptparser.ClassDeclRuleContext ctx) {
         ClassDeclaration classDeclaration = new ClassDeclaration();
 
-        if (ctx.ID() != null && ctx.ID().getText() != null) {
-            String className = ctx.ID().getText();
+        // Mandatory elements (guaranteed non-null by rule structure)
+        String className = ctx.ID().getText();
+        classDeclaration.setNameClass(className);
 
-            // Check for duplicate class in current scope
-            if (symbolTable.existsInCurrentScope(className)) {
-                errorManager.reportDuplicateClass(className,
-                        ctx.getStart().getLine(),
-                        ctx.getStart().getCharPositionInLine());
-            } else {
-                // Add class to current scope (should be Global)
-                symbolTable.addSymbol("CLASS", className);
-            }
+        // Check for duplicate class in current scope
+        if (symbolTable.existsInCurrentScope(className)) {
+            errorManager.reportDuplicateClass(
+                    className,
+                    ctx.getStart().getLine(),
+                    ctx.getStart().getCharPositionInLine()
+            );
+        } else {
+            // Add class to current scope (should be Global)
+            symbolTable.addSymbol("CLASS", className);
+        }
 
-            // Enter class scope for processing class body
-            symbolTable.enterScope("CLASS");
-            symbolTable.setCurrentScopeName("CLASS." + className);
+        // Enter class scope for processing class body
+        symbolTable.enterScope("CLASS");
+        symbolTable.setCurrentScopeName("CLASS." + className);
 
-            classDeclaration.setNameClass(className);
+        // Process class body (guaranteed non-null by rule structure)
+        classDeclaration.setClassDeclarationBody(
+                (ClassDeclarationBody) visit(ctx.classDeclarationBody())
+        );
 
-            // Process class body within the class scope
-            if (ctx.classDeclarationBody() != null) {
-                classDeclaration.setClassDeclarationBody(
-                        visitClassDeclarationBody(ctx.classDeclarationBody())
-                );
-            }
+        // Exit class scope after processing
+        symbolTable.exitScope();
 
-            // Exit class scope after processing
-            symbolTable.exitScope();
+        // Handle optional export modifier - FIXED
+        if (ctx.EXPORT() != null) {
+            classDeclaration.setExported(true);  // Now works
+            symbolTable.addSymbol("EXPORT", className);
+        } else {
+            classDeclaration.setExported(false);  // Explicitly set to false
         }
 
         return classDeclaration;
     }
 
     @Override
-    public ClassDeclarationBody visitClassDeclarationBody(typescriptparser.ClassDeclarationBodyContext ctx) {
+    public ClassDeclarationBody visitClassBodyRule(typescriptparser.ClassBodyRuleContext ctx) {
         ClassDeclarationBody classDeclarationBody = new ClassDeclarationBody();
 
-        // We're already in CLASS scope from visitClassDeclaration
-        // Process all class members in this scope
-        if (ctx.classMember() != null) {
-            for (int i = 0; i < ctx.classMember().size(); i++) {
-                if (ctx.classMember(i) != null) {
-                    ClassMember member = visitClassMember(ctx.classMember(i));
-                    if (member != null) {
-                        classDeclarationBody.getClassMembers().add(member);
-                    }
-                }
-            }
+        // Directly access classMember list (guaranteed non-null by ANTLR)
+        for (typescriptparser.ClassMemberContext memberCtx : ctx.classMember()) {
+            // Safe cast due to classMember labeling
+            classDeclarationBody.getClassMembers().add(
+                    (ClassMember) visit(memberCtx)
+            );
         }
 
         return classDeclarationBody;
     }
 
 
+    // =============== CLASS METHOD MEMBER ===============
     @Override
-    public ClassMember visitClassMember(typescriptparser.ClassMemberContext ctx) {
+    public ClassMember visitClassMethodMember(typescriptparser.ClassMethodMemberContext ctx) {
         ClassMember classMember = new ClassMember();
 
-        if (ctx.methodDeclaration() != null) {
-            // We're already in the correct CLASS scope context
-            classMember.setMethodDeclaration(visitMethodDeclaration(ctx.methodDeclaration()));
-        }
+        // Process method within current CLASS scope
+        classMember.setMethodDeclaration(
+                (MethodDeclaration) visit(ctx.methodDeclaration())
+        );
 
-        if (ctx.propertyDeclaration() != null) {
-            // Process property declaration within current CLASS scope
-            classMember.setPropertyDeclaration(visitPropertyDeclaration(ctx.propertyDeclaration()));
-        }
+        return classMember;
+    }
+
+    // =============== CLASS PROPERTY MEMBER ===============
+    @Override
+    public ClassMember visitClassPropertyMember(typescriptparser.ClassPropertyMemberContext ctx) {
+        ClassMember classMember = new ClassMember();
+
+        // Process property within current CLASS scope
+        classMember.setPropertyDeclaration(
+                (PropertyDeclaration) visit(ctx.propertyDeclaration())
+        );
+
+        return classMember;
+    }
+
+    // =============== NESTED CLASS MEMBER ===============
+    @Override
+    public ClassMember visitNestedClassMember(typescriptparser.NestedClassMemberContext ctx) {
+        ClassMember classMember = new ClassMember();
+
+        // Process nested class
+        classMember.setClassDeclaration(
+                (ClassDeclaration) visit(ctx.classDeclaration())
+        );
 
         return classMember;
     }
@@ -272,8 +329,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     public PropertyDeclaration visitPropertyWithoutInit(typescriptparser.PropertyWithoutInitContext ctx) {
         PropertyDeclaration prop = new PropertyDeclaration();
 
-        // Process ID (guaranteed)
-        String propName = ctx.ID().getText();
+        // Process first ID (property name - guaranteed)
+        String propName = ctx.ID(0).getText();
         prop.getID().add(propName);
 
         // Semantic analysis
@@ -289,8 +346,9 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         // Handle optional union type (OR ID ASSIGN ID)
         if (ctx.OR() != null && ctx.ID().size() > 1) {
+            // Get second ID (union type)
             String unionType = ctx.ID(1).getText();
-            prop.setUnionType(unionType);  // Add this field to PropertyDeclaration
+            prop.setUnionType(unionType);
 
             // Add union type to symbol table
             if (!symbolTable.existsInCurrentScope(unionType)) {
@@ -302,61 +360,65 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
     @Override
-    public MethodDeclaration visitMethodDeclaration(typescriptparser.MethodDeclarationContext ctx) {
+    public MethodDeclaration visitMethodDeclRule(typescriptparser.MethodDeclRuleContext ctx) {
         MethodDeclaration methodDeclaration = new MethodDeclaration();
-        String methodName = null;
+        String methodName = ctx.ID().getText();
+        methodDeclaration.setName(methodName);
+
+        // Handle optional return type - FIXED
         String returnType = "void";
-
-        if (ctx.ID() != null) {
-            methodName = ctx.ID().getText();
-            methodDeclaration.setName(methodName);
-        }
-
         if (ctx.type() != null) {
-            returnType = ctx.type().getText();
-            methodDeclaration.setTypeReturn(visitType(ctx.type()));
+            // Use generic visit() for type
+            TypeV typeV = (TypeV) visit(ctx.type());
+            methodDeclaration.setTypeReturn(typeV);
+            returnType = typeV.toString();
         }
 
+        // Handle optional parameters
         List<String> parameterTypes = new ArrayList<>();
         if (ctx.parameterList() != null) {
-            methodDeclaration.setParameterLists(visitParameterList(ctx.parameterList()));
-            parameterTypes = extractParameterTypes(methodDeclaration.getParameterLists());
+            // Use generic visit for labeled rule dispatch
+            ParameterList params = (ParameterList) visit(ctx.parameterList());
+            methodDeclaration.setParameterLists(params);
+            parameterTypes = extractParameterTypes(params);
         }
 
+        // Process method body (mandatory)
+        methodDeclaration.setMethodBody((MethodBody) visit(ctx.methodBody()));
+
+        // === Symbol Table & Error Handling (keep your existing logic) ===
         SemanticErrorManager.MethodInfo methodInfo = null;
-        if (methodName != null) {
-            errorManager.registerMethodDeclaration(
-                    methodName,
-                    returnType,
-                    parameterTypes,
-                    ctx.getStart().getLine(),
-                    ctx.getStart().getCharPositionInLine()
-            );
+        errorManager.registerMethodDeclaration(
+                methodName,
+                returnType,
+                parameterTypes,
+                ctx.getStart().getLine(),
+                ctx.getStart().getCharPositionInLine()
+        );
 
-            String currentScopeName = symbolTable.getCurrentScopeName();
-            String methodSignature = errorManager.createMethodSignature(
-                    currentScopeName + "." + methodName,
-                    parameterTypes
-            );
-            methodInfo = errorManager.getMethodInfoBySignature(methodSignature);
-        }
+        String currentScopeName = symbolTable.getCurrentScopeName();
+        String methodSignature = errorManager.createMethodSignature(
+                currentScopeName + "." + methodName,
+                parameterTypes
+        );
+        methodInfo = errorManager.getMethodInfoBySignature(methodSignature);
 
         MethodContext methodContext = new MethodContext(methodName, returnType, methodInfo);
         methodContextStack.push(methodContext);
 
         symbolTable.enterScope("METHOD");
-        if (methodName != null && !symbolTable.existsInCurrentScope(methodName)) {
+        if (!symbolTable.existsInCurrentScope(methodName)) {
             symbolTable.addSymbol("METHOD", methodName);
         }
 
-        if (ctx.methodBody() != null) {
-            methodDeclaration.setMethodBody(visitMethodBody(ctx.methodBody()));
-        }
+        // ... rest of your method body processing ...
 
+        // Interface method check
         String currentScopeType = symbolTable.getCurrentScopeType();
         boolean isInterfaceMethod = currentScopeType != null &&
                 (currentScopeType.equals("INTERFACE") || currentScopeType.equals("INTERFACE_METHOD"));
 
+        // Return statement validation
         if (!isInterfaceMethod && methodInfo != null && !methodInfo.isVoidMethod()) {
             if (!methodContext.hasReturnStatement()) {
                 SemanticError error = new SemanticError(
@@ -517,49 +579,61 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public TypeV visitListType(typescriptparser.ListTypeContext ctx) {
         TypeV typeV = new TypeV();
-        typeV.setListV(visitList(ctx.list()));
+        // FIX: Use generic visit() for list
+        typeV.setListV((ListV) visit(ctx.list()));
         return typeV;
     }
-
+    // =============== PLUS OPERATOR ===============
     @Override
-    public Operator visitOperator(typescriptparser.OperatorContext ctx) {
+    public Operator visitPlusOp(typescriptparser.PlusOpContext ctx) {
         Operator operator = new Operator();
+        String op = ctx.PLUS().getText();
+        operator.setPlus(op);
 
-        if (ctx.PLUS() != null) {
-            String plusOp = ctx.PLUS().getText();
-            operator.setPlus(plusOp);
-
-            // Add operator to symbol table if not already present
-            if (!symbolTable.existsInCurrentScope(plusOp)) {
-                symbolTable.addSymbol("ARITHMETIC_OPERATOR", plusOp);
-            }
+        if (!symbolTable.existsInCurrentScope(op)) {
+            symbolTable.addSymbol("ARITHMETIC_OPERATOR", op);
         }
-        else if (ctx.MINUS() != null) {
-            String minusOp = ctx.MINUS().getText();
-            operator.setMinus(minusOp);
 
-            // Add operator to symbol table if not already present
-            if (!symbolTable.existsInCurrentScope(minusOp)) {
-                symbolTable.addSymbol("ARITHMETIC_OPERATOR", minusOp);
-            }
+        return operator;
+    }
+
+    // =============== MINUS OPERATOR ===============
+    @Override
+    public Operator visitMinusOp(typescriptparser.MinusOpContext ctx) {
+        Operator operator = new Operator();
+        String op = ctx.MINUS().getText();
+        operator.setMinus(op);
+
+        if (!symbolTable.existsInCurrentScope(op)) {
+            symbolTable.addSymbol("ARITHMETIC_OPERATOR", op);
         }
-        else if (ctx.SLASH() != null) {
-            String divOp = ctx.SLASH().getText();
-            operator.setDiv(divOp);
 
-            // Add operator to symbol table if not already present
-            if (!symbolTable.existsInCurrentScope(divOp)) {
-                symbolTable.addSymbol("ARITHMETIC_OPERATOR", divOp);
-            }
+        return operator;
+    }
+
+    // =============== STAR OPERATOR ===============
+    @Override
+    public Operator visitStarOp(typescriptparser.StarOpContext ctx) {
+        Operator operator = new Operator();
+        String op = ctx.STAR().getText();
+        operator.setMult(op);
+
+        if (!symbolTable.existsInCurrentScope(op)) {
+            symbolTable.addSymbol("ARITHMETIC_OPERATOR", op);
         }
-        else if (ctx.STAR() != null) {
-            String multOp = ctx.STAR().getText();
-            operator.setMult(multOp);
 
-            // Add operator to symbol table if not already present
-            if (!symbolTable.existsInCurrentScope(multOp)) {
-                symbolTable.addSymbol("ARITHMETIC_OPERATOR", multOp);
-            }
+        return operator;
+    }
+
+    // =============== SLASH OPERATOR ===============
+    @Override
+    public Operator visitSlashOp(typescriptparser.SlashOpContext ctx) {
+        Operator operator = new Operator();
+        String op = ctx.SLASH().getText();
+        operator.setDiv(op);
+
+        if (!symbolTable.existsInCurrentScope(op)) {
+            symbolTable.addSymbol("ARITHMETIC_OPERATOR", op);
         }
 
         return operator;
@@ -625,10 +699,11 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
     @Override
-    public ParameterList visitParameterList(typescriptparser.ParameterListContext ctx) {
+    public ParameterList visitParameterListRule(typescriptparser.ParameterListRuleContext ctx) {
         ParameterList parameterList = new ParameterList();
         for (typescriptparser.ParameterContext pCtx : ctx.parameter()) {
-            parameterList.getParameters().add(visitParameter(pCtx));
+            // Use generic visit() for parameter
+            parameterList.getParameters().add((Parameter) visit(pCtx));
         }
         return parameterList;
     }
@@ -673,7 +748,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public Initvalue visitListInitValue(typescriptparser.ListInitValueContext ctx) {
         Initvalue initvalue = new Initvalue();
-        initvalue.setBodyList(visitBodylist(ctx.bodylist()));
+        // Use generic visit() for bodylist
+        initvalue.setBodyList((BodyList) visit(ctx.bodylist()));
         return initvalue;
     }
 
@@ -682,131 +758,164 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     public Initvalue visitObjectInitValue(typescriptparser.ObjectInitValueContext ctx) {
         Initvalue initvalue = new Initvalue();
         symbolTable.enterScope("OBJECT");
-        initvalue.setObjectV(visitObject(ctx.object()));
+        // Use generic visit() for object
+        initvalue.setObjectV((ObjectV) visit(ctx.object()));
         symbolTable.exitScope();
         return initvalue;
     }
 
     @Override
-    public MethodBody visitMethodBody(typescriptparser.MethodBodyContext ctx) {
+    public MethodBody visitMethodBodyRule(typescriptparser.MethodBodyRuleContext ctx) {
         MethodBody methodBody = new MethodBody();
+
+        // Visit each labeled statement directly - no type checks needed!
         for (typescriptparser.StatementMethodContext smCtx : ctx.statementMethod()) {
-            methodBody.getStatementMethods().add(visitStatementMethod(smCtx));
+            methodBody.getStatementMethods().add(
+                    (StatementMethod) visit(smCtx)  // Safe cast due to labels
+            );
         }
+
         return methodBody;
     }
 
 
+    // =============== METHOD ASSIGNMENT ===============
     @Override
-    public StatementMethod visitStatementMethod(typescriptparser.StatementMethodContext ctx) {
-        StatementMethod statementMethod = new StatementMethod();
+    public StatementMethod visitMethodAssignment(typescriptparser.MethodAssignmentContext ctx) {
+        StatementMethod stmt = new StatementMethod();
+        String varName = ctx.ID().getText();
+        stmt.getVariable().add(varName);
 
-        // Handle variable assignment: ID = expression
-        if (ctx.ID() != null && ctx.ASSIGN() != null) {
-            String varName = ctx.ID().getText();
-            statementMethod.getVariable().add(varName);
-
-            // Check for duplicate declaration in current scope
-            if (!symbolTable.existsInCurrentScope(varName)) {
-                symbolTable.addSymbol("VARIABLE", varName);
-            }
-
-            if (ctx.expression() != null) {
-                statementMethod.setExpression(visitExpression(ctx.expression()));
-            }
-        }
-        // Handle this.property assignment: this.ID = expression
-        else if (ctx.THIS() != null && ctx.DOT() != null && ctx.ID() != null) {
-            // Add 'this' keyword to symbol table
-            if (!symbolTable.existsInCurrentScope("this")) {
-                symbolTable.addSymbol("KEYWORD", "this");
-            }
-
-            String prop = ctx.ID().getText();
-            statementMethod.getVariable().add(prop);
-
-            // Add property reference to symbol table
-            if (!symbolTable.existsInCurrentScope(prop)) {
-                symbolTable.addSymbol("PROPERTY", prop);
-            }
-
-            if (ctx.expression() != null) {
-                statementMethod.setExpression(visitExpression(ctx.expression()));
-            }
-        }
-        // Handle standalone expression
-        else if (ctx.expression() != null) {
-            statementMethod.setExpression(visitExpression(ctx.expression()));
-        }
-        // Handle return statement
-        else if (ctx.return_() != null) {
-            statementMethod.setIsreturn(true);
-
-            // Add 'return' keyword to symbol table
-            if (!symbolTable.existsInCurrentScope("return")) {
-                symbolTable.addSymbol("KEYWORD", "return");
-            }
-
-
-            statementMethod.setReturnN(visitReturn(ctx.return_()));
-
+        if (!symbolTable.existsInCurrentScope(varName)) {
+            symbolTable.addSymbol("VARIABLE", varName);
         }
 
-        return statementMethod;
+        // FIX: Use generic visit() instead of visitExpression()
+        stmt.setExpression((Expression) visit(ctx.expression()));
+
+        if (ctx.returnStatment() != null) {
+            handleReturn(stmt, ctx.returnStatment());
+        }
+
+        return stmt;
+    }
+    // =============== METHOD THIS PROPERTY ASSIGNMENT ===============
+    @Override
+    public StatementMethod visitMethodThisPropertyAssignment(typescriptparser.MethodThisPropertyAssignmentContext ctx) {
+        StatementMethod stmt = new StatementMethod();
+
+        if (!symbolTable.existsInCurrentScope("this")) {
+            symbolTable.addSymbol("KEYWORD", "this");
+        }
+
+        String propName = ctx.ID().getText();
+        stmt.getVariable().add(propName);
+
+        if (!symbolTable.existsInCurrentScope(propName)) {
+            symbolTable.addSymbol("PROPERTY", propName);
+        }
+
+        // FIX: Use generic visit() instead of visitExpression()
+        stmt.setExpression((Expression) visit(ctx.expression()));
+
+        if (ctx.returnStatment() != null) {
+            handleReturn(stmt, ctx.returnStatment());
+        }
+
+        return stmt;
     }
 
+    // =============== METHOD EXPRESSION ===============
     @Override
-    public ReturnN visitReturn(typescriptparser.ReturnContext ctx) {
+    public StatementMethod visitMethodExpression(typescriptparser.MethodExpressionContext ctx) {
+        StatementMethod stmt = new StatementMethod();
+        // Use generic visit() for expression
+        stmt.setExpression((Expression) visit(ctx.expression()));
+
+        if (ctx.returnStatment() != null) {
+            handleReturn(stmt, ctx.returnStatment());
+        }
+
+        return stmt;
+    }
+
+    // =============== METHOD RETURN ONLY ===============
+    @Override
+    public StatementMethod visitMethodReturnOnly(typescriptparser.MethodReturnOnlyContext ctx) {
+        StatementMethod stmt = new StatementMethod();
+        stmt.setIsreturn(true);
+
+        if (!symbolTable.existsInCurrentScope("return")) {
+            symbolTable.addSymbol("KEYWORD", "return");
+        }
+
+        // Use generic visit() for return
+        stmt.setReturnN((ReturnN) visit(ctx.returnStatment()));
+        return stmt;
+    }
+
+    // Helper method remains the same
+    private void handleReturn(StatementMethod stmt, typescriptparser.ReturnStatmentContext returnCtx) {
+        stmt.setIsreturn(true);
+
+        if (!symbolTable.existsInCurrentScope("return")) {
+            symbolTable.addSymbol("KEYWORD", "return");
+        }
+
+        // Use generic visit() for return
+        stmt.setReturnN((ReturnN) visit(returnCtx));
+    }
+    // =============== RETURN EXPRESSION ===============
+    @Override
+    public ReturnN visitReturnExpression(typescriptparser.ReturnExpressionContext ctx) {
         ReturnN returnN = new ReturnN();
-        String returnValue = null;
-        String returnType = "void";
+        // Use generic visit() for expression
+        Expression expr = (Expression) visit(ctx.expression());
+        returnN.setExpressionReturn(expr);
+        String returnType = determineExpressionType(expr);
+        processReturnStatement(returnN, ctx.expression().getText(), returnType, ctx);
+        return returnN;
+    }
 
-        // Only process if this is actually a return statement
-        String contextText = ctx.getText();
-        if (contextText == null || !contextText.startsWith("return")) {
-            return returnN;
-        }
+    // =============== RETURN IDENTIFIER ===============
+    @Override
+    public ReturnN visitReturnIdentifier(typescriptparser.ReturnIdentifierContext ctx) {
+        ReturnN returnN = new ReturnN();
+        String idValue = ctx.ID().getText();
+        returnN.setValueReturn(idValue);
 
-        // Handle expression return
-        if (ctx.expression() != null) {
-            Expression expr = visitExpression(ctx.expression());
-            returnN.setExpressionReturn(expr);
-            returnType = determineExpressionType(expr);
-            returnValue = ctx.expression().getText();
-        }
-        // Handle ID return value
-        else if (ctx.ID() != null && ctx.ID().getText() != null) {
-            returnValue = ctx.ID().getText();
-            Row symbol = symbolTable.lookupSymbol(returnValue);
-            returnType = symbol != null ? symbol.getType() : "any";
-            returnN.setValueReturn(returnValue);
-        }
-        // Handle boolean return value
-        else if (ctx.isboolean() != null) {
-            returnN.setBoolReturn(visitIsboolean(ctx.isboolean()));
-            returnType = "boolean";
-            returnValue = ctx.isboolean().getText();
-        }
-        // Handle empty return statement
-        else if (contextText.equals("return") || contextText.equals("return;")) {
-            returnValue = null;
-            returnType = "void";
-        }
-        // Handle other return expressions
-        else {
-            returnValue = contextText.replace("return", "").replace(";", "").trim();
-            if (!returnValue.isEmpty()) {
-                returnType = "any";
-                returnN.setValueReturn(returnValue);
-            }
-        }
+        Row symbol = symbolTable.lookupSymbol(idValue);
+        String returnType = symbol != null ? symbol.getType() : "any";
 
-        // Check return statement semantics if we're in a method
+        processReturnStatement(returnN, idValue, returnType, ctx);
+        return returnN;
+    }
+
+    // =============== RETURN BOOLEAN ===============
+    @Override
+    public ReturnN visitReturnBoolean(typescriptparser.ReturnBooleanContext ctx) {
+        ReturnN returnN = new ReturnN();
+        // Use generic visit() for isboolean
+        returnN.setBoolReturn((IsBoolean) visit(ctx.isboolean()));
+        processReturnStatement(returnN, ctx.isboolean().getText(), "boolean", ctx);
+        return returnN;
+    }
+
+    // =============== RETURN VOID ===============
+    @Override
+    public ReturnN visitReturnVoid(typescriptparser.ReturnVoidContext ctx) {
+        ReturnN returnN = new ReturnN();
+        processReturnStatement(returnN, null, "void", ctx);
+        return returnN;
+    }
+
+    // Common helper method for return processing
+    private void processReturnStatement(ReturnN returnN, String returnValue,
+                                        String returnType, ParserRuleContext ctx) {
         if (!methodContextStack.isEmpty()) {
             MethodContext currentMethod = methodContextStack.peek();
             currentMethod.markHasReturn();
 
-            // Get the MethodInfo object for semantic checking
             SemanticErrorManager.MethodInfo methodInfo = currentMethod.getMethodInfo();
             if (methodInfo != null) {
                 errorManager.checkReturnStatement(
@@ -818,8 +927,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
                 );
             }
         }
-
-        return returnN;
     }
     @Override
     public Parameter visitParameterRule(typescriptparser.ParameterRuleContext ctx) {
@@ -885,111 +992,210 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public ObjectV visitObjectRule(typescriptparser.ObjectRuleContext ctx) {
         ObjectV object = new ObjectV();
-        object.setBodyObject(visitBodyobject(ctx.bodyobject()));
+        object.setBodyObject((BodyObject) visit(ctx.bodyobject()));
         return object;
     }
 
+    // Const declaration
     @Override
-    public VariableDeclaration visitVariableDeclaration(typescriptparser.VariableDeclarationContext ctx) {
-        VariableDeclaration variableDeclaration = new VariableDeclaration();
-
-        if (ctx.ID() != null) {
-            String variableName = ctx.ID().getText();
-            variableDeclaration.setName(variableName);
-
-            // Add variable if not already in current scope
-            if (!symbolTable.existsInCurrentScope(variableName)) {
-                symbolTable.addSymbol("VARIABLE", variableName);
-            }
-        }
-
-        if (ctx.expression() != null) {
-            variableDeclaration.setExpression(visitExpression(ctx.expression()));
-        }
-
-        if (ctx.VAR() != null) {
-            String varKeyword = ctx.VAR().getText();
-            variableDeclaration.setVar(varKeyword);
-            if (!symbolTable.existsInCurrentScope(varKeyword)) {
-                symbolTable.addSymbol("KEYWORD", varKeyword);
-            }
-        }
-
-        if (ctx.CONST() != null) {
-            String constKeyword = ctx.CONST().getText();
-            variableDeclaration.setConstv(constKeyword);
-            if (!symbolTable.existsInCurrentScope(constKeyword)) {
-                symbolTable.addSymbol("KEYWORD", constKeyword);
-            }
-        }
-
-        if (ctx.LET() != null) {
-            String letKeyword = ctx.LET().getText();
-            variableDeclaration.setLet(letKeyword);
-            if (!symbolTable.existsInCurrentScope(letKeyword)) {
-                symbolTable.addSymbol("KEYWORD", letKeyword);
-            }
-        }
-
-        return variableDeclaration;
+    public VariableDeclaration visitConstDeclaration(typescriptparser.ConstDeclarationContext ctx) {
+        return handleVarDeclaration(ctx, ctx.CONST().getText(), "const");
     }
 
+    // Let declaration
     @Override
-    public Expression visitExpression(typescriptparser.ExpressionContext ctx) {
-        Expression expression = new Expression();
+    public VariableDeclaration visitLetDeclaration(typescriptparser.LetDeclarationContext ctx) {
+        return handleVarDeclaration(ctx, ctx.LET().getText(), "let");
+    }
 
-        if (ctx.ID() != null && ctx.ID().getText() != null) {
-            String idValue = ctx.ID().getText();
-            expression.setString(idValue);
+    // Var declaration
+    private VariableDeclaration handleVarDeclaration(
+            typescriptparser.VariableDeclarationContext ctx,
+            String keyword,
+            String keywordType
+    ) {
+        VariableDeclaration vd = new VariableDeclaration();
+        String varName = "";
 
-            // Add identifier reference if not present
-            if (!symbolTable.existsInCurrentScope(idValue)) {
-                symbolTable.addSymbol("ID_REFERENCE", idValue);
+        // Get variable name from specific context
+        if (ctx instanceof typescriptparser.ConstDeclarationContext) {
+            varName = ((typescriptparser.ConstDeclarationContext) ctx).ID().getText();
+        }
+        else if (ctx instanceof typescriptparser.LetDeclarationContext) {
+            varName = ((typescriptparser.LetDeclarationContext) ctx).ID().getText();
+        }
+        else if (ctx instanceof typescriptparser.VarDeclarationContext) {
+            varName = ((typescriptparser.VarDeclarationContext) ctx).ID().getText();
+        }
+
+        vd.setName(varName);
+
+        // Add to symbol table
+        if (!symbolTable.existsInCurrentScope(varName)) {
+            symbolTable.addSymbol("VARIABLE", varName);
+        }
+
+        // Set keyword-specific property
+        switch (keywordType) {
+            case "const": vd.setConstv(keyword); break;
+            case "let": vd.setLet(keyword); break;
+            case "var": vd.setVar(keyword); break;
+        }
+
+        // Add keyword to symbol table
+        if (!symbolTable.existsInCurrentScope(keyword)) {
+            symbolTable.addSymbol("KEYWORD", keyword);
+        }
+
+        // Handle expression if present - use specific context types
+        if (ctx instanceof typescriptparser.ConstDeclarationContext) {
+            typescriptparser.ConstDeclarationContext constCtx =
+                    (typescriptparser.ConstDeclarationContext) ctx;
+            if (constCtx.expression() != null) {
+                vd.setExpression((Expression) visit(constCtx.expression()));
             }
         }
-        else if (ctx.isboolean() != null) {
-            expression.setIsboolean(visitIsboolean(ctx.isboolean()));
+        else if (ctx instanceof typescriptparser.LetDeclarationContext) {
+            typescriptparser.LetDeclarationContext letCtx =
+                    (typescriptparser.LetDeclarationContext) ctx;
+            if (letCtx.expression() != null) {
+                vd.setExpression((Expression) visit(letCtx.expression()));
+            }
         }
-        else if (ctx.variableDeclaration() != null) {
-            expression.setVariableDeclaration(visitVariableDeclaration(ctx.variableDeclaration()));
-        }
-        else if (ctx.functionCall() != null) {
-            expression.setFunctionCall(visitFunctionCall(ctx.functionCall()));
+        else if (ctx instanceof typescriptparser.VarDeclarationContext) {
+            typescriptparser.VarDeclarationContext varCtx =
+                    (typescriptparser.VarDeclarationContext) ctx;
+            if (varCtx.expression() != null) {
+                vd.setExpression((Expression) visit(varCtx.expression()));
+            }
         }
 
-        return expression;
+        return vd;
+    }
+    // String literal
+    @Override
+    public Expression visitStringLiteralExpr(typescriptparser.StringLiteralExprContext ctx) {
+        Expression expr = new Expression();
+        String value = ctx.STRING_LIT().getText();
+        expr.setString(value);
+
+        if (!symbolTable.existsInCurrentScope(value)) {
+            symbolTable.addSymbol("STRING_LITERAL", value);
+        }
+
+        return expr;
+    }
+
+    // Number literal
+    @Override
+    public Expression visitNumberLiteralExpr(typescriptparser.NumberLiteralExprContext ctx) {
+        Expression expr = new Expression();
+        String value = ctx.NUMBER_LIT().getText();
+        expr.setString(value);
+
+        if (!symbolTable.existsInCurrentScope(value)) {
+            symbolTable.addSymbol("NUMBER_LITERAL", value);
+        }
+
+        return expr;
+    }
+
+    // Identifier
+    @Override
+    public Expression visitIdentifierExpr(typescriptparser.IdentifierExprContext ctx) {
+        Expression expr = new Expression();
+        String id = ctx.ID().getText();
+        expr.setString(id);
+
+        if (!symbolTable.existsInCurrentScope(id)) {
+            symbolTable.addSymbol("ID_REFERENCE", id);
+        }
+
+        return expr;
+    }
+
+    // Boolean literal
+    @Override
+    public Expression visitBooleanLiteralExpr(typescriptparser.BooleanLiteralExprContext ctx) {
+        Expression expr = new Expression();
+        // Change BooleanValue to IsBoolean
+        expr.setIsboolean((IsBoolean) visit(ctx.isboolean()));
+        return expr;
+    }
+    // Function call expression
+
+    @Override
+    public Expression visitFunctionCallExpr(typescriptparser.FunctionCallExprContext ctx) {
+        Expression expr = new Expression();
+        // Use generic visit() for function call
+        expr.setFunctionCall((FunctionCall) visit(ctx.functionCall()));
+        return expr;
+    }
+
+    // Variable declaration expression
+    @Override
+    public Expression visitVariableDeclarationExpr(typescriptparser.VariableDeclarationExprContext ctx) {
+        Expression expr = new Expression();
+        // Use generic visit() for variable declaration
+        expr.setVariableDeclaration((VariableDeclaration) visit(ctx.variableDeclaration()));
+        return expr;
+    }
+
+    // Member access expression
+    @Override
+    public Expression visitMemberAccessExpr(typescriptparser.MemberAccessExprContext ctx) {
+        Expression expr = new Expression();
+        // Use generic visit() for member access
+        expr.setMemberAccess((MemberAccess) visit(ctx.memberAccess()));
+        return expr;
+    }
+
+    // Binary expression
+    @Override
+    public Expression visitBinaryExpr(typescriptparser.BinaryExprContext ctx) {
+        Expression expr = new Expression();
+        // Use generic visit() for left/right expressions
+        Expression left = (Expression) visit(ctx.expression(0));
+        Expression right = (Expression) visit(ctx.expression(1));
+
+        // Handle operator directly (no visit needed)
+        String op = ctx.operator().getText();
+        expr.setString(left.getString() + " " + op + " " + right.getString());
+        return expr;
+    }
+
+    // Parenthesized expression
+    @Override
+    public Expression visitParenthesizedExpr(typescriptparser.ParenthesizedExprContext ctx) {
+        // Use generic visit() for expression
+        return (Expression) visit(ctx.expression());
     }
 
 
 
     @Override
-    public FunctionCall visitFunctionCall(typescriptparser.FunctionCallContext ctx) {
-        FunctionCall functionCall = new FunctionCall();
+    public FunctionCall visitStandardFunctionCall(typescriptparser.StandardFunctionCallContext ctx) {
+        FunctionCall fc = new FunctionCall();
+        String name = ctx.ID().getText();
+        fc.setNameFun(name);
 
-        if (ctx.ID() != null) {
-            String functionName = ctx.ID().getText();
-            functionCall.setNameFun(functionName);
-
-            // Add function call symbol if not already there
-            if (!symbolTable.existsInCurrentScope(functionName)) {
-                symbolTable.addSymbol("FUNCTION_CALL", functionName);
-            }
+        if (!symbolTable.existsInCurrentScope(name)) {
+            symbolTable.addSymbol("FUNCTION_CALL", name);
         }
 
-        // Process and add each argument
         for (typescriptparser.ArgumentContext argCtx : ctx.argument()) {
-            functionCall.getArguments().add(visitArgument(argCtx));
+            // Use generic visit() for arguments
+            fc.getArguments().add((Argument) visit(argCtx));
         }
 
-        return functionCall;
+        return fc;
     }
 
     @Override
-    public Argument visitArgument(typescriptparser.ArgumentContext ctx) {
+    public Argument visitExpressionArgument(typescriptparser.ExpressionArgumentContext ctx) {
         Argument argument = new Argument();
-        if (ctx.expression() != null) {
-            argument.setExpression(visitExpression(ctx.expression()));
-        }
+        // Use generic visit() for expression
+        argument.setExpression((Expression) visit(ctx.expression()));
         return argument;
     }
 
@@ -1123,7 +1329,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     public Template visitTemplateDefinition(typescriptparser.TemplateDefinitionContext ctx) {
         Template template = new Template();
         for (typescriptparser.ElementContext elemCtx : ctx.element()) {
-            template.getElement().add(visitElement(elemCtx));
+            // Use generic visit() for elements
+            template.getElement().add((Element) visit(elemCtx));
         }
         return template;
     }
@@ -1132,7 +1339,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public Element visitTagElement(typescriptparser.TagElementContext ctx) {
         Element element = new Element();
-        element.setTag(visitTag(ctx.tag()));
+        // Use generic visit() for tag
+        element.setTag((Tag) visit(ctx.tag()));
         return element;
     }
 
@@ -1164,13 +1372,13 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     public Tag visitOpenCloseTag(typescriptparser.OpenCloseTagContext ctx) {
         Tag tag = new Tag();
 
-        // Directly use the specific rule contexts
-        tag.setOpeningTag(visitOpeningTagRule((typescriptparser.OpeningTagRuleContext) ctx.openingTag()));
-        tag.setClosingTag(visitClosingTagRule((typescriptparser.ClosingTagRuleContext) ctx.closingTag()));
+        // Use generic visit() for opening/closing tags
+        tag.setOpeningTag((OpeningTag) visit(ctx.openingTag()));
+        tag.setClosingTag((ClosingTag) visit(ctx.closingTag()));
 
-        // Process nested elements
+        // Process nested elements with generic visit()
         for (typescriptparser.ElementContext nested : ctx.element()) {
-            tag.getElements().add(visitElement(nested));
+            tag.getElements().add((Element) visit(nested));
         }
 
         return tag;
@@ -1376,63 +1584,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return selfClosingTag;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // OLD METHOD (DELETE)
-// @Override
-// public Styles visitStyles(StylesContext ctx) {...}
-
     // NEW METHOD
     @Override
     public Styles visitStylesBlock(typescriptparser.StylesBlockContext ctx) {
@@ -1562,48 +1713,14 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return cssValue;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public InterfaceDeclaration visitInterfaceDeclaration(typescriptparser.InterfaceDeclarationContext ctx) {
         InterfaceDeclaration interfaceDeclaration = new InterfaceDeclaration();
 
-        if (ctx.ID() != null && ctx.ID().getText() != null) {
+        if (ctx.ID() != null) {
             String interfaceName = ctx.ID().getText();
             interfaceDeclaration.setNameInterface(interfaceName);
 
-            // FIX: Add duplicate check before adding to symbol table
             if (symbolTable.existsInCurrentScope(interfaceName)) {
                 int line = ctx.ID().getSymbol().getLine();
                 int column = ctx.ID().getSymbol().getCharPositionInLine();
@@ -1613,10 +1730,9 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             }
         }
 
-        // Process interface members
-        for (int i = 0; i < ctx.interfaceMember().size(); i++) {
-            typescriptparser.InterfaceMemberContext imCtx = ctx.interfaceMember(i);
-            InterfaceMember member = visitInterfaceMember(imCtx);
+        // Fixed: Use generic visit() instead of visitInterfaceMember()
+        for (typescriptparser.InterfaceMemberContext imCtx : ctx.interfaceMember()) {
+            InterfaceMember member = (InterfaceMember) visit(imCtx);
             if (member != null) {
                 interfaceDeclaration.getInterfaceMembers().add(member);
             }
@@ -1626,21 +1742,32 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
 
-
+    // =============== INTERFACE PROPERTY MEMBER ===============
     @Override
-    public InterfaceMember visitInterfaceMember(typescriptparser.InterfaceMemberContext ctx) {
+    public InterfaceMember visitInterfacePropertyMember(typescriptparser.InterfacePropertyMemberContext ctx) {
         InterfaceMember interfaceMember = new InterfaceMember();
 
-        if (ctx.propertyDeclaration() != null) {
+        // Guaranteed to be PropertyDeclaration by rule structure
+        interfaceMember.setPropertyDeclaration(
+                (PropertyDeclaration) visit(ctx.propertyDeclaration())
+        );
 
-            interfaceMember.setPropertyDeclaration(visitPropertyDeclaration(ctx.propertyDeclaration()));
-        } else if (ctx.methodDeclaration() != null) {
+        return interfaceMember;
+    }
 
-            symbolTable.enterScope("INTERFACE_METHOD");
-            interfaceMember.setMethodDeclaration(visitMethodDeclaration(ctx.methodDeclaration()));
-            symbolTable.exitScope();
-        }
+    // =============== INTERFACE METHOD MEMBER ===============
+    @Override
+    public InterfaceMember visitInterfaceMethodMember(typescriptparser.InterfaceMethodMemberContext ctx) {
+        InterfaceMember interfaceMember = new InterfaceMember();
 
+        symbolTable.enterScope("INTERFACE_METHOD");
+
+        // Guaranteed to be MethodDeclaration by rule structure
+        interfaceMember.setMethodDeclaration(
+                (MethodDeclaration) visit(ctx.methodDeclaration())
+        );
+
+        symbolTable.exitScope();
         return interfaceMember;
     }
 
@@ -1649,34 +1776,36 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public BodyObject visitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) {
         BodyObject bodyObject = new BodyObject();
+        List<ParseTree> children = ctx.children;
 
-        for (typescriptparser.KeyValuePairContext kvCtx : ctx.keyValuePair()) {
-            // Visit each key-value pair and add to bodyObject
-            bodyObject.getInitvalues().add((Initvalue) visit(kvCtx));
+        String currentKey = null;
+
+        for (ParseTree child : children) {
+            // Get key (ID)
+            if (child instanceof TerminalNode) {
+                TerminalNode node = (TerminalNode) child;
+                if (node.getSymbol().getType() == typescriptlexer.ID) {
+                    currentKey = node.getText();
+                }
+            }
+            // Get value (initvalue)
+            else if (child instanceof typescriptparser.InitvalueContext) {
+                if (currentKey != null) {
+                    Initvalue value = (Initvalue) visit(child);
+                    value.setObjectKey(currentKey);
+
+                    if (!symbolTable.existsInCurrentScope(currentKey)) {
+                        symbolTable.addSymbol("OBJECT_KEY", currentKey);
+                    }
+
+                    bodyObject.getInitvalues().add(value);
+                    currentKey = null;
+                }
+            }
         }
 
         return bodyObject;
     }
-
-    // ====================== KEY VALUE PAIR ======================
-    @Override
-    public Initvalue visitKeyValue(typescriptparser.KeyValueContext ctx) {
-        // Create a special Initvalue that preserves key information
-        Initvalue initvalue = (Initvalue) visit(ctx.initvalue());
-
-        // Store the key in the initvalue object
-        initvalue.setObjectKey(ctx.ID().getText());
-
-        // Add key to symbol table
-        if (!symbolTable.existsInCurrentScope(initvalue.getObjectKey())) {
-            symbolTable.addSymbol("OBJECT_KEY", initvalue.getObjectKey());
-        }
-
-        return initvalue;
-    }
-
-
-
     // Add this stack declaration
     private Stack<MethodContext> methodContextStack = new Stack<>();
 

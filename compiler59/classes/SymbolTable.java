@@ -52,15 +52,6 @@ public class SymbolTable {
         }
     }
 
-    // Better scope type checking
-    public boolean hasAncestorScope(String scopeType) {
-        for (int i = scopeStack.size() - 1; i >= 0; i--) {
-            if (scopeType.equals(scopeStack.get(i).getScopeType())) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     // Enhanced symbol addition with better scope context
     public void addSymbol(String type, String value) {
@@ -78,14 +69,7 @@ public class SymbolTable {
             currentScope.addSymbol(row);
         }
     }
-    public void addMethodParameter(String paramName, String paramType, String methodName) {
-        if (!scopeStack.isEmpty()) {
-            Scope currentScope = scopeStack.peek();
-            // Add parameters directly to the method scope, not a separate "Parameters" scope
-            Row paramRow = new Row("PARAMETER", paramName, currentScope.getScopeId(), "METHOD");
-            currentScope.addSymbol(paramRow);
-        }
-    }
+
     // Snapshot creation with better token expansion
     public SymbolTableSnapshot createSnapshot(Set<String> relevantTokens) {
         List<ScopeInfo> currentScopeStackInfo = getCurrentScopeStack();
@@ -113,12 +97,6 @@ public class SymbolTable {
         return new SymbolTableSnapshot(relevantTokens, relevantSymbols, currentScopeStackInfo);
     }
 
-    // Helper methods
-    public boolean currentScopeContains(String symbolValue) {
-        if (scopeStack.isEmpty()) return false;
-        Scope current = scopeStack.peek();
-        return current.findSymbol(symbolValue) != null;
-    }
 
     private int getCurrentScopeId() {
         return scopeStack.isEmpty() ? -1 : scopeStack.peek().getScopeId();
@@ -180,19 +158,7 @@ public class SymbolTable {
         return scopeInfoList;
     }
 
-    public List<ScopeInfo> getAllScopes() {
-        List<ScopeInfo> scopeInfoList = new ArrayList<>();
-        for (Scope scope : allScopes) {
-            scopeInfoList.add(new ScopeInfo(
-                    scope.getScopeId(),
-                    scope.getScopeName(),
-                    scope.getScopeType(),
-                    scope.getParentScopeId(),
-                    scope.getSymbolCount()
-            ));
-        }
-        return scopeInfoList;
-    }
+
 
     public int getCurrentScopeIdPublic() {
         return getCurrentScopeId();
@@ -229,55 +195,7 @@ public class SymbolTable {
     }
 
     // Enhanced error printing
-    public void printErrors() {
-        if (errors.isEmpty()) {
-            System.out.println("\n=== SEMANTIC ANALYSIS ===");
-            System.out.println("No semantic errors found.");
-            System.out.println("========================\n");
-            return;
-        }
 
-        System.out.println("\n=== SEMANTIC ERRORS ===");
-        System.out.println("Found " + errors.size() + " semantic error(s):");
-
-        for (SemanticError error : errors) {
-            System.out.println("\n" + error.getType().getDisplayName() + ":");
-            System.out.println("  - Line " + error.getLine() + ", Column " +
-                    error.getColumn() + ": " + error.getMessage());
-            if (error.getSnapshot() != null) {
-                error.getSnapshot().print();
-            }
-        }
-
-        System.out.println("\nTotal: " + errors.size() + " semantic error(s)");
-        System.out.println("======================\n");
-    }
-
-    // Improved scope hierarchy printing
-    public void printScopeHierarchy() {
-        System.out.println("\n=== SCOPE HIERARCHY ===");
-        System.out.println("Current scope stack:");
-
-        for (int i = 0; i < scopeStack.size(); i++) {
-            Scope scope = scopeStack.get(i);
-            String indent = "  ".repeat(i);
-
-            // Show clear scope relationships
-            String scopeDisplay = String.format("%s%s (ID: %d, Symbols: %d)",
-                    indent, scope.getScopeType(), scope.getScopeId(), scope.getSymbolCount());
-
-            System.out.println(scopeDisplay);
-
-            // Show some example symbols in each scope
-            if (scope.getSymbolCount() > 0 && scope.getSymbolCount() <= 5) {
-                for (Row symbol : scope.getSymbols()) {
-                    System.out.println(indent + "  - " + symbol.getValue() + " (" + symbol.getType() + ")");
-                }
-            }
-        }
-
-        System.out.println("=======================\n");
-    }
 
     // Enhanced formatting methods
     private static String formatIdentifier(String value) {

@@ -6,14 +6,14 @@ program     : statement+;
 
 
 statement   :
-             componentDeclaration
-            |classDeclaration
-            | interfaceDeclaration
-            | variableDeclaration
-            | assignmentStatement
-            |functionCall
-            | methodDeclaration
-            | importDeclaration
+             componentDeclaration      # ComponentStmt
+            | classDeclaration         # ClassStmt
+            | interfaceDeclaration     # InterfaceStmt
+            | variableDeclaration      # VariableDeclStmt
+            | assignmentStatement      # AssignmentStmt
+            | functionCall             # FunctionCallStmt
+            | methodDeclaration        # MethodStmt
+            | importDeclaration        # ImportStmt
             ;
             // to do class and visitor
 assignmentStatement
@@ -64,48 +64,6 @@ importDeclaration
        | styles               # ComponentStyles
        ;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 isboolean
     : TRUE   # TrueBoolean
     | FALSE  # FalseBoolean
@@ -114,22 +72,21 @@ isboolean
 
 
 
-
-classDeclaration :
-    EXPORT? CLASS ID  classDeclarationBody
+classDeclaration
+    : EXPORT? CLASS ID classDeclarationBody
+    # ClassDeclRule  // Add this label
     ;
 
 classDeclarationBody
     : LBRACE (classMember SEMICOLON?)* RBRACE
+    # ClassBodyRule  // Add this label
     ;
 
 classMember
-    : methodDeclaration
-    | propertyDeclaration
-    | classDeclaration
+    : methodDeclaration       # ClassMethodMember
+    | propertyDeclaration     # ClassPropertyMember
+    | classDeclaration        # NestedClassMember
     ;
-
-
 
 
 propertyDeclaration
@@ -139,43 +96,50 @@ propertyDeclaration
 
 methodDeclaration
     : ID LPAREN parameterList? RPAREN COLON type? LBRACE methodBody RBRACE
+    # MethodDeclRule  // Add this label
     ;
-methodBody :(statementMethod)* ;
+methodBody
+    : (statementMethod)* # MethodBodyRule  // Add this label
+    ;
 
 
-
-statementMethod :
-ID ASSIGN expression SEMICOLON return?
-|THIS DOT ID ASSIGN expression SEMICOLON return?
-| expression SEMICOLON  return?
-| return
-
-;
+statementMethod
+    : ID ASSIGN expression SEMICOLON returnStatment?   # MethodAssignment
+    | THIS DOT ID ASSIGN expression SEMICOLON returnStatment?   # MethodThisPropertyAssignment
+    | expression SEMICOLON returnStatment?   # MethodExpression
+    | returnStatment   # MethodReturnOnly
+    ;
 
 
- return : RETURN expression SEMICOLON |RETURN ID SEMICOLON | RETURN isboolean SEMICOLON  ;
-
+returnStatment
+    : RETURN expression SEMICOLON   # ReturnExpression
+    | RETURN ID SEMICOLON           # ReturnIdentifier
+    | RETURN isboolean SEMICOLON    # ReturnBoolean
+    | RETURN SEMICOLON              # ReturnVoid
+    ;
 
 interfaceDeclaration
     : INTERFACE ID LBRACE interfaceMember* RBRACE
     ;
 
 interfaceMember
-    : propertyDeclaration
-    | methodDeclaration
+    : propertyDeclaration   # InterfacePropertyMember
+    | methodDeclaration     # InterfaceMethodMember
     ;
 
 parameter
     : ID COLON type   # ParameterRule
     ;
 parameterList
-    : parameter (COMMA parameter)*
+    : parameter (COMMA parameter)*   # ParameterListRule
     ;
     // to do
     // date type regular
     // datatype : (int| double | float |final | String | private | public | protected | char | ) ID COLON initialvalue | ID ID COLON initialvalue
 variableDeclaration
-    : (CONST | LET | VAR ) ID   (ASSIGN expression)?
+    : CONST ID (ASSIGN expression)?   # ConstDeclaration
+    | LET ID (ASSIGN expression)?     # LetDeclaration
+    | VAR ID (ASSIGN expression)?     # VarDeclaration
     ;
 
 
@@ -203,13 +167,9 @@ object
     : LBRACE bodyobject RBRACE COMMA?   # ObjectRule
     ;
 bodyobject
-    : (keyValuePair (COMMA keyValuePair)*)?   # ObjectBodyRule
+    : (ID COLON initvalue (COMMA ID COLON initvalue)* COMMA?)?   # ObjectBodyRule
     ;
 
-keyValuePair
-    : ID COLON initvalue   # KeyValue
-
-    ;
 
  initvalue
      : NUMBER_LIT                   # NumberInitValue
@@ -220,32 +180,33 @@ keyValuePair
      ;
 
 expression
-    : STRING_LIT
-    | NUMBER_LIT
-    | ID
-    | isboolean
-    | functionCall
-    | variableDeclaration
-    | memberAccess
-    | expression operator expression     // <-- دعم العمليات الحسابية
-    | LPAREN expression RPAREN           // <-- دعم الأقواس
+    : STRING_LIT                             # StringLiteralExpr
+    | NUMBER_LIT                             # NumberLiteralExpr
+    | ID                                     # IdentifierExpr
+    | isboolean                              # BooleanLiteralExpr
+    | functionCall                           # FunctionCallExpr
+    | variableDeclaration                    # VariableDeclarationExpr
+    | memberAccess                           # MemberAccessExpr
+    | expression operator expression         # BinaryExpr
+    | LPAREN expression RPAREN               # ParenthesizedExpr
     ;
 
 operator
-        : PLUS
-        | MINUS
-        | STAR
-        | SLASH
-        ;
+    : PLUS   # PlusOp
+    | MINUS  # MinusOp
+    | STAR   # StarOp
+    | SLASH  # SlashOp
+    ;
 
 
 
 functionCall
-    : ID LPAREN argument* RPAREN
+    : ID LPAREN argument* RPAREN   # StandardFunctionCall
     ;
 
-argument    : expression
-            ;
+argument
+    : expression   # ExpressionArgument
+    ;
 
 
 
@@ -282,33 +243,6 @@ attributes
 interpolation
     : INTERPOLATION_START_HTML NAME_HTML INTERPOLATION_END_HTML   # InterpolationRule
     ;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   cssBody :

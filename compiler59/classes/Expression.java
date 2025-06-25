@@ -6,6 +6,17 @@ public class Expression {
     VariableDeclaration variableDeclaration ;
     FunctionCall functionCall ;
 
+    private MemberAccess memberAccess;
+
+    // ... constructors and other methods ...
+
+    public void setMemberAccess(MemberAccess memberAccess) {
+        this.memberAccess = memberAccess;
+    }
+
+    public MemberAccess getMemberAccess() {
+        return memberAccess;
+    }
     public String getString() {
         return string;
     }
