@@ -254,7 +254,9 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             classDeclarationBody.getClassMembers().add(
                     (ClassMember) visit(memberCtx)
             );
+
         }
+
 
         return classDeclarationBody;
     }

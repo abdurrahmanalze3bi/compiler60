@@ -62,35 +62,7 @@ public class SemanticErrorManager {
         }
     }
 
-    public void reportLiteralBinding(String attribute, String value, int line, int column) {
-        Set<String> relevantTokens = new HashSet<>();
-        relevantTokens.add(attribute);
-        relevantTokens.add(value);
 
-        SemanticError error = new SemanticError(
-                SemanticErrorType.LITERAL_BINDING_FOR_PROPERTY,
-                "Literal string binding for '" + attribute + "' which should be property binding." +
-                        " Use: [" + attribute + "]=\"" + value + "\"",
-                line, column, value,
-                createSnapshot(relevantTokens)
-        );
-        errors.add(error);
-        System.err.println("SEMANTIC ERROR [Line " + line + ", Column " + column + "]: " + error.getMessage());
-    }
-
-    public void reportUndefinedBinding(String property, int line, int column) {
-        Set<String> relevantTokens = new HashSet<>();
-        relevantTokens.add(property);
-
-        SemanticError error = new SemanticError(
-                SemanticErrorType.UNDEFINED_BINDING,
-                "Undefined property '" + property + "' used in template",
-                line, column, property,
-                createSnapshot(relevantTokens)
-        );
-        errors.add(error);
-        System.err.println("SEMANTIC ERROR [Line " + line + ", Column " + column + "]: " + error.getMessage());
-    }
 
 
     // ========================================
@@ -136,15 +108,13 @@ public class SemanticErrorManager {
         // Getters
         public String getMethodName() { return methodName; }
         public String getDeclaredReturnType() { return declaredReturnType; }
-        public List<String> getActualReturnTypes() { return actualReturnTypes; }
-        public List<String> getParameterTypes() { return parameterTypes; }
         public int getDeclarationLine() { return declarationLine; }
         public int getDeclarationColumn() { return declarationColumn; }
         public boolean isVoidMethod() { return isVoidMethod; }
         public boolean hasReturnStatements() { return !actualReturnTypes.isEmpty(); }
         public boolean hasBeenProcessed() { return hasBeenProcessed; }
         public void setProcessed(boolean processed) { this.hasBeenProcessed = processed; }
-        public String getScopeId() { return scopeId; }
+
     }
 
     // Register method declaration
@@ -655,14 +625,12 @@ enum SemanticErrorType {
     MISSING_COMMON_MODULE("Missing CommonModule Import"),
     UNDEFINED_VARIABLE("Undefined Variable"),
     PROPERTY_BINDING_MISMATCH("Property Binding Mismatch"),
-    UNDEFINED_INTERPOLATION_VARIABLE("Undefined Interpolation Variable"),
     MISSING_DECORATOR_IMPORT("Missing Decorator Import"),
     MISSING_DECORATOR_SYMBOL("Missing Decorator Symbol"),
     DUPLICATE_CLASS("Duplicate Class Declaration"),
     LITERAL_BINDING_FOR_PROPERTY("Literal Binding Used for Property"),
     UNDEFINED_STRUCTURAL_DIRECTIVE_VARIABLE("Undefined Structural Directive Variable"),
     DUPLICATE_INTERFACE("Duplicate Interface Declaration"),
-    UNDEFINED_BINDING("Undefined Template Binding"),
     DUPLICATE_METHOD("Duplicate Method Declaration"),
     RETURN_TYPE_MISMATCH("Return Type Mismatch"),
     VOID_METHOD_RETURN_VALUE("Void Method Returning Value"),
@@ -722,11 +690,5 @@ class SemanticError {
     public String toString() {
         return String.format("[%s] Line %d, Column %d: %s", type.getDisplayName(), line, column, message);
     }
-    public void printWithContext() {
-        System.out.println("[" + type.getDisplayName() + "] Line " + line + ", Column " + column + ": " + message);
-        if (snapshot != null) {
-            System.out.println("Relevant Symbol Context:");
-            snapshot.print();
-        }
+
     }
-}

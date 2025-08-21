@@ -6,7 +6,7 @@ public class SymbolTable {
     private Stack<Scope> scopeStack;
     private List<Scope> allScopes;
     private int currentScopeId;
-    private List<SemanticError> errors = new ArrayList<>();
+
 
     public SymbolTable() {
         this.scopeStack = new Stack<>();
@@ -411,7 +411,7 @@ class ScopeInfo {
     public String getScopeName() { return scopeName; }
     public String getScopeType() { return scopeType; }
     public int getParentScopeId() { return parentScopeId; }
-    public int getSymbolCount() { return symbolCount; }
+
 }
 
 // Enhanced Scope class
@@ -434,9 +434,7 @@ class Scope {
         this.scopeName = scopeName;
     }
 
-    public void setScopeType(String scopeType) {
-        this.scopeType = scopeType;
-    }
+
 
     public void addSymbol(Row symbol) {
         symbols.put(symbol.getValue(), symbol);
