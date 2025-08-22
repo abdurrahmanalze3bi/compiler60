@@ -16,9 +16,23 @@ import java.util.Stack;
 
 
 public class MyVisitor extends typescriptparserBaseVisitor {
-
-    // UNIFIED SYMBOL TABLE - This is the main app-wide symbol table
+    // NEW METHOD - ADD THIS
+    public String generateVanillaWebCode() {
+        VanillaWebCodeGenerator generator = new VanillaWebCodeGenerator(symbolTable);
+        // Note: VanillaWebCodeGenerator doesn't have generateCode() method
+        // It uses generateFromAST() which is called from Main
+        return "Vanilla Web code generation initiated";
+    }
     private SymbolTable symbolTable = new SymbolTable();
+
+
+    public MyVisitor(SymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
+    }
+    public SymbolTable getSymbolTable() {
+        return symbolTable;
+    }
+    // UNIFIED SYMBOL TABLE - This is the main app-wide symbol table
 
     // Method tracking for return analysis
     private Stack<MethodContext> currentMethodStack = new Stack<>();
@@ -334,9 +348,12 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public PropertyDeclaration visitPropertyWithInit(typescriptparser.PropertyWithInitContext ctx) {
         PropertyDeclaration prop = new PropertyDeclaration();
+
         // Get the property name
         String propName = ctx.ID().getText();
         prop.getID().add(propName);
+
+        System.out.println(">>> Processing property: " + propName);
 
         // Handle type if present
         if (ctx.type() != null) {
@@ -344,13 +361,22 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             prop.setTypeV(typeV);
         }
 
-        // Handle initial value - FIXED: Use correct class name
+        // Handle initial value - ENHANCED EXTRACTION
         if (ctx.initvalue() != null) {
-            Initvalue initVal = (Initvalue) visit(ctx.initvalue()); // Fixed case
-            prop.setInitvalue(initVal); // Fixed method name
+            System.out.println(">>> Property has initial value, extracting...");
+
+            Initvalue initVal = (Initvalue) visit(ctx.initvalue());
+            prop.setInitvalue(initVal);
+
+            // Debug: Print what was extracted
+            String extractedInfo = getInitValueInfo(initVal);
+            System.out.println(">>> Extracted property: " + propName + " = " + extractedInfo);
+        } else {
+            System.out.println(">>> Property has no initial value");
+            System.out.println(">>> Extracted property: " + propName + " = null");
         }
 
-        // Add to symbol table - let the system handle type inference
+        // Add to symbol table
         symbolTable.addComponentProperty(propName, "any");
         if (!symbolTable.existsInCurrentScope(propName)) {
             symbolTable.addSymbol("PROPERTY", propName);
@@ -595,6 +621,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         Initvalue initvalue = new Initvalue();
         String numberValue = ctx.NUMBER_LIT().getText();
         initvalue.setNumber(numberValue);
+
+        System.out.println(">>> Found number value: " + numberValue);
         symbolTable.addSymbol("NUMBER_LITERAL", numberValue);
         return initvalue;
     }
@@ -604,6 +632,8 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         Initvalue initvalue = new Initvalue();
         String stringValue = ctx.STRING_LIT().getText();
         initvalue.setString(stringValue);
+
+        System.out.println(">>> Found string value: " + stringValue);
         symbolTable.addSymbol("STRING_LITERAL", stringValue);
         return initvalue;
     }
@@ -612,25 +642,33 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     public Initvalue visitBooleanInitValue(typescriptparser.BooleanInitValueContext ctx) {
         Initvalue initvalue = new Initvalue();
         initvalue.setIsBoolean((IsBoolean) visit(ctx.isboolean()));
+
+        System.out.println(">>> Found boolean value: " + ctx.isboolean().getText());
         return initvalue;
     }
-
     @Override
     public Initvalue visitListInitValue(typescriptparser.ListInitValueContext ctx) {
         Initvalue initvalue = new Initvalue();
+
+        System.out.println(">>> Found list/array value");
         initvalue.setBodyList((BodyList) visit(ctx.bodylist()));
+
         return initvalue;
     }
+
 
     @Override
     public Initvalue visitObjectInitValue(typescriptparser.ObjectInitValueContext ctx) {
         Initvalue initvalue = new Initvalue();
+
+        System.out.println(">>> Found nested object, entering scope...");
         symbolTable.enterScope("OBJECT");
         initvalue.setObjectV((ObjectV) visit(ctx.object()));
         symbolTable.exitScope();
+        System.out.println(">>> Exited nested object scope");
+
         return initvalue;
     }
-
 
     @Override
     public MethodBody visitMethodBodyRule(typescriptparser.MethodBodyRuleContext ctx) {
@@ -837,16 +875,62 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public BodyList visitBodyListRule(typescriptparser.BodyListRuleContext ctx) {
         BodyList bodyList = new BodyList();
+
+        System.out.println(">>> Processing BodyList...");
         symbolTable.enterScope("BODY_LIST");
 
+        int itemCount = ctx.initvalue().size();
+        System.out.println(">>> BodyList has " + itemCount + " items");
+
         // Process all initvalues
-        for (typescriptparser.InitvalueContext ivCtx : ctx.initvalue()) {
-            bodyList.getInitvalues().add((Initvalue) visit(ivCtx));
+        for (int i = 0; i < ctx.initvalue().size(); i++) {
+            System.out.println(">>> Processing array item " + i + "...");
+
+            typescriptparser.InitvalueContext ivCtx = ctx.initvalue(i);
+            Initvalue initValue = (Initvalue) visit(ivCtx);
+            bodyList.getInitvalues().add(initValue);
+
+            // Debug: Print what was extracted
+            String extractedInfo = getInitValueInfo(initValue);
+            System.out.println(">>> Array item " + i + " extracted: " + extractedInfo);
         }
 
         symbolTable.exitScope();
+        System.out.println(">>> Array extraction completed with " + itemCount + " items");
+
         return bodyList;
     }
+    private String getInitValueInfo(Initvalue initValue) {
+        if (initValue == null) return "null";
+
+        // Check what type of value this is
+        if (initValue.getNumber() != null) {
+            return "number(" + initValue.getNumber() + ")";
+        }
+        if (initValue.getString() != null) {
+            return "string(" + initValue.getString() + ")";
+        }
+        if (initValue.getIsBoolean() != null) {
+            return "boolean(" + initValue.getIsBoolean() + ")";
+        }
+        if (initValue.getObjectV() != null) {
+            // Count properties in the object
+            BodyObject bodyObj = initValue.getObjectV().getBodyObject();
+            if (bodyObj != null) {
+                int propCount = bodyObj.getInitvalues() != null ? bodyObj.getInitvalues().size() : 0;
+                return "{" + propCount + " props}";
+            }
+            return "{object}";
+        }
+        if (initValue.getBodyList() != null) {
+            int listSize = initValue.getBodyList().getInitvalues() != null ?
+                    initValue.getBodyList().getInitvalues().size() : 0;
+            return "[" + listSize + " items]";
+        }
+
+        return "unknown";
+    }
+
 
 
     @Override
@@ -1275,14 +1359,23 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     public OpeningTag visitOpeningTagRule(typescriptparser.OpeningTagRuleContext ctx) {
         OpeningTag openingTag = new OpeningTag();
 
-        // Process all attributes (if any)
+        // Extract tag name from TAG_OPEN_START_HTML token
+        if (ctx.TAG_OPEN_START_HTML() != null) {
+            String tagOpenText = ctx.TAG_OPEN_START_HTML().getText();
+            // TAG_OPEN_START_HTML should contain something like "<div" or "<span"
+            if (tagOpenText.startsWith("<")) {
+                String tagName = tagOpenText.substring(1); // Remove the "<"
+                openingTag.setName(tagName);
+            }
+        }
+
+        // Process attributes
         for (typescriptparser.AttributesContext attrCtx : ctx.attributes()) {
             openingTag.getAttributes().add((Attributes) visit(attrCtx));
         }
 
         return openingTag;
     }
-
     @Override
     public ClosingTag visitClosingTagRule(typescriptparser.ClosingTagRuleContext ctx) {
         ClosingTag closingTag = new ClosingTag();
@@ -1620,39 +1713,114 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
 
     // ====================== OBJECT BODY RULE ======================
+    // ====================== FIXED OBJECT BODY RULE ======================
     @Override
     public BodyObject visitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) {
         BodyObject bodyObject = new BodyObject();
-        List<ParseTree> children = ctx.children;
+        System.out.println(">>> Processing ObjectBodyRule...");
 
-        String currentKey = null;
-
-        for (ParseTree child : children) {
-            // Get key (ID)
-            if (child instanceof TerminalNode) {
-                TerminalNode node = (TerminalNode) child;
-                if (node.getSymbol().getType() == typescriptlexer.ID) {
-                    currentKey = node.getText();
-                }
-            }
-            // Get value (initvalue)
-            else if (child instanceof typescriptparser.InitvalueContext) {
-                if (currentKey != null) {
-                    Initvalue value = (Initvalue) visit(child);
-                    value.setObjectKey(currentKey);
-
-                    if (!symbolTable.existsInCurrentScope(currentKey)) {
-                        symbolTable.addSymbol("OBJECT_KEY", currentKey);
-                    }
-
-                    bodyObject.getInitvalues().add(value);
-                    currentKey = null;
-                }
-            }
+        // Debug: Print the actual parse tree structure
+        System.out.println(">>> Parse tree child count: " + ctx.getChildCount());
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            ParseTree child = ctx.getChild(i);
+            System.out.println(">>> Child " + i + ": " + child.getClass().getSimpleName() + " = '" + child.getText() + "'");
         }
 
+        // Check if the object body is empty
+        if (ctx.getChildCount() == 0) {
+            System.out.println(">>> Empty object body - no children found");
+            return bodyObject;
+        }
+
+        // Try different approaches to extract data
+        try {
+            // Approach 1: Try calling the methods (might work if grammar is correct)
+            try {
+                java.lang.reflect.Method idMethod = ctx.getClass().getMethod("ID");
+                java.lang.reflect.Method initvalueMethod = ctx.getClass().getMethod("initvalue");
+
+                @SuppressWarnings("unchecked")
+                List<TerminalNode> ids = (List<TerminalNode>) idMethod.invoke(ctx);
+                @SuppressWarnings("unchecked")
+                List<typescriptparser.InitvalueContext> values = (List<typescriptparser.InitvalueContext>) initvalueMethod.invoke(ctx);
+
+                if (ids != null && values != null) {
+                    System.out.println(">>> Reflection approach worked! Found " + ids.size() + " keys, " + values.size() + " values");
+
+                    for (int i = 0; i < ids.size() && i < values.size(); i++) {
+                        String key = ids.get(i).getText();
+                        typescriptparser.InitvalueContext valueCtx = values.get(i);
+
+                        System.out.println(">>> Processing property: " + key);
+
+                        Initvalue initValue = (Initvalue) visit(valueCtx);
+                        initValue.setObjectKey(key);
+
+                        if (!symbolTable.existsInCurrentScope(key)) {
+                            symbolTable.addSymbol("OBJECT_KEY", key);
+                        }
+
+                        bodyObject.getInitvalues().add(initValue);
+                        System.out.println(">>> Added property: " + key + " = " + getInitValueInfo(initValue));
+                    }
+                }
+            } catch (Exception reflectionEx) {
+                System.out.println(">>> Reflection approach failed: " + reflectionEx.getMessage());
+
+                // Approach 2: Manual parsing with better logic
+                List<String> keys = new ArrayList<>();
+                List<typescriptparser.InitvalueContext> values = new ArrayList<>();
+
+                // Look for the pattern: ID COLON initvalue
+                for (int i = 0; i < ctx.getChildCount() - 2; i++) {
+                    ParseTree child1 = ctx.getChild(i);
+                    ParseTree child2 = ctx.getChild(i + 1);
+                    ParseTree child3 = ctx.getChild(i + 2);
+
+                    // Check for ID : initvalue pattern
+                    if (child1 instanceof TerminalNode && child3 instanceof typescriptparser.InitvalueContext) {
+                        TerminalNode idNode = (TerminalNode) child1;
+                        if (child2.getText().equals(":") && idNode.getSymbol().getType() == typescriptlexer.ID) {
+                            String key = idNode.getText();
+                            typescriptparser.InitvalueContext valueCtx = (typescriptparser.InitvalueContext) child3;
+
+                            keys.add(key);
+                            values.add(valueCtx);
+
+                            System.out.println(">>> Found pattern at position " + i + ": " + key + " : " + valueCtx.getText());
+                        }
+                    }
+                }
+
+                System.out.println(">>> Manual parsing found " + keys.size() + " property keys");
+
+                // Process the found pairs
+                for (int i = 0; i < keys.size(); i++) {
+                    String key = keys.get(i);
+                    typescriptparser.InitvalueContext valueCtx = values.get(i);
+
+                    System.out.println(">>> Processing property: " + key);
+
+                    Initvalue initValue = (Initvalue) visit(valueCtx);
+                    initValue.setObjectKey(key);
+
+                    if (!symbolTable.existsInCurrentScope(key)) {
+                        symbolTable.addSymbol("OBJECT_KEY", key);
+                    }
+
+                    bodyObject.getInitvalues().add(initValue);
+                    System.out.println(">>> Added property: " + key + " = " + getInitValueInfo(initValue));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(">>> Error processing object body: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        System.out.println(">>> Object extraction completed with " + bodyObject.getInitvalues().size() + " properties");
         return bodyObject;
     }
+
     // Add this stack declaration
 
     // Helper method to determine expression type

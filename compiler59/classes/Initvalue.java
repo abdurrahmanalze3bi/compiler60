@@ -1,17 +1,13 @@
 package classes;
 
 public class Initvalue {
-    // Existing fields
     private String string;
     private String number;
     private IsBoolean isBoolean;
     private BodyList bodyList;
     private ObjectV objectV;
-
-    // New field to store object keys
     private String objectKey;
 
-    // Getters and setters
     public String getObjectKey() {
         return objectKey;
     }
@@ -62,28 +58,21 @@ public class Initvalue {
 
     @Override
     public String toString() {
-        if(isBoolean != null) {
-            return "\nInitvalue{"+
-                    "\n " + isBoolean +
-                    "\n}";
+        if (isBoolean != null) {
+            return isBoolean.toString();
         }
-        if(string != null) {
-            return "\nInitvalue{" +
-                    "\n string=" + string +
-                    "\n}";
+        if (string != null) {
+            return string;
         }
-        if(objectV != null) {
-            return "\nInitvalue{" +
-                    "\n " + objectV +
-                    "\n}";
+        if (number != null) {
+            return number;
         }
-        if(bodyList != null) {
-            return "\nInitvalue{" +
-                    "\n " + bodyList +
-                    "\n}";
+        if (objectV != null) {
+            return objectV.toString();
         }
-        return "\nInitvalue{" +
-                "\n number=" + number +
-                "\n}";
+        if (bodyList != null) {
+            return bodyList.toString();
+        }
+        return "null";
     }
 }

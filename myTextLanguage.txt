@@ -1,3 +1,6 @@
+// app.component.ts
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 interface Product {
   id: number;
@@ -8,8 +11,9 @@ interface Product {
 }
 
 @Component({
-  selector: 'app-product',
+  selector: 'app-root',
   standalone: true,
+  imports: [CommonModule],
   styles: [
     `
       .container {
@@ -49,13 +53,13 @@ interface Product {
       }
     `,
   ],
-  imports: [CommonModule],
+
   template: `
     <div class="container">
       <div class="product-list">
         <h3>Products</h3>
         <ul>
-          <li ngFor="let product of products" (click)="selectProduct(product)">
+          <li *ngFor="let product of products" (click)="selectProduct(product)">
             <img [src]="product.imageUrl" alt="{{ product.name }}" />
             <p>{{ product.name }}</p>
           </li>
@@ -71,42 +75,60 @@ interface Product {
       </div>
     </div>
   `,
-})
-export class ProductComponent {
-  products: Product[] = [
+
+
+}
+
+)
+export class AppComponent {
+  products: Product[]  =  [
     {
       id: 1,
-      name: 'MacBook Pro 16"',
-      price: 2499,
-      type: 'Laptop',
-      imageUrl: 'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mbp16-spacegray-gallery1-202301?wid=2000&hei=2000&fmt=jpeg&qlt=95&.v=1671304673229',
+      name: 'Apple iPhone 15 Pro',
+      price: 999,
+      type: 'Smartphone',
+      imageUrl: 'https://imgs.search.brave.com/PWkrla43U79BF3A9MlclhMG0NuVB5iEYTGJNqXaHz9I/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9mZG4y/LmdzbWFyZW5hLmNv/bS92di9iaWdwaWMv/YXBwbGUtaXBob25l/LTE0LmpwZw',
     },
     {
       id: 2,
-      name: 'Dell XPS 13',
-      price: 1399,
-      type: 'Laptop',
-      imageUrl: 'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/page/franchise/xps-13-9315-2023-black-category-image-800x620.png',
+      name: 'Samsung Galaxy S23 Ultra',
+      price: 1199,
+      type: 'Smartphone',
+      imageUrl: 'https://imgs.search.brave.com/DVt6aqYu0XAjGA_8yhOUffCvJIJ6vsNI5m2KYQ_sM9g/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly93d3cu/OTEtaW1nLmNvbS9n/YWxsZXJ5X2ltYWdl/c191cGxvYWRzL2Yv/Ny9mNzM4YzNjYzlj/ZTJhNGVmNzM2NDc4/OWZmMzFiNDhkNjM3/N2U0ZTE5LmpwZz90/cj1oLTU1MCx3LTAs/Yy1hdF9tYXg',
     },
     {
       id: 3,
-      name: 'HP Spectre x360',
-      price: 1299,
-      type: 'Laptop',
-      imageUrl: 'https://ssl-product-images.www8-hp.com/digmedialib/prodimg/lowres/c08401115.png',
+      name: 'Google Pixel 8 Pro',
+      price: 899,
+      type: 'Smartphone',
+      imageUrl: 'https://imgs.search.brave.com/nCVKfU2zCx-30-2nCk76lwOuNirJhKlfZeTPalioM0g/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9zczcu/dnp3LmNvbS9pcy9p/bWFnZS9WZXJpem9u/V2lyZWxlc3MvZ29v/Z2xlLXRrNC1vYnNp/ZGlhbi1oZXJvP2hl/aT0yNTAmYmdjPWY2/ZjZmNg.jpeg',
     },
     {
       id: 4,
-      name: 'Lenovo ThinkPad X1',
-      price: 1499,
-      type: 'Laptop',
-      imageUrl: 'https://www.lenovo.com/medias/thinkpad-x1-carbon-gen-9-hero.png?context=bWFzdGVyfHJvb3R8Mjc0MzQxfGltYWdlL3BuZ3xoNDMvaDAxLzExMzI5MjY0MTU5NTk4LnBuZ3xiZjhhZDBjODU0ZmM2ZmEyODZmODAxZjljZjYwM2Y4ODQ3ZTBlMTdlM2M0ZTQ0MTM1ODlhMWE2NGRjMjZjNjMw',
+      name: 'OnePlus 11',
+      price: 699,
+      type: 'Smartphone',
+      imageUrl: 'https://imgs.search.brave.com/ssaPEcbKQeg2AIbelN6Mhbqzj4lt9RSsfxtnvCUdBRM/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9mZG4y/LmdzbWFyZW5hLmNv/bS92di9iaWdwaWMv/b25lcGx1cy0xMS5q/cGc',
+    },
+    {
+      id: 5,
+      name: 'Xiaomi 13 Pro',
+      price: 799,
+      type: 'Smartphone',
+      imageUrl: 'https://imgs.search.brave.com/n1-3EV-_yqT1ePIBqMUdbrLh6SCO6Hj3_Bdn580hZLI/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9mZG4y/LmdzbWFyZW5hLmNv/bS92di9iaWdwaWMv/eGlhb21pLTEzLXBy/by1ibGFjay5qcGc',
+    },
+    {
+      id: 6,
+      name: 'Sony Xperia 1 V',
+      price: 1299,
+      type: 'Smartphone',
+      imageUrl: 'https://imgs.search.brave.com/QQAPjO66v_3qVNgshnE9q7WLbeXgad9fvduKQ6j1zoM/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9tb2Jp/bGVpbnRvLmNvbS9p/bWFnZXMvU29ueS1Y/cGVyaWEtMS1WLmpw/Zw',
     },
   ];
-
   selectedProduct: Product | null = null;
 
   selectProduct(product: Product): void {
     this.selectedProduct = product;
+
   }
 }

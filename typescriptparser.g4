@@ -166,10 +166,10 @@ bodylist
 object
     : LBRACE bodyobject RBRACE COMMA?   # ObjectRule
     ;
+
 bodyobject
     : (ID COLON initvalue (COMMA ID COLON initvalue)* COMMA?)?   # ObjectBodyRule
     ;
-
 
  initvalue
      : NUMBER_LIT                   # NumberInitValue

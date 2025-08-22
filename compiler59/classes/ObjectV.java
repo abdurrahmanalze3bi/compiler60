@@ -1,7 +1,7 @@
 package classes;
 
 public class ObjectV {
-    BodyObject bodyObject ;
+    private BodyObject bodyObject;
 
     public BodyObject getBodyObject() {
         return bodyObject;
@@ -13,8 +13,6 @@ public class ObjectV {
 
     @Override
     public String toString() {
-        return "\nObjectV{" +
-                "\n=" + bodyObject +
-                "\n}";
+        return bodyObject != null ? bodyObject.toString() : "{}";
     }
 }
