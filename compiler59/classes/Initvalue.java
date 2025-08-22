@@ -19,6 +19,7 @@ public class Initvalue {
     public void setObjectKey(String objectKey) {
         this.objectKey = objectKey;
     }
+
     public String getNumber() {
         return number;
     }
@@ -61,33 +62,28 @@ public class Initvalue {
 
     @Override
     public String toString() {
-
-        if(isBoolean!=null) {
+        if(isBoolean != null) {
             return "\nInitvalue{"+
                     "\n " + isBoolean +
                     "\n}";
         }
-
-        if(string!=null) {
+        if(string != null) {
             return "\nInitvalue{" +
                     "\n string=" + string +
                     "\n}";
         }
-        if(objectV!=null) {
+        if(objectV != null) {
             return "\nInitvalue{" +
                     "\n " + objectV +
                     "\n}";
         }
-        if(bodyList!=null) {
+        if(bodyList != null) {
             return "\nInitvalue{" +
                     "\n " + bodyList +
                     "\n}";
         }
-
         return "\nInitvalue{" +
                 "\n number=" + number +
                 "\n}";
-
-
     }
 }

@@ -18,6 +18,11 @@ public class PropertyDeclaration {
         this.ID = ID;
     }
 
+    // FIXED: Added setInitValue method that was missing
+    public void setInitValue(Initvalue initvalue) {
+        this.initvalue = initvalue;
+    }
+
     public TypeV getTypeV() {
         return typeV;
     }
@@ -51,15 +56,12 @@ public class PropertyDeclaration {
         if (!ID.isEmpty()) {
             sb.append("\n  ID=").append(ID);
         }
-
         if (typeV != null) {
             sb.append("\n  typeV=").append(typeV);
         }
-
         if (initvalue != null) {
             sb.append("\n  initvalue=").append(initvalue);
         }
-
         if (unionType != null) {
             sb.append("\n  unionType='").append(unionType).append('\'');
         }
