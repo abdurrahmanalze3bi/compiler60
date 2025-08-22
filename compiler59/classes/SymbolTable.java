@@ -3,15 +3,15 @@ package classes;
 import java.util.*;
 
 /**
- * Complete Symbol Table System - Single File Replacement
- * This single file replaces your old SymbolTable.java completely
+ * Complete Symbol Table System - Angular-Aware Version
+ * Enhanced to properly handle Angular template syntax and component semantics
  *
  * Features:
- * 1. All your original SymbolTable functionality (scopes, symbols, lookups)
- * 2. Specialized error symbol tables (MAP, LIST, BINARY TREE) for each error type
- * 3. Integrated error reporting and management
- *
- * Usage: Use this exactly like your old SymbolTable class
+ * 1. All original SymbolTable functionality (scopes, symbols, lookups)
+ * 2. Angular template variable recognition (*ngFor, *ngIf)
+ * 3. Component property tracking
+ * 4. HTML attribute validation
+ * 5. Fixed semantic error reporting for Angular
  */
 public class SymbolTable {
     // Core symbol table components
@@ -22,7 +22,7 @@ public class SymbolTable {
     // Error management
     private EnhancedSemanticErrorManager errorManager;
 
-    // Component tracking for error context
+    // Angular-specific component tracking
     private Set<String> componentProperties;
     private Map<String, String> propertyTypes;
 
@@ -32,17 +32,19 @@ public class SymbolTable {
         this.allScopes = new ArrayList<>();
         this.currentScopeId = 0;
 
-        // Initialize error management
-        this.errorManager = new EnhancedSemanticErrorManager(this);
+        // Initialize Angular-aware error management
         this.componentProperties = new HashSet<>();
         this.propertyTypes = new HashMap<>();
 
         // Create global scope
         enterScope("GLOBAL");
+
+        // Initialize error manager after basic setup
+        this.errorManager = new EnhancedSemanticErrorManager(this);
     }
 
     // ============================================
-    // YOUR ORIGINAL SYMBOLTABLE METHODS - UNCHANGED
+    // ORIGINAL SYMBOLTABLE METHODS - UNCHANGED
     // ============================================
 
     public void enterScope(String scopeName) {
@@ -87,7 +89,22 @@ public class SymbolTable {
         }
     }
 
+    /**
+     * ENHANCED lookup that includes Angular template variables and component properties
+     */
     public Row lookupSymbol(String value) {
+        // Check component properties first
+        if (componentProperties.contains(value)) {
+            String type = propertyTypes.getOrDefault(value, "any");
+            return new Row("COMPONENT_PROPERTY", value, getCurrentScopeId(), "COMPONENT");
+        }
+
+        // Check template variables if in template context
+        if ("TEMPLATE".equals(getCurrentScopeType()) && errorManager != null && errorManager.templateVariables.contains(value)) {
+            return new Row("TEMPLATE_VARIABLE", value, getCurrentScopeId(), "TEMPLATE");
+        }
+
+        // Original scope-based lookup
         for (int i = scopeStack.size() - 1; i >= 0; i--) {
             Scope scope = scopeStack.get(i);
             Row symbol = scope.findSymbol(value);
@@ -146,8 +163,8 @@ public class SymbolTable {
     public SymbolTableSnapshot createSnapshot(Set<String> relevantTokens) {
         List<ScopeInfo> currentScopeStackInfo = getCurrentScopeStack();
         List<Row> relevantSymbols = new ArrayList<>();
-
         Set<String> expandedTokens = new HashSet<>(relevantTokens);
+
         for (String token : relevantTokens) {
             String cleanToken = token.replaceAll("[\"'*]", "");
             expandedTokens.add(cleanToken);
@@ -177,6 +194,7 @@ public class SymbolTable {
 
         System.out.println("| Identifier         | Kind             | Data Type        | Scope                |");
         System.out.println("| ------------------ | ---------------- | ---------------- | -------------------- |");
+
         for (Row row : allSymbols) {
             if (row != null) {
                 String identifier = formatIdentifier(row.getValue());
@@ -187,6 +205,7 @@ public class SymbolTable {
                         identifier, kind, dataType, scope);
             }
         }
+
         System.out.println();
         System.out.println("Total symbols: " + allSymbols.size());
         System.out.println("Current scope: " + getCurrentScopeName() + " (ID: " + getCurrentScopeId() + ")");
@@ -194,11 +213,33 @@ public class SymbolTable {
     }
 
     // ============================================
-    // NEW ERROR REPORTING METHODS
+    // ANGULAR TEMPLATE PARSING AND ANALYSIS
     // ============================================
 
     /**
-     * Report undefined variable - creates specialized VariableSymbolTable (MAP)
+     * Parse Angular template and extract semantic information
+     */
+    public void parseAngularTemplate(String templateContent) {
+        if (errorManager != null) {
+            errorManager.parseAngularTemplate(templateContent);
+        }
+    }
+
+    /**
+     * Register a template variable from structural directives
+     */
+    public void registerTemplateVariable(String variableName, String directive, String sourceProperty) {
+        if (errorManager != null) {
+            errorManager.registerTemplateVariable(variableName, directive, sourceProperty);
+        }
+    }
+
+    // ============================================
+    // ANGULAR-AWARE ERROR REPORTING METHODS
+    // ============================================
+
+    /**
+     * Report undefined variable - FIXED for Angular template variables
      */
     public void reportUndefinedVariable(String variableName, int line, int column) {
         if (lookupSymbol(variableName) == null) {
@@ -208,50 +249,98 @@ public class SymbolTable {
     }
 
     /**
-     * Report duplicate class - creates specialized ClassSymbolTable (MAP)
+     * Report structural directive error - ENHANCED for Angular
      */
-    public void reportDuplicateClass(String className, int line, int column, int previousLine) {
-        errorManager.reportDuplicateClass(className, line, column, previousLine);
-    }
+    public void reportUndefinedStructuralDirective(String variableName, String directive, int line, int column) {
+        // Check if this is an *ngFor template variable
+        if (directive.contains("*ngFor") && directive.contains("let " + variableName)) {
+            // This is valid Angular syntax - register the template variable and don't report error
+            if (errorManager != null) {
+                errorManager.registerTemplateVariable(variableName, directive, "ngFor");
+            }
+            return;
+        }
 
-    /**
-     * Report duplicate method - creates specialized MethodSymbolTable (MAP)
-     */
-    public void reportDuplicateMethod(String methodName, List<String> parameterTypes,
-                                      int line, int column, int previousLine) {
-        errorManager.reportDuplicateMethod(methodName, parameterTypes, line, column, previousLine);
-    }
+        // Check if this is an *ngIf with a component property
+        if (directive.contains("*ngIf") && componentProperties.contains(variableName)) {
+            // This is valid - referencing a component property in *ngIf
+            return;
+        }
 
-    /**
-     * Report duplicate interface - creates specialized InterfaceSymbolTable (BINARY TREE)
-     */
-    public void reportDuplicateInterface(String interfaceName, List<String> extendedInterfaces,
-                                         int line, int column, int previousLine) {
-        errorManager.reportDuplicateInterface(interfaceName, extendedInterfaces, line, column, previousLine);
-    }
-
-    /**
-     * Report return type mismatch - creates specialized TypeSymbolTable (BINARY TREE)
-     */
-    public void reportReturnTypeMismatch(String methodName, String expectedType,
-                                         String actualType, int line, int column) {
-        errorManager.reportReturnTypeMismatch(methodName, expectedType, actualType, line, column);
-    }
-
-    /**
-     * Report structural directive error - creates specialized DirectiveSymbolTable (LIST)
-     */
-    public void reportUndefinedStructuralDirective(String variableName, String directive,
-                                                   int line, int column) {
+        // Only report if truly invalid
         errorManager.reportUndefinedStructuralDirective(variableName, directive, line, column);
     }
 
     /**
-     * Report property binding mismatch - creates specialized PropertyBindingSymbolTable (MAP)
+     * Report property binding - ENHANCED for HTML attributes
      */
-    public void reportPropertyBindingMismatch(String propertyName, String bindingType,
-                                              String expectedType, int line, int column) {
-        errorManager.reportPropertyBindingMismatch(propertyName, bindingType, expectedType, line, column);
+    public void reportPropertyBindingMismatch(String propertyName, String bindingType, String expectedType, int line, int column) {
+        // Check if this is a standard HTML attribute
+        Set<String> standardHtmlAttributes = Set.of(
+                "src", "href", "alt", "title", "id", "class", "style",
+                "width", "height", "disabled", "checked", "selected", "hidden",
+                "value", "type", "name", "placeholder", "required", "readonly"
+        );
+
+        if (standardHtmlAttributes.contains(propertyName.toLowerCase())) {
+            // This is a valid HTML attribute binding - don't report as error
+            return;
+        }
+
+        // Only report for non-standard attributes that aren't component properties
+        if (!componentProperties.contains(propertyName)) {
+            errorManager.reportPropertyBindingMismatch(propertyName, bindingType, expectedType, line, column);
+        }
+    }
+
+    /**
+     * Report literal binding - ENHANCED for CSS classes
+     */
+    public void reportLiteralBindingForProperty(String attributeName, String attributeValue, int line, int column) {
+        // Check if this is a static CSS class
+        if ("class".equals(attributeName) && isValidCssClassName(attributeValue)) {
+            // This is valid static CSS - don't report as error
+            return;
+        }
+
+        // Check if this is a standard HTML attribute with literal value
+        if (isStandardHtmlAttributeWithLiteralValue(attributeName, attributeValue)) {
+            // This is valid HTML - don't report as error
+            return;
+        }
+
+        // Only report if this looks like it should be property binding
+        if (componentProperties.contains(attributeValue)) {
+            errorManager.reportLiteralBindingForProperty(attributeName, attributeValue, line, column);
+        }
+    }
+
+    // ============================================
+    // REMAINING ERROR REPORTING METHODS
+    // ============================================
+
+    public void reportDuplicateClass(String className, int line, int column, int previousLine) {
+        errorManager.reportDuplicateClass(className, line, column, previousLine);
+    }
+
+    public void reportDuplicateMethod(String methodName, List<String> parameterTypes, int line, int column, int previousLine) {
+        errorManager.reportDuplicateMethod(methodName, parameterTypes, line, column, previousLine);
+    }
+
+    public void reportDuplicateInterface(String interfaceName, List<String> extendedInterfaces, int line, int column, int previousLine) {
+        errorManager.reportDuplicateInterface(interfaceName, extendedInterfaces, line, column, previousLine);
+    }
+
+    public void reportReturnTypeMismatch(String methodName, String expectedType, String actualType, int line, int column) {
+        errorManager.reportReturnTypeMismatch(methodName, expectedType, actualType, line, column);
+    }
+
+    public void reportMissingReturnStatement(String methodName, String expectedReturnType, int line, int column) {
+        errorManager.reportMissingReturnStatement(methodName, expectedReturnType, line, column);
+    }
+
+    public void reportVoidMethodReturnValue(String methodName, String returnValue, int line, int column) {
+        errorManager.reportVoidMethodReturnValue(methodName, returnValue, line, column);
     }
 
     // ============================================
@@ -269,55 +358,33 @@ public class SymbolTable {
     // ERROR REPORTING AND ANALYSIS
     // ============================================
 
-    /**
-     * Print all semantic errors with their specialized symbol tables
-     */
     public void printErrorReport() {
         System.out.println("\n=== SEMANTIC ERROR REPORT ===");
         System.out.println(errorManager.getFormattedReport());
     }
 
-    /**
-     * Get all errors
-     */
     public List<SemanticErrorBase> getAllErrors() {
         return errorManager.getAllErrors();
     }
 
-    /**
-     * Get errors by type
-     */
     public List<SemanticErrorBase> getErrorsByType(SemanticErrorType type) {
         return errorManager.getErrorsByType(type);
     }
 
-    /**
-     * Get error count
-     */
     public int getErrorCount() {
         return errorManager.getErrorCount();
     }
 
-    /**
-     * Check if there are any errors
-     */
     public boolean hasErrors() {
         return errorManager.getErrorCount() > 0;
     }
 
-    /**
-     * Clear all errors
-     */
     public void clearErrors() {
         errorManager.clearErrors();
     }
 
-    /**
-     * Get comprehensive report showing both symbols and errors
-     */
     public String getComprehensiveReport() {
         StringBuilder report = new StringBuilder();
-
         report.append("=== SYMBOL TABLE STATUS ===\n");
         report.append("Total symbols: ").append(getAllSymbols().size()).append("\n");
         report.append("Current scope: ").append(getCurrentScopeName()).append("\n");
@@ -325,6 +392,7 @@ public class SymbolTable {
 
         report.append("=== ERROR SUMMARY ===\n");
         report.append("Total errors: ").append(errorManager.getErrorCount()).append("\n");
+
         for (SemanticErrorType type : SemanticErrorType.values()) {
             int count = errorManager.getErrorCountByType(type);
             if (count > 0) {
@@ -340,13 +408,12 @@ public class SymbolTable {
     // ============================================
 
     private void enhanceVariableErrorContext(String variableName) {
-        // Add similar variables from main symbol table to error context
         List<SemanticErrorBase> varErrors = errorManager.getErrorsByType(SemanticErrorType.UNDEFINED_VARIABLE);
         for (SemanticErrorBase error : varErrors) {
             if (error.getContext().equals(variableName)) {
-                // Add relevant symbols from main table
                 for (Row row : getAllSymbols()) {
-                    if ("VARIABLE".equals(row.getType()) || "PROPERTY".equals(row.getType()) ||
+                    if ("VARIABLE".equals(row.getType()) ||
+                            "PROPERTY".equals(row.getType()) ||
                             "COMPONENT_PROPERTY".equals(row.getType())) {
                         error.addRelevantSymbol(row.getValue(), row.getType(), row.getScopeName());
                     }
@@ -355,27 +422,22 @@ public class SymbolTable {
             }
         }
     }
-    public void reportMissingReturnStatement(String methodName, String expectedReturnType, int line, int column) {
 
+    private boolean isValidCssClassName(String className) {
+        // Check if it's a valid CSS class name (starts with letter, contains letters/numbers/hyphens)
+        return className != null &&
+                className.matches("^[a-zA-Z][a-zA-Z0-9_-]*$") &&
+                !componentProperties.contains(className);
+    }
 
- errorManager.reportMissingReturnStatement(methodName, expectedReturnType, line, column);
-}
+    private boolean isStandardHtmlAttributeWithLiteralValue(String attributeName, String attributeValue) {
+        // Common HTML attributes that commonly have literal values
+        Set<String> literalAttributes = Set.of("id", "type", "name", "role", "aria-label");
+        return literalAttributes.contains(attributeName.toLowerCase());
+    }
 
-/**
- * Report void method return value - creates specialized VoidMethodSymbolTable (LIST)
- */
-public void reportVoidMethodReturnValue(String methodName, String returnValue, int line, int column) {
-    errorManager.reportVoidMethodReturnValue(methodName, returnValue, line, column);
-}
-
-/**
- * Report literal binding for property - creates specialized LiteralBindingSymbolTable (LIST)
- */
-public void reportLiteralBindingForProperty(String attributeName, String attributeValue, int line, int column) {
-    errorManager.reportLiteralBindingForProperty(attributeName, attributeValue, line, column);
-}
     // ============================================
-    // FORMATTING METHODS (unchanged from your original)
+    // FORMATTING METHODS (unchanged from original)
     // ============================================
 
     private static String formatIdentifier(String value) {
@@ -396,7 +458,8 @@ public void reportLiteralBindingForProperty(String attributeName, String attribu
             case "IMPORT_ID": return "Import";
             case "IMPORT_PATH": return "Import Path";
             case "VARIABLE": return "Variable";
-            case "FUNCTION": case "METHOD": return "Function";
+            case "FUNCTION":
+            case "METHOD": return "Function";
             case "CLASS": return "Class";
             case "INTERFACE": return "Interface";
             case "COMPONENT": return "Component";
@@ -407,7 +470,8 @@ public void reportLiteralBindingForProperty(String attributeName, String attribu
             case "CSS_SELECTOR": return "CSS Selector";
             case "CSS_RULE": return "CSS Rule";
             case "HTML_ELEMENT": return "HTML Element";
-            case "HTML_STRING_ATTRIBUTE": case "HTML_NAME_ATTRIBUTE": return "HTML Attribute";
+            case "HTML_STRING_ATTRIBUTE":
+            case "HTML_NAME_ATTRIBUTE": return "HTML Attribute";
             case "HTML_CLOSING_TAG": return "HTML Tag";
             case "RESOURCE_BINDING": return "Resource Binding";
             case "EVENT_BINDING": return "Event Binding";
@@ -432,6 +496,7 @@ public void reportLiteralBindingForProperty(String attributeName, String attribu
             case "CSS_NUMBER": return "CSS Number";
             case "CSS_BORDER_STYLE": return "CSS Border Style";
             case "COMPONENT_PROPERTY": return "Component Prop";
+            case "TEMPLATE_VARIABLE": return "Template Var";
             default: return type;
         }
     }
@@ -441,17 +506,21 @@ public void reportLiteralBindingForProperty(String attributeName, String attribu
         switch (type.toUpperCase()) {
             case "IMPORT_ID": return "module";
             case "IMPORT_PATH": return "string";
-            case "VARIABLE": case "UNDEFINED_VARIABLE": return "any";
+            case "VARIABLE":
+            case "UNDEFINED_VARIABLE": return "any";
             case "ID_REFERENCE": return "reference";
             case "PROPERTY_REFERENCE": return "property";
             case "MEMBER_REFERENCE": return "member";
             case "MEMBER_ACCESS": return "member";
-            case "FUNCTION": case "METHOD": return "function";
+            case "FUNCTION":
+            case "METHOD": return "function";
             case "PARAMETER": return "parameter";
             case "CLASS": return "class";
             case "INTERFACE": return "interface";
             case "COMPONENT": return "component";
-            case "PROPERTY": case "COMPONENT_PROPERTY": return "property";
+            case "PROPERTY":
+            case "COMPONENT_PROPERTY": return "property";
+            case "TEMPLATE_VARIABLE": return "template-var";
             case "STRING_LITERAL": return "string";
             case "NUMBER_LITERAL": return "number";
             case "BOOLEAN_LITERAL": return "boolean";
@@ -487,7 +556,7 @@ public void reportLiteralBindingForProperty(String attributeName, String attribu
     }
 
     // ============================================
-    // INNER CLASSES (unchanged from your original)
+    // INNER CLASSES (unchanged from original)
     // ============================================
 
     public static class SymbolTableSnapshot {
@@ -495,8 +564,7 @@ public void reportLiteralBindingForProperty(String attributeName, String attribu
         private final List<Row> relevantSymbols;
         private final List<ScopeInfo> currentScopeStack;
 
-        public SymbolTableSnapshot(Set<String> relevantTokens, List<Row> relevantSymbols,
-                                   List<ScopeInfo> currentScopeStack) {
+        public SymbolTableSnapshot(Set<String> relevantTokens, List<Row> relevantSymbols, List<ScopeInfo> currentScopeStack) {
             this.relevantTokens = relevantTokens;
             this.relevantSymbols = relevantSymbols;
             this.currentScopeStack = currentScopeStack;
@@ -507,18 +575,21 @@ public void reportLiteralBindingForProperty(String attributeName, String attribu
                 System.out.println("  No relevant symbols found");
                 return;
             }
+
             System.out.println("  | Identifier         | Kind             | Scope                |");
             System.out.println("  | ------------------ | ---------------- | -------------------- |");
+
             for (Row row : relevantSymbols) {
                 String identifier = formatIdentifier(row.getValue());
                 String kind = formatKind(row.getType());
                 String scope = formatScope(row.getScopeName());
                 System.out.printf("  | %-18s | %-16s | %-20s |%n", identifier, kind, scope);
             }
+
             System.out.println("  Current scope stack:");
             for (ScopeInfo scope : currentScopeStack) {
-                System.out.println("    - " + scope.getScopeName() + " [" + scope.getScopeType() +
-                        "] (ID: " + scope.getScopeId() + ")");
+                System.out.println("    - " + scope.getScopeName() +
+                        " [" + scope.getScopeType() + "] (ID: " + scope.getScopeId() + ")");
             }
         }
     }
@@ -561,39 +632,13 @@ class Scope {
         this.symbols = new HashMap<>();
     }
 
-    public void setScopeName(String scopeName) {
-        this.scopeName = scopeName;
-    }
-
-    public void addSymbol(Row symbol) {
-        symbols.put(symbol.getValue(), symbol);
-    }
-
-    public Row findSymbol(String value) {
-        return symbols.get(value);
-    }
-
-    public List<Row> getSymbols() {
-        return new ArrayList<>(symbols.values());
-    }
-
-    public int getSymbolCount() {
-        return symbols.size();
-    }
-
-    public int getScopeId() {
-        return scopeId;
-    }
-
-    public String getScopeName() {
-        return scopeName;
-    }
-
-    public String getScopeType() {
-        return scopeType;
-    }
-
-    public int getParentScopeId() {
-        return parentScopeId;
-    }
+    public void setScopeName(String scopeName) { this.scopeName = scopeName; }
+    public void addSymbol(Row symbol) { symbols.put(symbol.getValue(), symbol); }
+    public Row findSymbol(String value) { return symbols.get(value); }
+    public List<Row> getSymbols() { return new ArrayList<>(symbols.values()); }
+    public int getSymbolCount() { return symbols.size(); }
+    public int getScopeId() { return scopeId; }
+    public String getScopeName() { return scopeName; }
+    public String getScopeType() { return scopeType; }
+    public int getParentScopeId() { return parentScopeId; }
 }
