@@ -1,4 +1,5 @@
 package classes;
+
 import gen.typescriptlexer;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -9,6 +10,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import classes.KeyValue;
+
 import java.util.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -46,12 +48,14 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         System.out.println(">>> Please use generateVanillaWebCode(Program program, String outputDirectory) instead");
         return "Vanilla Web code generation requires Program AST and output directory";
     }
+
     private SymbolTable symbolTable = new SymbolTable();
 
 
     public MyVisitor(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
     }
+
     public SymbolTable getSymbolTable() {
         return symbolTable;
     }
@@ -111,6 +115,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         symbolTable.exitScope();
         return statment;
     }
+
     // =============== CLASS STATEMENT ===============
     @Override
     public Statment visitClassStmt(typescriptparser.ClassStmtContext ctx) {
@@ -185,6 +190,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         statment.setAssignmentStatement((AssignmentStatement) visit(ctx.assignmentStatement()));
         return statment;
     }
+
     // =============== FUNCTION CALL STATEMENT ===============
     @Override
     public Statment visitFunctionCallStmt(typescriptparser.FunctionCallStmtContext ctx) {
@@ -210,6 +216,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         statement.setImportDeclaration((ImportDeclaration) visit(ctx.importDeclaration()));
         return statement;
     }
+
     @Override
     public AssignmentStatement visitAssignmentRule(typescriptparser.AssignmentRuleContext ctx) {
         AssignmentStatement assignment = new AssignmentStatement();
@@ -234,7 +241,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
 
-
     // OLD METHOD (DELETE)
 // @Override
 // public ImportDeclaration visitImportDeclaration(ImportDeclarationContext ctx) {...}
@@ -254,6 +260,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         }
         return importDecl;
     }
+
     @Override
     public ImportDeclaration visitComponentImportDecl(typescriptparser.ComponentImportDeclContext ctx) {
         ImportDeclaration importDecl = new ImportDeclaration();
@@ -320,7 +327,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
 
-
     // =============== CLASS METHOD MEMBER ===============
     @Override
     public ClassMember visitClassMethodMember(typescriptparser.ClassMethodMemberContext ctx) {
@@ -342,6 +348,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         classMember.setClassDeclaration((ClassDeclaration) visit(ctx.classDeclaration()));
         return classMember;
     }
+
     // =============== PROPERTY WITH INITIAL VALUE ===============
     @Override
     public PropertyDeclaration visitPropertyWithoutInit(typescriptparser.PropertyWithoutInitContext ctx) {
@@ -407,6 +414,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return prop;
     }
+
     @Override
     public MethodDeclaration visitMethodDeclRule(typescriptparser.MethodDeclRuleContext ctx) {
         MethodDeclaration methodDeclaration = new MethodDeclaration();
@@ -471,9 +479,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
 
-
-
-
     private String extractTypeFromTypeV(TypeV typeV) {
         if (typeV == null) return "any";
 
@@ -495,6 +500,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         }
         return "any";
     }
+
     // =============== STRING TYPE ===============
     @Override
     public TypeV visitStringType(typescriptparser.StringTypeContext ctx) {
@@ -620,6 +626,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         }
         return memberAccess;
     }
+
     @Override
     public ListV visitListDeclaration(typescriptparser.ListDeclarationContext ctx) {
         ListV listV = new ListV();
@@ -628,6 +635,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         symbolTable.addSymbol("LIST_TYPE", listName);
         return listV;
     }
+
     @Override
     public ParameterList visitParameterListRule(typescriptparser.ParameterListRuleContext ctx) {
         ParameterList parameterList = new ParameterList();
@@ -649,6 +657,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         symbolTable.addSymbol("NUMBER_LITERAL", numberValue);
         return initvalue;
     }
+
     // =============== STRING INIT VALUE ===============
     @Override
     public Initvalue visitStringInitValue(typescriptparser.StringInitValueContext ctx) {
@@ -669,6 +678,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         System.out.println(">>> Found boolean value: " + ctx.isboolean().getText());
         return initvalue;
     }
+
     @Override
     public Initvalue visitListInitValue(typescriptparser.ListInitValueContext ctx) {
         Initvalue initvalue = new Initvalue();
@@ -758,6 +768,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         symbolTable.addSymbol("KEYWORD", "return");
         stmt.setReturnN((ReturnN) visit(returnCtx));
     }
+
     // =============== RETURN EXPRESSION ===============
     @Override
     public ReturnN visitReturnExpression(typescriptparser.ReturnExpressionContext ctx) {
@@ -923,6 +934,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return bodyList;
     }
+
     private String getInitValueInfo(Initvalue initValue) {
         if (initValue == null) return "null";
 
@@ -955,7 +967,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
 
-
     @Override
     public ObjectV visitObjectRule(typescriptparser.ObjectRuleContext ctx) {
         ObjectV object = new ObjectV();
@@ -975,6 +986,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     public VariableDeclaration visitLetDeclaration(typescriptparser.LetDeclarationContext ctx) {
         return handleVarDeclaration(ctx, ctx.LET().getText(), "let");
     }
+
     // Var declaration
     private VariableDeclaration handleVarDeclaration(
             typescriptparser.VariableDeclarationContext ctx,
@@ -1146,7 +1158,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
 
-
     @Override
     public FunctionCall visitStandardFunctionCall(typescriptparser.StandardFunctionCallContext ctx) {
         FunctionCall fc = new FunctionCall();
@@ -1172,7 +1183,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         argument.setExpression((Expression) visit(ctx.expression()));
         return argument;
     }
-
 
 
     @Override
@@ -1342,6 +1352,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         );
         return element;
     }
+
     @Override
     public Tag visitOpenCloseTag(typescriptparser.OpenCloseTagContext ctx) {
         Tag tag = new Tag();
@@ -1357,6 +1368,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return tag;
     }
+
     // =============== SELF-CLOSING TAG ===============
     @Override
     public Tag visitSelfClosingTagElement(typescriptparser.SelfClosingTagElementContext ctx) {
@@ -1378,6 +1390,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return interpolation;
     }
+
     @Override
     public OpeningTag visitOpeningTagRule(typescriptparser.OpeningTagRuleContext ctx) {
         OpeningTag openingTag = new OpeningTag();
@@ -1399,6 +1412,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return openingTag;
     }
+
     @Override
     public ClosingTag visitClosingTagRule(typescriptparser.ClosingTagRuleContext ctx) {
         ClosingTag closingTag = new ClosingTag();
@@ -1449,8 +1463,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return attributes;
     }
-
-
 
 
     // =============== STRUCTURAL DIRECTIVE ATTRIBUTE ===============
@@ -1537,6 +1549,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return attributes;
     }
+
     private boolean isStructuralDirectiveName(String name) {
         if (name == null) return false;
 
@@ -1548,6 +1561,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return structuralDirectives.contains(name);
     }
+
     private boolean isStructuralDirective(String name) {
         return name.equals("ngFor") ||
                 name.equals("ngIf") ||
@@ -1555,6 +1569,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
                 name.equals("ngSwitchCase") ||
                 name.equals("ngSwitchDefault");
     }
+
     @Override
     public SelfClosingTag visitSelfClosingTagRule(typescriptparser.SelfClosingTagRuleContext ctx) {
         SelfClosingTag selfClosingTag = new SelfClosingTag();
@@ -1603,6 +1618,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return cssObjects;
     }
+
     @Override
     public CssElement visitCssElementRule(typescriptparser.CssElementRuleContext ctx) {
         CssElement cssElement = new CssElement();
@@ -1629,6 +1645,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return cssElement;
     }
+
     @Override
     public Bodyelement visitCssDeclaration(typescriptparser.CssDeclarationContext ctx) {
         Bodyelement bodyelement = new Bodyelement();
@@ -1650,7 +1667,6 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     }
 
     // Remove the old visitCssValue method and replace with these two methods:
-
 
 
     @Override
@@ -1705,6 +1721,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return interfaceDeclaration;
     }
+
     // =============== INTERFACE PROPERTY MEMBER ===============
     @Override
     public InterfaceMember visitInterfacePropertyMember(typescriptparser.InterfacePropertyMemberContext ctx) {
@@ -1836,6 +1853,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         }
         return null;
     }
+
     private boolean areTypesCompatible(String expected, String actual) {
         if (expected.equals(actual)) return true;
         if ("any".equals(expected) || "any".equals(actual)) return true;
@@ -1850,6 +1868,7 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
         return false;
     }
+
     private static class MethodContext {
         private final String methodName;
         private final String returnType;
