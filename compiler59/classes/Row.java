@@ -77,4 +77,6 @@ public class Row {
     public void setScopeName(String scopeName) {
         this.scopeName = scopeName;
     }
+
+
 }

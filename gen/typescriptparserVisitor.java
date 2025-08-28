@@ -450,6 +450,13 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitObjectRule(typescriptparser.ObjectRuleContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code KeyValuePairRule}
+	 * labeled alternative in {@link typescriptparser#keyValuePair}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitKeyValuePairRule(typescriptparser.KeyValuePairRuleContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ObjectBodyRule}
 	 * labeled alternative in {@link typescriptparser#bodyobject}.
 	 * @param ctx the parse tree

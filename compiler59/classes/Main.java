@@ -22,7 +22,12 @@ public class Main {
             typescriptparser parser = new typescriptparser(token);
 
             ParseTree tree = parser.program();
-            MyVisitor visitor = new MyVisitor();
+
+            // Create SymbolTable first
+            SymbolTable symbolTable = new SymbolTable();
+
+            // Pass SymbolTable to MyVisitor constructor
+            MyVisitor visitor = new MyVisitor(symbolTable);
             Program doc = (Program) visitor.visit(tree);
 
             // Print in tree format instead of toString()
@@ -34,8 +39,8 @@ public class Main {
                 outputDir.mkdirs();
             }
 
-            // CHANGED: Generate Vanilla Web components instead of Angular
-            VanillaWebCodeGenerator codegen = new VanillaWebCodeGenerator(visitor.getSymbolTable());
+            // Generate Vanilla Web components using the symbol table
+            VanillaWebCodeGenerator codegen = new VanillaWebCodeGenerator(symbolTable);
             codegen.generateFromAST(doc, outputPath);
 
             System.out.println("Vanilla Web code generation completed successfully!");

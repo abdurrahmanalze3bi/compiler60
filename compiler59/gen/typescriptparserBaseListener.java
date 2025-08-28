@@ -773,6 +773,18 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterKeyValuePairRule(typescriptparser.KeyValuePairRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitKeyValuePairRule(typescriptparser.KeyValuePairRuleContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -780,18 +792,6 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterKeyValue(typescriptparser.KeyValueContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitKeyValue(typescriptparser.KeyValueContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

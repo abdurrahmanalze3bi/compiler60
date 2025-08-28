@@ -4,117 +4,723 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Data-Driven Vanilla Web Code Generator
+ * Extracts actual component data from Symbol Table and AST
+ * Generates functional UI based on discovered properties and templates
+ */
 public class VanillaWebCodeGenerator {
     private SymbolTable symbolTable;
+    private EnhancedSemanticErrorManager errorManager;
+    private ComponentAnalysis componentAnalysis;
+    private TemplateAnalysis templateAnalysis;
 
     public VanillaWebCodeGenerator(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
+        this.errorManager = new EnhancedSemanticErrorManager(symbolTable);
+        this.componentAnalysis = new ComponentAnalysis();
+        this.templateAnalysis = new TemplateAnalysis();
     }
 
     public void generateFromAST(Program program, String outputDir) throws IOException {
         File dir = new File(outputDir);
         dir.mkdirs();
 
-        boolean found = false;
-        for (Statment stmt : program.getStatments()) {
-            if (stmt.getComponentDeclaration() != null) {
-                found = true;
-                String componentName = extractComponentName(stmt.getComponentDeclaration());
-                System.out.println(">>> Found component: " + componentName);
-                generateVanillaComponent(stmt.getComponentDeclaration(), outputDir, program);
+        // Extract ALL component data from AST and symbol table
+        analyzeProgram(program);
+
+        // Generate based on actual discovered components
+        for (ComponentDeclaration comp : findComponents(program)) {
+            String componentName = extractComponentName(comp);
+            System.out.println(">>> Generating component: " + componentName);
+
+            // Extract ALL component data before generation
+            ComponentInfo componentInfo = extractCompleteComponentInfo(comp, program);
+            componentAnalysis.addComponent(componentInfo);
+
+            generateComponent(comp, outputDir, componentName, componentInfo);
+        }
+
+        // If no components found, check for standalone class with properties
+        if (componentAnalysis.getComponents().isEmpty()) {
+            generateFromClassAnalysis(program, outputDir);
+        }
+    }
+
+    /**
+     * Extract complete component information from AST
+     */
+    private ComponentInfo extractCompleteComponentInfo(ComponentDeclaration comp, Program program) {
+        String componentName = extractComponentName(comp);
+        ComponentInfo info = new ComponentInfo(componentName);
+
+        // Extract selector
+        String selector = extractActualSelector(comp);
+        if (selector != null) {
+            info.setSelector(selector);
+        }
+
+        // Extract template with actual HTML structure
+        String templateContent = extractActualTemplate(comp);
+        if (templateContent != null) {
+            info.setTemplateContent(templateContent);
+            // Parse template for variables and bindings
+            parseTemplateForVariables(templateContent, info);
+        }
+
+        // Extract styles
+        extractActualStyles(comp, info);
+
+        // Find associated class and extract properties
+        ClassDeclaration associatedClass = findAssociatedClass(comp, program);
+        if (associatedClass != null) {
+            extractClassProperties(associatedClass, info);
+        }
+
+        return info;
+    }
+
+    /**
+     * Extract actual selector from component AST
+     */
+    private String extractActualSelector(ComponentDeclaration comp) {
+        if (comp.getComponentDeclarationBody() == null) return null;
+
+        for (ComponentBodyElement element : comp.getComponentDeclarationBody().getComponentBodyElements()) {
+            if (element.getSelector() != null) {
+                return element.getSelector().getSTRING_LIT()
+                        .replaceAll("[\"']", "");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Extract actual template content from component AST
+     */
+    private String extractActualTemplate(ComponentDeclaration comp) {
+        if (comp.getComponentDeclarationBody() == null) return null;
+
+        for (ComponentBodyElement element : comp.getComponentDeclarationBody().getComponentBodyElements()) {
+            if (element.getTemplate() != null) {
+                return buildTemplateFromElements(element.getTemplate());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Build HTML template from Template AST elements
+     */
+    private String buildTemplateFromElements(Template template) {
+        StringBuilder html = new StringBuilder();
+
+        for (Element element : template.getElement()) {
+            html.append(buildElementHTML(element));
+        }
+
+        return html.toString();
+    }
+
+    /**
+     * Build HTML for individual elements
+     */
+    private String buildElementHTML(Element element) {
+        StringBuilder html = new StringBuilder();
+
+        if (element.getHtmlName() != null) {
+            // Simple HTML element
+            html.append("<").append(element.getHtmlName()).append(">");
+            html.append("</").append(element.getHtmlName()).append(">");
+        }
+
+        if (element.getTag() != null) {
+            html.append(buildTagHTML(element.getTag()));
+        }
+
+        if (element.getInterpolation() != null) {
+            // Angular interpolation - convert to template placeholder
+            String varName = element.getInterpolation().getNAME_HTML();
+            html.append("<span class=\"").append(varName).append("-display\">")
+                    .append("{{").append(varName).append("}}")
+                    .append("</span>");
+        }
+
+        return html.toString();
+    }
+
+    /**
+     * Build HTML for tag elements
+     */
+    private String buildTagHTML(Tag tag) {
+        StringBuilder html = new StringBuilder();
+
+        if (tag.getOpeningTag() != null && tag.getClosingTag() != null) {
+            // Regular tag with opening/closing
+            String tagName = extractTagName(tag.getOpeningTag());
+            Map<String, String> attributes = extractAttributes(tag.getOpeningTag());
+
+            html.append("<").append(tagName);
+
+            // Add attributes
+            for (Map.Entry<String, String> attr : attributes.entrySet()) {
+                html.append(" ").append(attr.getKey()).append("=\"").append(attr.getValue()).append("\"");
+            }
+
+            html.append(">");
+
+            // Add nested elements
+            for (Element nested : tag.getElements()) {
+                html.append(buildElementHTML(nested));
+            }
+
+            html.append("</").append(tagName).append(">");
+        }
+
+        if (tag.getSelfClosingTag() != null) {
+            // Self-closing tag
+            html.append("<").append("input"); // Default for self-closing
+
+            for (Attributes attr : tag.getSelfClosingTag().getAttributes()) {
+                String attrHTML = buildAttributeHTML(attr);
+                if (!attrHTML.isEmpty()) {
+                    html.append(" ").append(attrHTML);
+                }
+            }
+
+            html.append(" />");
+        }
+
+        return html.toString();
+    }
+
+    /**
+     * Extract tag name from opening tag
+     */
+    private String extractTagName(OpeningTag openingTag) {
+        if (openingTag.getName() != null) {
+            return openingTag.getName();
+        }
+        return "div"; // Only as discovered from actual parsing
+    }
+
+    /**
+     * Extract attributes from opening tag
+     */
+    private Map<String, String> extractAttributes(OpeningTag openingTag) {
+        Map<String, String> attributes = new HashMap<>();
+
+        for (Attributes attr : openingTag.getAttributes()) {
+            String[] attrPair = buildAttributeHTML(attr).split("=");
+            if (attrPair.length == 2) {
+                attributes.put(attrPair[0], attrPair[1].replaceAll("\"", ""));
             }
         }
 
-        if (!found) {
-            System.out.println(">>> No ComponentDeclaration found in AST!");
+        return attributes;
+    }
+
+    /**
+     * Build attribute HTML from Attributes object
+     */
+    private String buildAttributeHTML(Attributes attr) {
+        if (attr.getHtmlName() != null && attr.getHtmlString() != null) {
+            return attr.getHtmlName() + "=" + attr.getHtmlString();
+        }
+
+        if (attr.getBinding() != null && attr.getHtmlString() != null) {
+            // Property binding - convert to data attribute
+            String propName = attr.getBinding().replaceAll("[\\[\\]]", "");
+            String value = attr.getHtmlString().replaceAll("[\"']", "");
+            return "data-" + propName + "=\"" + value + "\"";
+        }
+
+        if (attr.getEvent() != null && attr.getHtmlString() != null) {
+            // Event binding - convert to data attribute for JS handling
+            String eventName = attr.getEvent().replaceAll("[\\(\\)]", "");
+            String handler = attr.getHtmlString().replaceAll("[\"']", "");
+            return "data-event-" + eventName + "=\"" + handler + "\"";
+        }
+
+        if (attr.getStructuralDir() != null && attr.getHtmlString() != null) {
+            // Structural directive - convert to template
+            String directive = attr.getStructuralDir();
+            String value = attr.getHtmlString().replaceAll("[\"']", "");
+
+            if (directive.contains("ngFor")) {
+                return "data-ng-for=\"" + value + "\"";
+            }
+            if (directive.contains("ngIf")) {
+                return "data-ng-if=\"" + value + "\"";
+            }
+        }
+
+        return "";
+    }
+
+    /**
+     * Parse template for variables and bindings
+     */
+    private void parseTemplateForVariables(String templateContent, ComponentInfo info) {
+        // Extract interpolation variables
+        java.util.regex.Pattern interpolationPattern = java.util.regex.Pattern.compile("\\{\\{\\s*(\\w+)\\s*\\}\\}");
+        java.util.regex.Matcher matcher = interpolationPattern.matcher(templateContent);
+
+        while (matcher.find()) {
+            String varName = matcher.group(1);
+            templateAnalysis.addTemplateVariable(varName, "string");
+        }
+
+        // Extract property bindings
+        java.util.regex.Pattern bindingPattern = java.util.regex.Pattern.compile("data-(\\w+)=\"([^\"]+)\"");
+        matcher = bindingPattern.matcher(templateContent);
+
+        while (matcher.find()) {
+            String propName = matcher.group(1);
+            String propValue = matcher.group(2);
+            templateAnalysis.addTemplateVariable(propName, "any");
         }
     }
 
-    private void generateVanillaComponent(ComponentDeclaration comp, String outputDir, Program program) throws IOException {
-        String componentName = extractComponentName(comp);
-        String base = outputDir + "/" + componentName.toLowerCase();
+    /**
+     * Extract actual styles from component
+     */
+    private void extractActualStyles(ComponentDeclaration comp, ComponentInfo info) {
+        if (comp.getComponentDeclarationBody() == null) return;
 
-        // Extract class data from the program
-        Map<String, Object> componentData = extractComponentData(program);
-
-        generateJS(comp, base + ".js", componentData);
-        generateHTML(comp, base + ".html", componentData);
-        generateCSS(comp, base + ".css");
+        for (ComponentBodyElement element : comp.getComponentDeclarationBody().getComponentBodyElements()) {
+            if (element.getStyles() != null) {
+                String cssContent = extractCSSFromStyles(element.getStyles());
+                info.setStyleContent(cssContent);
+            }
+        }
     }
 
-    private Map<String, Object> extractComponentData(Program program) {
-        Map<String, Object> componentData = new HashMap<>();
+    /**
+     * Extract CSS content from Styles object
+     */
+    private String extractCSSFromStyles(Styles styles) {
+        StringBuilder css = new StringBuilder();
 
-        System.out.println(">>> Starting component data extraction...");
+        if (styles.getCssBody() != null && styles.getCssBody().getCssObjects() != null) {
+            CssObjects cssObjects = styles.getCssBody().getCssObjects();
 
-        // Look for class declarations in the program
+            for (CssElement rule : cssObjects.getCssElementlist()) {
+                css.append(buildCSSRule(rule));
+            }
+        }
+
+        return css.toString();
+    }
+
+    /**
+     * Build CSS rule from CssElement
+     */
+    private String buildCSSRule(CssElement rule) {
+        StringBuilder css = new StringBuilder();
+
+        // Build selector
+        if (rule.getSelectors() != null && !rule.getSelectors().isEmpty()) {
+            css.append(String.join(", ", rule.getSelectors()));
+        } else {
+            return ""; // No fallback - only use discovered selectors
+        }
+
+        css.append(" {\n");
+
+        // Build properties
+        if (rule.getBodyCssElements() != null) {
+            for (Bodyelement decl : rule.getBodyCssElements()) {
+                css.append("    ").append(decl.getId_css()).append(": ");
+
+                if (decl.getCssValue() != null && decl.getCssValue().getID_CSS() != null) {
+                    css.append(String.join(" ", decl.getCssValue().getID_CSS()));
+                } else {
+                    continue; // Skip if no value discovered
+                }
+
+                css.append(";\n");
+            }
+        }
+
+        css.append("}\n\n");
+
+        return css.toString();
+    }
+
+    /**
+     * Find associated class for component
+     */
+    private ClassDeclaration findAssociatedClass(ComponentDeclaration comp, Program program) {
+        String componentName = extractComponentName(comp);
+        String expectedClassName = componentName.replace("Component", "");
+
         for (Statment stmt : program.getStatments()) {
             if (stmt.getClassDeclaration() != null) {
                 ClassDeclaration classDecl = stmt.getClassDeclaration();
-                System.out.println(">>> Found class: " + classDecl.getNameClass());
-
-                if (classDecl.getClassDeclarationBody() != null) {
-                    for (ClassMember member : classDecl.getClassDeclarationBody().getClassMembers()) {
-                        if (member.getPropertyDeclaration() != null) {
-                            PropertyDeclaration prop = member.getPropertyDeclaration();
-                            if (!prop.getID().isEmpty()) {
-                                String propName = prop.getID().get(0);
-                                System.out.println(">>> Processing property: " + propName);
-
-                                Object propValue = extractPropertyValue(prop);
-                                componentData.put(propName, propValue);
-
-                                System.out.println(">>> Extracted property: " + propName + " = " + formatDebugValue(propValue));
-                            }
-                        }
-                    }
+                if (classDecl.getNameClass().toLowerCase().contains(expectedClassName.toLowerCase())) {
+                    return classDecl;
                 }
             }
         }
 
-        System.out.println(">>> Component data extraction completed. Found " + componentData.size() + " properties.");
-        return componentData;
-    }
-
-    private String formatDebugValue(Object value) {
-        if (value == null) return "null";
-        if (value instanceof List) {
-            List<?> list = (List<?>) value;
-            return "[" + list.size() + " items: " + list.stream()
-                    .map(item -> item instanceof Map ? "{" + ((Map<?,?>) item).size() + " props}" : String.valueOf(item))
-                    .collect(Collectors.joining(", ")) + "]";
-        }
-        if (value instanceof Map) {
-            Map<?,?> map = (Map<?,?>) value;
-            return "{" + map.entrySet().stream()
-                    .map(entry -> entry.getKey() + "=" + entry.getValue())
-                    .collect(Collectors.joining(", ")) + "}";
-        }
-        return String.valueOf(value);
-    }
-
-    private Object extractPropertyValue(PropertyDeclaration prop) {
-        if (prop.getInitvalue() != null) {
-            System.out.println(">>> Property has initial value, extracting...");
-            Object result = extractInitValue(prop.getInitvalue());
-            System.out.println(">>> Extraction result: " + formatDebugValue(result));
-            return result;
-        }
-        System.out.println(">>> Property has no initial value");
         return null;
     }
 
-    private Object extractInitValue(Initvalue initValue) {
-        System.out.println(">>> Extracting InitValue...");
+    /**
+     * Extract properties from class declaration
+     */
+    private void extractClassProperties(ClassDeclaration classDecl, ComponentInfo info) {
+        if (classDecl.getClassDeclarationBody() == null) return;
 
-        if (initValue.getString() != null) {
-            String value = initValue.getString().replace("\"", "").replace("'", "");
-            System.out.println(">>> Found string value: " + value);
-            return value;
+        ClassInfo classInfo = new ClassInfo(classDecl.getNameClass());
+
+        for (ClassMember member : classDecl.getClassDeclarationBody().getClassMembers()) {
+            if (member.getPropertyDeclaration() != null) {
+                PropertyDeclaration prop = member.getPropertyDeclaration();
+                if (!prop.getID().isEmpty()) {
+                    String propName = prop.getID().get(0);
+                    Object propValue = extractPropertyValue(prop);
+                    String propType = determinePropertyType(propValue);
+
+                    PropertyInfo propertyInfo = new PropertyInfo(propName, propType, propValue);
+                    classInfo.addProperty(propertyInfo);
+
+                    System.out.println(">>> Extracted property: " + propName + " = " + propValue + " (" + propType + ")");
+                }
+            }
         }
 
+        componentAnalysis.addClassInfo(classInfo);
+        info.setAssociatedClass(classInfo);
+    }
+
+    /**
+     * Determine property type from value
+     */
+    private String determinePropertyType(Object value) {
+        if (value == null) return "any";
+        if (value instanceof String) return "string";
+        if (value instanceof Number) return "number";
+        if (value instanceof Boolean) return "boolean";
+        if (value instanceof List) return "array";
+        if (value instanceof Map) return "object";
+        return "any";
+    }
+
+    /**
+     * Generate component files using discovered data
+     */
+    private void generateComponent(ComponentDeclaration comp, String outputDir, String componentName, ComponentInfo componentInfo) throws IOException {
+        String baseName = componentName.toLowerCase().replace("component", "");
+        String base = outputDir + "/" + baseName;
+
+        generateJSFromDiscoveredData(base + ".js", componentInfo);
+        generateHTMLFromDiscoveredData(base + ".html", componentInfo);
+        generateCSSFromDiscoveredData(base + ".css", componentInfo);
+    }
+
+    /**
+     * Generate JavaScript from discovered component data
+     */
+    private void generateJSFromDiscoveredData(String filename, ComponentInfo componentInfo) throws IOException {
+        try (PrintWriter out = new PrintWriter(filename)) {
+            out.println("// Generated from discovered component data");
+            out.println("class " + componentInfo.getComponentName() + " {");
+            out.println("    constructor() {");
+
+            // Initialize discovered properties
+            ClassInfo classInfo = componentInfo.getAssociatedClass();
+            if (classInfo != null) {
+                for (PropertyInfo prop : classInfo.getProperties()) {
+                    out.println("        this." + prop.getName() + " = " + formatValueForJS(prop.getValue()) + ";");
+                }
+            }
+
+            // Add template variables as properties
+            for (String templateVar : templateAnalysis.getTemplateVariables().keySet()) {
+                if (classInfo == null || !hasProperty(classInfo, templateVar)) {
+                    out.println("        this." + templateVar + " = null;");
+                }
+            }
+
+            out.println("        this.init();");
+            out.println("    }");
+            out.println();
+
+            // Generate methods based on discovered properties
+            if (classInfo != null) {
+                generateMethodsFromProperties(out, classInfo);
+            }
+
+            out.println("    init() {");
+            out.println("        this.bindEvents();");
+            out.println("        this.render();");
+            out.println("    }");
+            out.println();
+
+            out.println("    bindEvents() {");
+            generateEventBindingsFromTemplate(out, componentInfo);
+            out.println("    }");
+            out.println();
+
+            out.println("    render() {");
+            generateRenderFromTemplate(out, componentInfo);
+            out.println("    }");
+            out.println("}");
+            out.println();
+
+            out.println("document.addEventListener('DOMContentLoaded', function() {");
+            out.println("    new " + componentInfo.getComponentName() + "();");
+            out.println("});");
+        }
+    }
+
+    /**
+     * Generate methods from discovered properties
+     */
+    private void generateMethodsFromProperties(PrintWriter out, ClassInfo classInfo) {
+        for (PropertyInfo prop : classInfo.getProperties()) {
+            if (prop.getValue() instanceof List) {
+                String propName = prop.getName();
+                String itemName = propName.endsWith("s") ? propName.substring(0, propName.length() - 1) : "item";
+
+                out.println("    select" + capitalize(itemName) + "(" + itemName + ") {");
+                out.println("        this.selected" + capitalize(itemName) + " = " + itemName + ";");
+                out.println("        this.render();");
+                out.println("    }");
+                out.println();
+            }
+        }
+    }
+
+    /**
+     * Generate event bindings from template
+     */
+    private void generateEventBindingsFromTemplate(PrintWriter out, ComponentInfo componentInfo) {
+        if (componentInfo.getTemplateContent() == null) {
+            return;
+        }
+
+        String template = componentInfo.getTemplateContent();
+
+        // Find data-event attributes
+        java.util.regex.Pattern eventPattern = java.util.regex.Pattern.compile("data-event-(\\w+)=\"([^\"]+)\"");
+        java.util.regex.Matcher matcher = eventPattern.matcher(template);
+
+        while (matcher.find()) {
+            String eventType = matcher.group(1);
+            String handler = matcher.group(2);
+
+            out.println("        document.addEventListener('" + eventType + "', (e) => {");
+            out.println("            if (e.target.hasAttribute('data-event-" + eventType + "')) {");
+            out.println("                this." + handler + "(e);");
+            out.println("            }");
+            out.println("        });");
+        }
+
+        // Find ngFor patterns
+        java.util.regex.Pattern ngForPattern = java.util.regex.Pattern.compile("data-ng-for=\"([^\"]+)\"");
+        matcher = ngForPattern.matcher(template);
+
+        while (matcher.find()) {
+            String ngForValue = matcher.group(1);
+            String[] parts = ngForValue.split("\\s+of\\s+");
+            if (parts.length == 2) {
+                String itemVar = parts[0].replace("let ", "").trim();
+                String collectionVar = parts[1].trim();
+
+                out.println("        // Click handlers for " + collectionVar);
+                out.println("        document.addEventListener('click', (e) => {");
+                out.println("            const " + itemVar + "Element = e.target.closest('[data-" + itemVar + "]');");
+                out.println("            if (" + itemVar + "Element) {");
+                out.println("                const " + itemVar + "Id = " + itemVar + "Element.dataset." + itemVar + ";");
+                out.println("                const " + itemVar + " = this." + collectionVar + ".find(item => item.id == " + itemVar + "Id);");
+                out.println("                if (" + itemVar + ") this.select" + capitalize(itemVar) + "(" + itemVar + ");");
+                out.println("            }");
+                out.println("        });");
+            }
+        }
+    }
+
+    /**
+     * Generate render method from template
+     */
+    private void generateRenderFromTemplate(PrintWriter out, ComponentInfo componentInfo) {
+        if (componentInfo.getTemplateContent() == null) {
+            return;
+        }
+
+        String template = componentInfo.getTemplateContent();
+        ClassInfo classInfo = componentInfo.getAssociatedClass();
+
+        // Handle interpolation
+        java.util.regex.Pattern interpolationPattern = java.util.regex.Pattern.compile("\\{\\{\\s*(\\w+)\\s*\\}\\}");
+        java.util.regex.Matcher matcher = interpolationPattern.matcher(template);
+
+        Set<String> foundVariables = new HashSet<>();
+        while (matcher.find()) {
+            foundVariables.add(matcher.group(1));
+        }
+
+        for (String varName : foundVariables) {
+            out.println("        const " + varName + "Elements = document.querySelectorAll('." + varName + "-display');");
+            out.println("        " + varName + "Elements.forEach(el => {");
+            out.println("            el.textContent = this." + varName + " || '';");
+            out.println("        });");
+        }
+
+        // Handle ngFor rendering
+        java.util.regex.Pattern ngForPattern = java.util.regex.Pattern.compile("data-ng-for=\"([^\"]+)\"");
+        matcher = ngForPattern.matcher(template);
+
+        while (matcher.find()) {
+            String ngForValue = matcher.group(1);
+            String[] parts = ngForValue.split("\\s+of\\s+");
+            if (parts.length == 2) {
+                String itemVar = parts[0].replace("let ", "").trim();
+                String collectionVar = parts[1].trim();
+
+                out.println("        // Render " + collectionVar);
+                out.println("        const " + collectionVar + "Container = document.querySelector('[data-ng-for*=\"" + collectionVar + "\"]');");
+                out.println("        if (" + collectionVar + "Container && this." + collectionVar + ") {");
+                out.println("            " + collectionVar + "Container.innerHTML = this." + collectionVar + ".map(" + itemVar + " => {");
+                out.println("                return `<div data-" + itemVar + "=\"${" + itemVar + ".id || " + itemVar + ".name}\">${JSON.stringify(" + itemVar + ")}</div>`;");
+                out.println("            }).join('');");
+                out.println("        }");
+            }
+        }
+    }
+
+    /**
+     * Generate HTML from discovered template
+     */
+    private void generateHTMLFromDiscoveredData(String filename, ComponentInfo componentInfo) throws IOException {
+        try (PrintWriter out = new PrintWriter(filename)) {
+            String componentName = componentInfo.getComponentName();
+            String baseName = componentName.toLowerCase().replace("component", "");
+
+            out.println("<!DOCTYPE html>");
+            out.println("<html lang=\"en\">");
+            out.println("<head>");
+            out.println("    <meta charset=\"UTF-8\">");
+            out.println("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
+            out.println("    <title>" + componentName + "</title>");
+            out.println("    <link rel=\"stylesheet\" href=\"" + baseName + ".css\">");
+            out.println("</head>");
+            out.println("<body>");
+
+            if (componentInfo.getTemplateContent() != null) {
+                // Use discovered template
+                out.println(componentInfo.getTemplateContent());
+            } else {
+                // Generate from component properties if no template
+                generateHTMLFromProperties(out, componentInfo);
+            }
+
+            out.println("    <script src=\"" + baseName + ".js\"></script>");
+            out.println("</body>");
+            out.println("</html>");
+        }
+    }
+
+    /**
+     * Generate HTML structure from component properties
+     */
+    private void generateHTMLFromProperties(PrintWriter out, ComponentInfo componentInfo) {
+        ClassInfo classInfo = componentInfo.getAssociatedClass();
+        if (classInfo == null) return;
+
+        out.println("    <div class=\"container\">");
+
+        for (PropertyInfo prop : classInfo.getProperties()) {
+            if (prop.getValue() instanceof List) {
+                out.println("        <div class=\"" + prop.getName() + "-container\" data-ng-for=\"let item of " + prop.getName() + "\">");
+                out.println("        </div>");
+            } else {
+                out.println("        <div class=\"" + prop.getName() + "-display\">{{" + prop.getName() + "}}</div>");
+            }
+        }
+
+        out.println("    </div>");
+    }
+
+    /**
+     * Generate CSS from discovered styles
+     */
+    private void generateCSSFromDiscoveredData(String filename, ComponentInfo componentInfo) throws IOException {
+        try (PrintWriter out = new PrintWriter(filename)) {
+            out.println("/* Generated from discovered component styles */");
+
+            if (componentInfo.getStyleContent() != null && !componentInfo.getStyleContent().isEmpty()) {
+                out.println(componentInfo.getStyleContent());
+            }
+
+            // Generate CSS for discovered properties
+            ClassInfo classInfo = componentInfo.getAssociatedClass();
+            if (classInfo != null) {
+                generateCSSForProperties(out, classInfo);
+            }
+        }
+    }
+
+    /**
+     * Generate CSS for component properties
+     */
+    private void generateCSSForProperties(PrintWriter out, ClassInfo classInfo) {
+        for (PropertyInfo prop : classInfo.getProperties()) {
+            String propName = prop.getName();
+
+            if (prop.getValue() instanceof List) {
+                out.println("." + propName + "-container {");
+                out.println("    margin: 10px 0;");
+                out.println("}");
+                out.println();
+            } else {
+                out.println("." + propName + "-display {");
+                out.println("    margin: 5px 0;");
+                out.println("}");
+                out.println();
+            }
+        }
+    }
+
+    /**
+     * Generate from standalone class analysis if no components found
+     */
+    private void generateFromClassAnalysis(Program program, String outputDir) throws IOException {
+        for (Statment stmt : program.getStatments()) {
+            if (stmt.getClassDeclaration() != null) {
+                ClassDeclaration classDecl = stmt.getClassDeclaration();
+                ComponentInfo componentInfo = new ComponentInfo(classDecl.getNameClass() + "Component");
+
+                extractClassProperties(classDecl, componentInfo);
+
+                if (componentInfo.getAssociatedClass() != null &&
+                        !componentInfo.getAssociatedClass().getProperties().isEmpty()) {
+
+                    String baseName = classDecl.getNameClass().toLowerCase();
+                    generateJSFromDiscoveredData(outputDir + "/" + baseName + ".js", componentInfo);
+                    generateHTMLFromDiscoveredData(outputDir + "/" + baseName + ".html", componentInfo);
+                    generateCSSFromDiscoveredData(outputDir + "/" + baseName + ".css", componentInfo);
+
+                    System.out.println(">>> Generated from class: " + classDecl.getNameClass());
+                }
+            }
+        }
+    }
+
+    // Helper methods
+    private Object extractPropertyValue(PropertyDeclaration prop) {
+        if (prop.getInitvalue() == null) return null;
+        return extractInitValue(prop.getInitvalue());
+    }
+
+    private Object extractInitValue(Initvalue initValue) {
+        if (initValue.getString() != null) {
+            return initValue.getString().replace("\"", "").replace("'", "");
+        }
         if (initValue.getNumber() != null) {
-            System.out.println(">>> Found number value: " + initValue.getNumber());
             try {
                 return Integer.parseInt(initValue.getNumber());
             } catch (NumberFormatException e) {
@@ -125,145 +731,62 @@ public class VanillaWebCodeGenerator {
                 }
             }
         }
-
         if (initValue.getIsBoolean() != null) {
-            IsBoolean bool = initValue.getIsBoolean();
-            boolean result = bool.getTruev() != null;
-            System.out.println(">>> Found boolean value: " + result);
-            return result;
+            return initValue.getIsBoolean().getTruev() != null;
         }
-
         if (initValue.getBodyList() != null) {
-            System.out.println(">>> Found BodyList, extracting array...");
-            List<Object> result = extractArrayData(initValue.getBodyList());
-            System.out.println(">>> Array extraction completed with " + result.size() + " items");
-            return result;
+            return extractArrayData(initValue.getBodyList());
         }
-
         if (initValue.getObjectV() != null) {
-            System.out.println(">>> Found ObjectV, extracting object...");
-            Map<String, Object> result = extractObjectData(initValue.getObjectV());
-            System.out.println(">>> Object extraction completed with " + result.size() + " properties");
-            return result;
+            return extractObjectData(initValue.getObjectV());
         }
-
-        // CRITICAL FIX: Check for object key at InitValue level
-        if (initValue.getObjectKey() != null) {
-            System.out.println(">>> Found ObjectKey at InitValue level: " + initValue.getObjectKey());
-            Map<String, Object> obj = new HashMap<>();
-            obj.put("key", initValue.getObjectKey());
-            return obj;
-        }
-
-        System.out.println(">>> WARNING: Could not extract value from InitValue, returning null");
         return null;
     }
 
     private List<Object> extractArrayData(BodyList bodyList) {
         List<Object> array = new ArrayList<>();
-        System.out.println(">>> Processing BodyList...");
-
         if (bodyList.getInitvalues() != null) {
-            System.out.println(">>> BodyList has " + bodyList.getInitvalues().size() + " items");
-
-            for (int i = 0; i < bodyList.getInitvalues().size(); i++) {
-                Initvalue item = bodyList.getInitvalues().get(i);
-                System.out.println(">>> Processing array item " + i + "...");
-
-                Object extracted = extractInitValue(item);
-                array.add(extracted);
-
-                System.out.println(">>> Array item " + i + " extracted: " + formatDebugValue(extracted));
+            for (Initvalue item : bodyList.getInitvalues()) {
+                array.add(extractInitValue(item));
             }
-        } else {
-            System.out.println(">>> BodyList has no initvalues");
         }
-
         return array;
     }
 
     private Map<String, Object> extractObjectData(ObjectV objectV) {
         Map<String, Object> obj = new LinkedHashMap<>();
-        System.out.println(">>> Processing ObjectV...");
-
-        if (objectV.getBodyObject() == null) {
-            System.out.println(">>> ObjectV has no BodyObject");
-            return obj;
-        }
-
-        BodyObject bodyObject = objectV.getBodyObject();
-
-        // ENHANCED: Process each Initvalue which contains both key and value
-        if (bodyObject.getInitvalues() != null) {
-            System.out.println(">>> BodyObject has " + bodyObject.getInitvalues().size() + " initvalues");
-
-            for (Initvalue initValue : bodyObject.getInitvalues()) {
-                String key = initValue.getObjectKey();
-                if (key != null) {
-                    System.out.println(">>> Processing object property: " + key);
-
-                    // FIXED: Recursively extract the value, handling nested objects and arrays
-                    Object value = extractObjectPropertyValue(initValue);
-                    obj.put(key, value);
-                    System.out.println(">>> Extracted property: " + key + " = " + formatDebugValue(value));
-                } else {
-                    System.out.println(">>> InitValue has no ObjectKey, skipping...");
-                }
+        if (objectV.getBodyObject() != null && objectV.getBodyObject().getProperties() != null) {
+            for (Map.Entry<String, Initvalue> entry : objectV.getBodyObject().getProperties().entrySet()) {
+                obj.put(entry.getKey(), extractInitValue(entry.getValue()));
             }
         }
-
-        System.out.println(">>> Object extraction completed with " + obj.size() + " properties");
         return obj;
     }
 
-    // NEW METHOD: Extract object property values properly
-    private Object extractObjectPropertyValue(Initvalue initValue) {
-        // Check for string value
-        if (initValue.getString() != null) {
-            String value = initValue.getString().replace("\"", "").replace("'", "");
-            System.out.println(">>> Found string property value: " + value);
-            return value;
+    private String formatValueForJS(Object value) {
+        if (value == null) return "null";
+        if (value instanceof String) return "'" + value + "'";
+        if (value instanceof Number || value instanceof Boolean) return value.toString();
+        if (value instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> list = (List<Object>) value;
+            return "[" + list.stream()
+                    .map(this::formatValueForJS)
+                    .collect(Collectors.joining(", ")) + "]";
         }
-
-        // Check for number value
-        if (initValue.getNumber() != null) {
-            System.out.println(">>> Found number property value: " + initValue.getNumber());
-            try {
-                return Integer.parseInt(initValue.getNumber());
-            } catch (NumberFormatException e) {
-                try {
-                    return Double.parseDouble(initValue.getNumber());
-                } catch (NumberFormatException e2) {
-                    return initValue.getNumber();
-                }
-            }
+        if (value instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) value;
+            return "{" + map.entrySet().stream()
+                    .map(entry -> "'" + entry.getKey() + "': " + formatValueForJS(entry.getValue()))
+                    .collect(Collectors.joining(", ")) + "}";
         }
-
-        // Check for boolean value
-        if (initValue.getIsBoolean() != null) {
-            IsBoolean bool = initValue.getIsBoolean();
-            boolean result = bool.getTruev() != null;
-            System.out.println(">>> Found boolean property value: " + result);
-            return result;
-        }
-
-        // Check for nested object
-        if (initValue.getObjectV() != null) {
-            System.out.println(">>> Found nested object property");
-            return extractObjectData(initValue.getObjectV());
-        }
-
-        // Check for array
-        if (initValue.getBodyList() != null) {
-            System.out.println(">>> Found array property");
-            return extractArrayData(initValue.getBodyList());
-        }
-
-        System.out.println(">>> No recognizable property value found, returning null");
-        return null;
+        return "'" + value.toString() + "'";
     }
 
     private String extractComponentName(ComponentDeclaration comp) {
+        if (comp.getComponentDeclarationBody() == null) return "UnknownComponent";
+
         for (ComponentBodyElement element : comp.getComponentDeclarationBody().getComponentBodyElements()) {
             if (element.getSelector() != null) {
                 String raw = element.getSelector().getSTRING_LIT();
@@ -274,11 +797,18 @@ public class VanillaWebCodeGenerator {
                 return toPascalCase(cleaned) + "Component";
             }
         }
-        return "AppComponent";
+        return "UnknownComponent";
+    }
+
+    private List<ComponentDeclaration> findComponents(Program program) {
+        return program.getStatments().stream()
+                .filter(stmt -> stmt.getComponentDeclaration() != null)
+                .map(stmt -> stmt.getComponentDeclaration())
+                .collect(Collectors.toList());
     }
 
     private String toPascalCase(String input) {
-        if (input == null || input.isEmpty()) return "App";
+        if (input == null || input.isEmpty()) return "Unknown";
         String[] parts = input.split("-");
         StringBuilder result = new StringBuilder();
         for (String part : parts) {
@@ -292,319 +822,159 @@ public class VanillaWebCodeGenerator {
         return result.toString();
     }
 
-    private void generateJS(ComponentDeclaration comp, String file, Map<String, Object> componentData) throws IOException {
-        try (PrintWriter out = new PrintWriter(file)) {
-            String componentName = extractComponentName(comp);
-            String componentBaseName = componentName.replace("Component", "");
-
-            out.println("// Generated Vanilla JavaScript Component");
-            out.println();
-
-            // Generate object template with actual data
-            generateObjectTemplateFromData(out, componentBaseName, componentData);
-
-            out.println("class " + componentName + " {");
-            out.println("    constructor() {");
-
-            // Generate properties with actual data
-            generateJSPropertiesFromData(out, componentData);
-
-            out.println("        this.init();");
-            out.println("    }");
-            out.println();
-
-            out.println("    init() {");
-            out.println("        this.bindEvents();");
-            out.println("        this.render();");
-            out.println("    }");
-            out.println();
-
-            out.println("    bindEvents() {");
-            generateEventBindings(out);
-            out.println("    }");
-            out.println();
-
-            // Generate methods from component data
-            generateJSMethods(out, componentData);
-
-            out.println("    render() {");
-            generateRenderLogic(out, comp, componentData);
-            out.println("    }");
-            out.println("}");
-            out.println();
-
-            out.println("// Initialize component when DOM is loaded");
-            out.println("document.addEventListener('DOMContentLoaded', function() {");
-            out.println("    new " + componentName + "();");
-            out.println("});");
-        }
+    private String capitalize(String str) {
+        if (str == null || str.isEmpty()) return str;
+        return Character.toUpperCase(str.charAt(0)) + str.substring(1);
     }
 
-    private void generateObjectTemplateFromData(PrintWriter out, String baseName, Map<String, Object> componentData) {
-        if (!componentData.isEmpty()) {
-            out.println("// " + baseName + " object template");
-            out.println("const " + baseName + "Template = {");
-            for (Map.Entry<String, Object> entry : componentData.entrySet()) {
-                String propName = entry.getKey();
-                Object propValue = entry.getValue();
-                out.println("    " + propName + ": " + formatValueForJS(propValue) + ",");
+    private boolean hasProperty(ClassInfo classInfo, String propertyName) {
+        return classInfo.getProperties().stream()
+                .anyMatch(prop -> prop.getName().equals(propertyName));
+    }
+
+    private void analyzeProgram(Program program) {
+        System.out.println(">>> Starting comprehensive program analysis...");
+
+        for (Statment stmt : program.getStatments()) {
+            if (stmt.getComponentDeclaration() != null) {
+                analyzeComponentDeclaration(stmt.getComponentDeclaration(), program);
             }
-            out.println("};");
-            out.println();
-        }
-    }
-
-    private void generateJSPropertiesFromData(PrintWriter out, Map<String, Object> componentData) {
-        for (Map.Entry<String, Object> entry : componentData.entrySet()) {
-            String propName = entry.getKey();
-            Object propValue = entry.getValue();
-            out.println("        this." + propName + " = " + formatValueForJS(propValue) + ";");
-        }
-        if (componentData.isEmpty()) {
-            out.println("        // No properties found");
-        }
-    }
-
-    // ENHANCED: Better formatting for JavaScript values
-    private String formatValueForJS(Object value) {
-        if (value == null) return "null";
-        if (value instanceof String) return "'" + value;
-        if (value instanceof Number) return value.toString();
-        if (value instanceof Boolean) return value.toString();
-
-        if (value instanceof List) {
-            @SuppressWarnings("unchecked")
-            List<Object> list = (List<Object>) value;
-            if (list.isEmpty()) return "[]";
-
-            StringBuilder sb = new StringBuilder("[\n");
-            for (int i = 0; i < list.size(); i++) {
-                sb.append("        ").append(formatValueForJS(list.get(i)));
-                if (i < list.size() - 1) sb.append(",");
-                sb.append("\n");
+            if (stmt.getClassDeclaration() != null) {
+                analyzeClassDeclaration(stmt.getClassDeclaration());
             }
-            sb.append("    ]");
-            return sb.toString();
         }
 
-        if (value instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) value;
-            if (map.isEmpty()) return "{}";
-
-            StringBuilder sb = new StringBuilder("{\n");
-            int i = 0;
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                // FIXED: Properly quote object keys
-                sb.append("            ").append(entry.getKey()).append(": ").append(formatValueForJS(entry.getValue()));
-                if (i < map.size() - 1) sb.append(",");
-                sb.append("\n");
-                i++;
-            }
-            sb.append("        }");
-            return sb.toString();
-        }
-
-        return "'" + value.toString() + "'";
+        System.out.println(">>> Analysis completed:");
+        System.out.println("    - Components: " + componentAnalysis.getComponents().size());
+        System.out.println("    - Template variables: " + templateAnalysis.getTemplateVariables().size());
     }
 
-    private void generateEventBindings(PrintWriter out) {
-        out.println("        // Event bindings");
-        out.println("        const productItems = document.querySelectorAll('[data-product]');");
-        out.println("        productItems.forEach(item => {");
-        out.println("            item.addEventListener('click', (e) => {");
-        out.println("                const productId = parseInt(e.target.closest('[data-product]').dataset.product);");
-        out.println("                this.selectProduct(this.products.find(p => p.id === productId));");
-        out.println("            });");
-        out.println("        });");
+    private void analyzeComponentDeclaration(ComponentDeclaration comp, Program program) {
+        String componentName = extractComponentName(comp);
+        System.out.println(">>> Analyzing component: " + componentName);
+
+        ComponentInfo info = extractCompleteComponentInfo(comp, program);
+        componentAnalysis.addComponent(info);
     }
 
-    private void generateJSMethods(PrintWriter out, Map<String, Object> componentData) {
-        // Generate selectProduct method if products exist
-        if (componentData.containsKey("products")) {
-            out.println("    selectProduct(product) {");
-            out.println("        this.selectedProduct = product;");
-            out.println("        this.render();");
-            out.println("    }");
-            out.println();
-        }
-    }
+    private void analyzeClassDeclaration(ClassDeclaration classDecl) {
+        String className = classDecl.getNameClass();
+        System.out.println(">>> Analyzing class: " + className);
 
-    private void generateRenderLogic(PrintWriter out, ComponentDeclaration comp, Map<String, Object> componentData) {
-        out.println("        // Render products list");
-        out.println("        const productList = document.querySelector('.products-container');");
-        out.println("        if (productList && this.products) {");
-        out.println("            productList.innerHTML = this.products.map(product => `");
-        out.println("                <li data-product=\"${product.id}\" class=\"product-item\">");
-        out.println("                    <img src=\"${product.imageUrl}\" alt=\"${product.name}\" />");
-        out.println("                    <p>${product.name}</p>");
-        out.println("                </li>");
-        out.println("            `).join('');");
-        out.println("        }");
-        out.println();
+        if (classDecl.getClassDeclarationBody() != null) {
+            ClassInfo classInfo = new ClassInfo(className);
 
-        out.println("        // Render selected product details");
-        out.println("        const productDetails = document.querySelector('.product-details');");
-        out.println("        if (productDetails) {");
-        out.println("            if (this.selectedProduct) {");
-        out.println("                productDetails.style.display = 'block';");
-        out.println("                productDetails.innerHTML = `");
-        out.println("                    <h3>Product Details</h3>");
-        out.println("                    <img src=\"${this.selectedProduct.imageUrl}\" alt=\"${this.selectedProduct.name}\" />");
-        out.println("                    <h4>${this.selectedProduct.name}</h4>");
-        out.println("                    <p><strong>Price:</strong> $${this.selectedProduct.price}</p>");
-        out.println("                    <p><strong>Type:</strong> ${this.selectedProduct.type}</p>");
-        out.println("                `;");
-        out.println("            } else {");
-        out.println("                productDetails.style.display = 'none';");
-        out.println("            }");
-        out.println("        }");
-    }
+            for (ClassMember member : classDecl.getClassDeclarationBody().getClassMembers()) {
+                if (member.getPropertyDeclaration() != null) {
+                    PropertyDeclaration prop = member.getPropertyDeclaration();
+                    if (!prop.getID().isEmpty()) {
+                        String propName = prop.getID().get(0);
+                        Object propValue = extractPropertyValue(prop);
+                        String propType = determinePropertyType(propValue);
 
-    private void generateHTML(ComponentDeclaration comp, String file, Map<String, Object> componentData) throws IOException {
-        try (PrintWriter out = new PrintWriter(file)) {
-            String componentName = extractComponentName(comp);
-
-            out.println("<!DOCTYPE html>");
-            out.println("<html lang=\"en\">");
-            out.println("<head>");
-            out.println("    <meta charset=\"UTF-8\">");
-            out.println("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-            out.println("    <title>" + componentName + "</title>");
-            out.println("    <link rel=\"stylesheet\" href=\"" + componentName.toLowerCase().replace("component", "") + "component.css\">");
-            out.println("</head>");
-            out.println("<body>");
-
-            // Generate proper HTML structure
-            out.println("    <div class=\"container\">");
-            out.println("        <div class=\"product-list\">");
-            out.println("            <h3>Products</h3>");
-            out.println("            <ul class=\"products-container\">");
-            out.println("                <!-- Products will be dynamically generated -->");
-            out.println("            </ul>");
-            out.println("        </div>");
-            out.println("        <div class=\"product-details\" style=\"display: none;\">");
-            out.println("            <!-- Product details will be dynamically generated -->");
-            out.println("        </div>");
-            out.println("    </div>");
-
-            out.println("    <script src=\"" + componentName.toLowerCase().replace("component", "") + "component.js\"></script>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    private void generateCSS(ComponentDeclaration comp, String file) throws IOException {
-        try (PrintWriter out = new PrintWriter(file)) {
-            out.println("/* Generated Vanilla CSS Component Styles */");
-
-            // Extract styles from component
-            Styles styles = comp.getComponentDeclarationBody().getComponentBodyElements().stream()
-                    .map(ComponentBodyElement::getStyles)
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(null);
-
-            if (styles != null && styles.getCssBody() != null) {
-                CssObjects cssObjects = styles.getCssBody().getCssObjects();
-                if (cssObjects != null && cssObjects.getCssElementlist() != null) {
-                    for (CssElement rule : cssObjects.getCssElementlist()) {
-                        out.println(processVanillaCssRule(rule));
+                        PropertyInfo propertyInfo = new PropertyInfo(propName, propType, propValue);
+                        classInfo.addProperty(propertyInfo);
                     }
                 }
-            } else {
-                // Generate enhanced default styles
-                generateEnhancedCSS(out);
             }
+
+            componentAnalysis.addClassInfo(classInfo);
         }
     }
 
-    private void generateEnhancedCSS(PrintWriter out) {
-        out.println(".container {");
-        out.println("    display: flex;");
-        out.println("    gap: 20px;");
-        out.println("    padding: 20px;");
-        out.println("}");
-        out.println();
+    // Data classes
+    private static class ComponentAnalysis {
+        private List<ComponentInfo> components = new ArrayList<>();
+        private Map<String, ClassInfo> classInfoMap = new HashMap<>();
 
-        out.println(".product-list {");
-        out.println("    width: 30%;");
-        out.println("    border-right: 1px solid #ddd;");
-        out.println("}");
-        out.println();
+        public void addComponent(ComponentInfo info) {
+            components.add(info);
+        }
 
-        out.println(".products-container {");
-        out.println("    list-style-type: none;");
-        out.println("    padding: 0;");
-        out.println("}");
-        out.println();
+        public void addClassInfo(ClassInfo info) {
+            classInfoMap.put(info.getClassName(), info);
+        }
 
-        out.println(".product-item {");
-        out.println("    display: flex;");
-        out.println("    align-items: center;");
-        out.println("    gap: 10px;");
-        out.println("    padding: 10px;");
-        out.println("    cursor: pointer;");
-        out.println("    border-bottom: 1px solid #ddd;");
-        out.println("    transition: background-color 0.2s;");
-        out.println("}");
-        out.println();
+        public List<ComponentInfo> getComponents() {
+            return components;
+        }
 
-        out.println(".product-item:hover {");
-        out.println("    background-color: #f5f5f5;");
-        out.println("}");
-        out.println();
+        public ComponentInfo getComponentByName(String name) {
+            return components.stream()
+                    .filter(comp -> comp.getComponentName().equals(name))
+                    .findFirst()
+                    .orElse(null);
+        }
 
-        out.println(".product-item img {");
-        out.println("    width: 50px;");
-        out.println("    height: 50px;");
-        out.println("    object-fit: cover;");
-        out.println("    border-radius: 4px;");
-        out.println("}");
-        out.println();
-
-        out.println(".product-details {");
-        out.println("    width: 70%;");
-        out.println("    padding: 10px;");
-        out.println("}");
-        out.println();
-
-        out.println(".product-details img {");
-        out.println("    width: 200px;");
-        out.println("    height: 200px;");
-        out.println("    object-fit: cover;");
-        out.println("    margin-bottom: 20px;");
-        out.println("    border-radius: 8px;");
-        out.println("}");
+        public ClassInfo getClassInfoForComponent(String componentName) {
+            String className = componentName.replace("Component", "");
+            return classInfoMap.values().stream()
+                    .filter(classInfo -> classInfo.getClassName().contains(className))
+                    .findFirst()
+                    .orElse(null);
+        }
     }
 
-    private String processVanillaCssRule(CssElement rule) {
-        StringBuilder sb = new StringBuilder();
+    private static class TemplateAnalysis {
+        private Map<String, String> templateVariables = new HashMap<>();
 
-        if (rule.getSelectors() != null && !rule.getSelectors().isEmpty()) {
-            sb.append(rule.getSelectors().stream()
-                    .map(selector -> selector.startsWith(".") ? selector : "." + selector)
-                    .collect(Collectors.joining(", ")));
-        } else {
-            sb.append(".component-element");
+        public void addTemplateVariable(String varName, String type) {
+            templateVariables.put(varName, type);
         }
 
-        sb.append(" {\n");
+        public Map<String, String> getTemplateVariables() {
+            return templateVariables;
+        }
+    }
 
-        if (rule.getBodyCssElements() != null) {
-            for (Bodyelement decl : rule.getBodyCssElements()) {
-                sb.append("    ").append(decl.getId_css()).append(": ");
-                if (decl.getCssValue() != null && decl.getCssValue().getID_CSS() != null) {
-                    sb.append(decl.getCssValue().getID_CSS().stream()
-                            .collect(Collectors.joining(" ")));
-                } else {
-                    sb.append("auto");
-                }
-                sb.append(";\n");
-            }
+    private static class ComponentInfo {
+        private String componentName;
+        private String selector;
+        private String templateContent;
+        private String styleContent;
+        private ClassInfo associatedClass;
+
+        public ComponentInfo(String componentName) {
+            this.componentName = componentName;
         }
 
-        sb.append("}\n\n");
-        return sb.toString();
+        public String getComponentName() { return componentName; }
+        public String getSelector() { return selector; }
+        public void setSelector(String selector) { this.selector = selector; }
+        public String getTemplateContent() { return templateContent; }
+        public void setTemplateContent(String templateContent) { this.templateContent = templateContent; }
+        public String getStyleContent() { return styleContent; }
+        public void setStyleContent(String styleContent) { this.styleContent = styleContent; }
+        public ClassInfo getAssociatedClass() { return associatedClass; }
+        public void setAssociatedClass(ClassInfo associatedClass) { this.associatedClass = associatedClass; }
+    }
+
+    private static class ClassInfo {
+        private String className;
+        private List<PropertyInfo> properties = new ArrayList<>();
+
+        public ClassInfo(String className) {
+            this.className = className;
+        }
+
+        public String getClassName() { return className; }
+        public List<PropertyInfo> getProperties() { return properties; }
+        public void addProperty(PropertyInfo property) { properties.add(property); }
+    }
+
+    private static class PropertyInfo {
+        private String name;
+        private String type;
+        private Object value;
+
+        public PropertyInfo(String name, String type, Object value) {
+            this.name = name;
+            this.type = type;
+            this.value = value;
+        }
+
+        public String getName() { return name; }
+        public String getType() { return type; }
+        public Object getValue() { return value; }
     }
 }

@@ -760,6 +760,18 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 */
 	void exitObjectRule(typescriptparser.ObjectRuleContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code KeyValuePairRule}
+	 * labeled alternative in {@link typescriptparser#keyValuePair}.
+	 * @param ctx the parse tree
+	 */
+	void enterKeyValuePairRule(typescriptparser.KeyValuePairRuleContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code KeyValuePairRule}
+	 * labeled alternative in {@link typescriptparser#keyValuePair}.
+	 * @param ctx the parse tree
+	 */
+	void exitKeyValuePairRule(typescriptparser.KeyValuePairRuleContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ObjectBodyRule}
 	 * labeled alternative in {@link typescriptparser#bodyobject}.
 	 * @param ctx the parse tree

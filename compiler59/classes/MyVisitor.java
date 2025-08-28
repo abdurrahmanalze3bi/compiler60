@@ -8,6 +8,7 @@ import jdk.dynalink.Operation;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import classes.KeyValue;
 import java.util.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -17,11 +18,33 @@ import java.util.Stack;
 
 public class MyVisitor extends typescriptparserBaseVisitor {
     // NEW METHOD - ADD THIS
+    public String generateVanillaWebCode(Program program, String outputDirectory) {
+        try {
+            System.out.println(">>> Initiating Vanilla Web Code Generation...");
+            System.out.println(">>> Using Symbol Table data and AST analysis");
+
+            VanillaWebCodeGenerator generator = new VanillaWebCodeGenerator(this.symbolTable);
+
+            // Generate using the program AST and symbol table data
+            generator.generateFromAST(program, outputDirectory);
+
+            System.out.println(">>> Vanilla Web Code generation completed successfully");
+            System.out.println(">>> Files generated in: " + outputDirectory);
+
+            return "Vanilla Web code generated successfully from discovered component data";
+
+        } catch (Exception e) {
+            System.err.println(">>> Error during code generation: " + e.getMessage());
+            e.printStackTrace();
+            return "Code generation failed: " + e.getMessage();
+        }
+    }
+
+    // Also add this method to support the old signature if needed elsewhere:
     public String generateVanillaWebCode() {
-        VanillaWebCodeGenerator generator = new VanillaWebCodeGenerator(symbolTable);
-        // Note: VanillaWebCodeGenerator doesn't have generateCode() method
-        // It uses generateFromAST() which is called from Main
-        return "Vanilla Web code generation initiated";
+        System.out.println(">>> Warning: Using generateVanillaWebCode() without Program parameter");
+        System.out.println(">>> Please use generateVanillaWebCode(Program program, String outputDirectory) instead");
+        return "Vanilla Web code generation requires Program AST and output directory";
     }
     private SymbolTable symbolTable = new SymbolTable();
 
@@ -1715,112 +1738,28 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     // ====================== OBJECT BODY RULE ======================
     // ====================== FIXED OBJECT BODY RULE ======================
     @Override
-    public BodyObject visitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) {
-        BodyObject bodyObject = new BodyObject();
-        System.out.println(">>> Processing ObjectBodyRule...");
-
-        // Debug: Print the actual parse tree structure
-        System.out.println(">>> Parse tree child count: " + ctx.getChildCount());
-        for (int i = 0; i < ctx.getChildCount(); i++) {
-            ParseTree child = ctx.getChild(i);
-            System.out.println(">>> Child " + i + ": " + child.getClass().getSimpleName() + " = '" + child.getText() + "'");
-        }
-
-        // Check if the object body is empty
-        if (ctx.getChildCount() == 0) {
-            System.out.println(">>> Empty object body - no children found");
-            return bodyObject;
-        }
-
-        // Try different approaches to extract data
-        try {
-            // Approach 1: Try calling the methods (might work if grammar is correct)
-            try {
-                java.lang.reflect.Method idMethod = ctx.getClass().getMethod("ID");
-                java.lang.reflect.Method initvalueMethod = ctx.getClass().getMethod("initvalue");
-
-                @SuppressWarnings("unchecked")
-                List<TerminalNode> ids = (List<TerminalNode>) idMethod.invoke(ctx);
-                @SuppressWarnings("unchecked")
-                List<typescriptparser.InitvalueContext> values = (List<typescriptparser.InitvalueContext>) initvalueMethod.invoke(ctx);
-
-                if (ids != null && values != null) {
-                    System.out.println(">>> Reflection approach worked! Found " + ids.size() + " keys, " + values.size() + " values");
-
-                    for (int i = 0; i < ids.size() && i < values.size(); i++) {
-                        String key = ids.get(i).getText();
-                        typescriptparser.InitvalueContext valueCtx = values.get(i);
-
-                        System.out.println(">>> Processing property: " + key);
-
-                        Initvalue initValue = (Initvalue) visit(valueCtx);
-                        initValue.setObjectKey(key);
-
-                        if (!symbolTable.existsInCurrentScope(key)) {
-                            symbolTable.addSymbol("OBJECT_KEY", key);
-                        }
-
-                        bodyObject.getInitvalues().add(initValue);
-                        System.out.println(">>> Added property: " + key + " = " + getInitValueInfo(initValue));
-                    }
-                }
-            } catch (Exception reflectionEx) {
-                System.out.println(">>> Reflection approach failed: " + reflectionEx.getMessage());
-
-                // Approach 2: Manual parsing with better logic
-                List<String> keys = new ArrayList<>();
-                List<typescriptparser.InitvalueContext> values = new ArrayList<>();
-
-                // Look for the pattern: ID COLON initvalue
-                for (int i = 0; i < ctx.getChildCount() - 2; i++) {
-                    ParseTree child1 = ctx.getChild(i);
-                    ParseTree child2 = ctx.getChild(i + 1);
-                    ParseTree child3 = ctx.getChild(i + 2);
-
-                    // Check for ID : initvalue pattern
-                    if (child1 instanceof TerminalNode && child3 instanceof typescriptparser.InitvalueContext) {
-                        TerminalNode idNode = (TerminalNode) child1;
-                        if (child2.getText().equals(":") && idNode.getSymbol().getType() == typescriptlexer.ID) {
-                            String key = idNode.getText();
-                            typescriptparser.InitvalueContext valueCtx = (typescriptparser.InitvalueContext) child3;
-
-                            keys.add(key);
-                            values.add(valueCtx);
-
-                            System.out.println(">>> Found pattern at position " + i + ": " + key + " : " + valueCtx.getText());
-                        }
-                    }
-                }
-
-                System.out.println(">>> Manual parsing found " + keys.size() + " property keys");
-
-                // Process the found pairs
-                for (int i = 0; i < keys.size(); i++) {
-                    String key = keys.get(i);
-                    typescriptparser.InitvalueContext valueCtx = values.get(i);
-
-                    System.out.println(">>> Processing property: " + key);
-
-                    Initvalue initValue = (Initvalue) visit(valueCtx);
-                    initValue.setObjectKey(key);
-
-                    if (!symbolTable.existsInCurrentScope(key)) {
-                        symbolTable.addSymbol("OBJECT_KEY", key);
-                    }
-
-                    bodyObject.getInitvalues().add(initValue);
-                    System.out.println(">>> Added property: " + key + " = " + getInitValueInfo(initValue));
-                }
-            }
-        } catch (Exception e) {
-            System.err.println(">>> Error processing object body: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        System.out.println(">>> Object extraction completed with " + bodyObject.getInitvalues().size() + " properties");
-        return bodyObject;
+    public KeyValue visitKeyValuePairRule(typescriptparser.KeyValuePairRuleContext ctx) {
+        KeyValue kv = new KeyValue();
+        kv.setKey(ctx.ID().getText());
+        kv.setValue((Initvalue) visit(ctx.initvalue()));
+        return kv;
     }
 
+
+    @Override
+    public BodyObject visitObjectBodyRule(typescriptparser.ObjectBodyRuleContext ctx) {
+        BodyObject bodyObject = new BodyObject();
+
+        // Handle the case where there might be no key-value pairs
+        if (ctx.keyValuePair() != null) {
+            for (typescriptparser.KeyValuePairContext kv : ctx.keyValuePair()) {
+                KeyValue keyValue = (KeyValue) visit(kv);
+                // Use the addProperty method instead of relying on setInitvalues
+                bodyObject.addProperty(keyValue.getKey(), keyValue.getValue());
+            }
+        }
+        return bodyObject;
+    }
     // Add this stack declaration
 
     // Helper method to determine expression type
