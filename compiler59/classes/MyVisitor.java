@@ -907,32 +907,53 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return isBoolean;
     }
 
+    // Replace the existing visitBodyListRule method in MyVisitor.java
+    // Replace the existing visitBodyListRule method in MyVisitor.java
+    // Replace your visitBodyListRule method in MyVisitor.java
     @Override
     public BodyList visitBodyListRule(typescriptparser.BodyListRuleContext ctx) {
         BodyList bodyList = new BodyList();
+        System.out.println(">>> Processing Array with " + ctx.initvalue().size() + " items");
 
-        System.out.println(">>> Processing BodyList...");
-        symbolTable.enterScope("BODY_LIST");
+        symbolTable.enterScope("ARRAY");
+        int itemIndex = 0;
 
-        int itemCount = ctx.initvalue().size();
-        System.out.println(">>> BodyList has " + itemCount + " items");
-
-        // Process all initvalues
-        for (int i = 0; i < ctx.initvalue().size(); i++) {
-            System.out.println(">>> Processing array item " + i + "...");
-
-            typescriptparser.InitvalueContext ivCtx = ctx.initvalue(i);
+        // Process all array elements
+        for (typescriptparser.InitvalueContext ivCtx : ctx.initvalue()) {
+            System.out.println(">>> Processing array item " + itemIndex);
             Initvalue initValue = (Initvalue) visit(ivCtx);
             bodyList.getInitvalues().add(initValue);
 
-            // Debug: Print what was extracted
-            String extractedInfo = getInitValueInfo(initValue);
-            System.out.println(">>> Array item " + i + " extracted: " + extractedInfo);
+            // CRITICAL: Extract data from each array element for symbol table
+            if (initValue.getObjectV() != null && initValue.getObjectV().getBodyObject() != null) {
+                BodyObject obj = initValue.getObjectV().getBodyObject();
+                System.out.println(">>> Found object in array at index " + itemIndex);
+
+                // Use the existing BodyObject methods to extract properties
+                Map<String, Initvalue> properties = obj.getProperties();
+                if (properties != null && !properties.isEmpty()) {
+                    for (Map.Entry<String, Initvalue> entry : properties.entrySet()) {
+                        String key = entry.getKey();
+                        Initvalue val = entry.getValue();
+
+                        if (val.getString() != null) {
+                            String cleanStr = val.getString().replace("'", "").replace("\"", "");
+                            symbolTable.addSymbol("ARRAY_OBJECT_STRING", cleanStr);
+                            System.out.println(">>> Captured from array object: " + key + " = " + cleanStr);
+                        }
+                        if (val.getNumber() != null) {
+                            symbolTable.addSymbol("ARRAY_OBJECT_NUMBER", val.getNumber());
+                            System.out.println(">>> Captured from array object: " + key + " = " + val.getNumber());
+                        }
+                    }
+                }
+            }
+
+            itemIndex++;
         }
 
         symbolTable.exitScope();
-        System.out.println(">>> Array extraction completed with " + itemCount + " items");
-
+        System.out.println(">>> Completed array processing with " + itemIndex + " items");
         return bodyList;
     }
 
@@ -1832,11 +1853,36 @@ public class MyVisitor extends typescriptparserBaseVisitor {
 
     // ====================== OBJECT BODY RULE ======================
     // ====================== FIXED OBJECT BODY RULE ======================
+    // Replace the existing visitKeyValuePairRule method in MyVisitor.java
     @Override
     public KeyValue visitKeyValuePairRule(typescriptparser.KeyValuePairRuleContext ctx) {
         KeyValue kv = new KeyValue();
-        kv.setKey(ctx.ID().getText());
-        kv.setValue((Initvalue) visit(ctx.initvalue()));
+        String key = ctx.ID().getText();
+        kv.setKey(key);
+
+        System.out.println(">>> Processing object property: " + key);
+
+        Initvalue value = (Initvalue) visit(ctx.initvalue());
+        kv.setValue(value);
+
+        // CRITICAL: Extract the actual value for symbol table based on what was found
+        if (value != null) {
+            if (value.getString() != null) {
+                String rawString = value.getString();
+                String cleanStr = rawString.replace("'", "").replace("\"", "");
+                symbolTable.addSymbol("OBJECT_PROPERTY_STRING", cleanStr);
+                System.out.println(">>> Captured object string property: " + key + " = " + cleanStr);
+            }
+            if (value.getNumber() != null) {
+                symbolTable.addSymbol("OBJECT_PROPERTY_NUMBER", value.getNumber());
+                System.out.println(">>> Captured object number property: " + key + " = " + value.getNumber());
+            }
+            if (value.getIsBoolean() != null) {
+                symbolTable.addSymbol("OBJECT_PROPERTY_BOOLEAN", value.getIsBoolean().toString());
+                System.out.println(">>> Captured object boolean property: " + key + " = " + value.getIsBoolean());
+            }
+        }
+
         return kv;
     }
 

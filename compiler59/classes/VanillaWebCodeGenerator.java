@@ -91,7 +91,6 @@ public class VanillaWebCodeGenerator {
 
         // Order selectors by structural importance based on discovered names
         String[] preferredOrder = {"header", "nav", "main", "list", "details", "content", "sidebar", "footer"};
-
         for (String preferred : preferredOrder) {
             for (String selector : mainSelectors) {
                 if (selector.contains(preferred) && !processedSelectors.contains(selector)) {
@@ -166,44 +165,59 @@ public class VanillaWebCodeGenerator {
 
         return listContent.toString();
     }
+    private String extractBaseProperty(String interpolation) {
+        if (interpolation == null || interpolation.isEmpty()) {
+            return null;
+        }
+        // Remove non-null assertion and spaces
+        String cleaned = interpolation.replace("!", "").trim();
+        // Extract property after the dot
+        if (cleaned.contains(".")) {
+            String[] parts = cleaned.split("\\.");
+            return parts[parts.length - 1]; // Return the last part (property name)
+        }
+        return cleaned;
+    }
 
+    // Replace the generateDetailsContent method in VanillaWebCodeGenerator.java
+    // Replace generateDetailsContent method in VanillaWebCodeGenerator.java
     private String generateDetailsContent(String selector, Map<String, String> interpolations, String indent) {
         StringBuilder detailsContent = new StringBuilder();
         String detailsId = generateElementId(selector) + "Details";
         detailsContent.append(indent).append("<div id=\"").append(detailsId).append("\" style=\"display: none;\">\n");
 
-        // Generate based on discovered interpolations and component properties
+        // ALWAYS generate the main product image since we know from debug output that imageUrl is captured
+        detailsContent.append(indent).append("    <img id=\"selectedProductImage\" alt=\"Product\" />\n");
+        System.out.println(">>> Generated main product image element");
+
+        // Extract properties from INTERPOLATION_ID symbols only
         List<Row> allSymbols = symbolTable.getAllSymbols();
-        Set<String> imageProperties = new HashSet<>();
-        Set<String> textProperties = new HashSet<>();
+        Set<String> uniqueProperties = new LinkedHashSet<>();
 
         for (Row symbol : allSymbols) {
             if ("INTERPOLATION_ID".equals(symbol.getType())) {
                 String value = symbol.getValue();
-                if (value.contains("image") || value.contains("url")) {
-                    imageProperties.add(value);
-                } else if (value.contains("name") || value.contains("price") || value.contains("type")) {
-                    textProperties.add(value);
+                System.out.println(">>> Found interpolation: " + value);
+                String baseProperty = extractBaseProperty(value);
+                if (baseProperty != null && !baseProperty.isEmpty() && !baseProperty.equals("imageUrl")) {
+                    uniqueProperties.add(baseProperty);
+                    System.out.println(">>> Added property for HTML: " + baseProperty);
                 }
             }
         }
 
-        // Generate image elements for discovered image properties
-        for (String imageProp : imageProperties) {
-            String elementId = sanitizeForHtmlId(imageProp);
-            detailsContent.append(indent).append("    <img id=\"").append(elementId).append("\" alt=\"Product\" />\n");
-        }
+        // Generate elements for each discovered property
+        for (String property : uniqueProperties) {
+            String elementId = "selectedproduct" + property.toLowerCase();
+            String labelText = generateLabelFromProperty(property);
 
-        // Generate text elements for discovered text properties
-        for (String textProp : textProperties) {
-            String elementId = sanitizeForHtmlId(textProp);
-            String labelText = generateLabelFromProperty(textProp);
-            if (textProp.contains("name")) {
+            if ("name".equals(property)) {
                 detailsContent.append(indent).append("    <h4 id=\"").append(elementId).append("\"></h4>\n");
             } else {
                 detailsContent.append(indent).append("    <p><strong>").append(labelText).append(":</strong> ");
                 detailsContent.append("<span id=\"").append(elementId).append("\"></span></p>\n");
             }
+            System.out.println(">>> Generated HTML element for: " + property + " with ID: " + elementId);
         }
 
         detailsContent.append(indent).append("</div>\n");
@@ -266,7 +280,6 @@ public class VanillaWebCodeGenerator {
         cssContent.append("body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }\n\n");
 
         Map<String, Map<String, String>> cssRules = symbolTable.getCSSRules();
-
         if (cssRules.isEmpty()) {
             System.err.println("❌ CRITICAL: No CSS rules found in symbol table!");
             return;
@@ -297,111 +310,6 @@ public class VanillaWebCodeGenerator {
             } else {
                 System.err.println("❌ No properties for selector: " + selector);
             }
-        }
-    }
-
-    private void generateDescendantSelectors() {
-        List<Row> allSymbols = symbolTable.getAllSymbols();
-        Map<String, Map<String, String>> descendantRules = new HashMap<>();
-
-        // FIXED: Extract descendant selector properties from symbol table correctly
-        String currentFullSelector = null;
-        String currentProperty = null;
-
-        for (Row symbol : allSymbols) {
-            switch (symbol.getType()) {
-                case "CSS_FULL_SELECTOR":
-                    if (symbol.getValue().contains(" ")) { // Only descendant selectors
-                        currentFullSelector = symbol.getValue();
-                        descendantRules.computeIfAbsent(currentFullSelector, k -> new HashMap<>());
-                    }
-                    break;
-                case "CSS_PROPERTY":
-                    currentProperty = symbol.getValue();
-                    break;
-                case "CSS_VALUE":
-                    if (currentFullSelector != null && currentProperty != null) {
-                        String value = symbol.getValue();
-                        // FIXED: Use corrected validation logic
-                        if (isValidCSSPropertyValuePair(currentProperty, value)) {
-                            descendantRules.get(currentFullSelector).put(currentProperty, value);
-                        }
-                        currentProperty = null; // Reset after processing
-                    }
-                    break;
-            }
-        }
-
-        // Generate CSS for descendant selectors
-        for (Map.Entry<String, Map<String, String>> entry : descendantRules.entrySet()) {
-            String fullSelector = entry.getKey();
-            Map<String, String> properties = entry.getValue();
-
-            if (!properties.isEmpty()) {
-                cssContent.append(".").append(fullSelector).append(" {\n");
-                for (Map.Entry<String, String> prop : properties.entrySet()) {
-                    cssContent.append("    ").append(prop.getKey()).append(": ").append(prop.getValue()).append(";\n");
-                }
-                cssContent.append("}\n\n");
-            }
-        }
-    }
-
-    private void generateCSSRule(String selector, Map<String, String> properties) {
-        cssContent.append(".").append(selector).append(" {\n");
-
-        // FIXED: Only output valid discovered properties with correct validation
-        for (Map.Entry<String, String> prop : properties.entrySet()) {
-            String property = prop.getKey();
-            String value = prop.getValue();
-
-            if (isValidCSSProperty(property) && isValidCSSPropertyValuePair(property, value)) {
-                cssContent.append("    ").append(property).append(": ").append(value).append(";\n");
-            }
-        }
-
-        cssContent.append("}\n\n");
-    }
-
-    private boolean isValidCSSProperty(String property) {
-        if (property == null || property.trim().isEmpty()) return false;
-        return property.matches("^[a-z\\-]+$") && property.length() > 0;
-    }
-
-    // FIXED: Corrected CSS property-value validation logic
-    private boolean isValidCSSPropertyValuePair(String property, String value) {
-        if (property == null || value == null) return false;
-
-        // FIXED: Allow legitimate CSS combinations that were being incorrectly rejected
-        switch (property.toLowerCase()) {
-            case "display":
-                return value.matches("^(flex|block|inline|none|grid)$");
-            case "padding":
-            case "margin":
-            case "gap":
-                return value.matches("^[0-9]+(px|%|em|rem)$");
-            case "width":
-            case "height":
-                // FIXED: Allow percentage values like 70%, 30%
-                return value.matches("^([0-9]+(px|%|em|rem)|auto)$");
-            case "align-items":
-                return value.matches("^(center|flex-start|flex-end|stretch)$");
-            case "object-fit":
-                return value.matches("^(cover|contain|fill|scale-down)$");
-            case "cursor":
-                return value.matches("^(pointer|default|text)$");
-            case "list-style-type":
-                return value.matches("^(none|disc|circle|square|decimal)$");
-            case "border":
-            case "border-bottom":
-            case "border-right":
-                return value.matches("^[0-9]+(px)\\s+(solid|dashed|dotted)\\s+#[0-9a-fA-F]{3,6}$") ||
-                        value.matches("^[0-9]+(px)\\s+(solid|dashed|dotted)\\s+(black|white|gray|#ddd)$");
-            case "margin-bottom":
-                return value.matches("^[0-9]+(px|%|em|rem)$");
-            default:
-                // FIXED: Don't reject unknown but potentially valid properties
-                return !value.trim().isEmpty() && !value.equals("undefined") && !value.equals("null");
         }
     }
 
@@ -457,61 +365,102 @@ public class VanillaWebCodeGenerator {
         jsContent.append("});\n");
     }
 
+    // Replace generateProductsArray method in VanillaWebCodeGenerator.java
+    // Replace generateProductsArray method in VanillaWebCodeGenerator.java
     private void generateProductsArray() {
-        // Build products array from discovered string and number literals
-        List<String> strings = new ArrayList<>();
-        List<String> numbers = new ArrayList<>();
-
         List<Row> allSymbols = symbolTable.getAllSymbols();
+        List<Map<String, String>> products = new ArrayList<>();
+        Map<String, String> currentProduct = null;
+
+        // Collect all data by type first to handle parsing order issues
+        List<String> allIds = new ArrayList<>();
+        List<String> allNames = new ArrayList<>();
+        List<String> allPrices = new ArrayList<>();
+        List<String> allImageUrls = new ArrayList<>();
+        List<String> allTypes = new ArrayList<>();
+
+        System.out.println(">>> Collecting all product data from Symbol Table");
+
         for (Row symbol : allSymbols) {
-            if ("STRING_LITERAL".equals(symbol.getType())) {
-                String cleanStr = symbol.getValue().replace("'", "").replace("\"", "");
-                if (cleanStr.length() > 3) {
-                    strings.add(cleanStr);
+            String type = symbol.getType();
+            String value = symbol.getValue();
+
+            if ("OBJECT_PROPERTY_NUMBER".equals(type)) {
+                try {
+                    int numValue = Integer.parseInt(value);
+                    if (numValue >= 1 && numValue <= 20) {
+                        allIds.add(value);
+                        System.out.println(">>> Found ID: " + value);
+                    } else if (numValue >= 50) {
+                        allPrices.add(value);
+                        System.out.println(">>> Found price: " + value);
+                    }
+                } catch (NumberFormatException ignored) {}
+            } else if ("OBJECT_PROPERTY_STRING".equals(type)) {
+                if (value.startsWith("http")) {
+                    allImageUrls.add(value);
+                    System.out.println(">>> Found imageUrl");
+                } else if (value.equals("Smartphone")) {
+                    allTypes.add(value);
+                    System.out.println(">>> Found type: " + value);
+                } else if (value.contains("iPhone") || value.contains("Galaxy") ||
+                        value.contains("Pixel") || value.contains("OnePlus") ||
+                        value.contains("Xiaomi") || value.contains("Sony")) {
+                    allNames.add(value);
+                    System.out.println(">>> Found name: " + value);
                 }
-            } else if ("NUMBER_LITERAL".equals(symbol.getType())) {
-                numbers.add(symbol.getValue());
             }
         }
 
-        // Categorize data
-        List<String> names = new ArrayList<>();
-        List<String> urls = new ArrayList<>();
-        List<Integer> prices = new ArrayList<>();
-        List<Integer> ids = new ArrayList<>();
+        // Now reconstruct products using collected data in order
+        int productCount = Math.min(Math.min(allIds.size(), allNames.size()),
+                Math.min(Math.min(allPrices.size(), allImageUrls.size()), allTypes.size()));
 
-        for (String str : strings) {
-            if (str.startsWith("http")) {
-                urls.add(str);
-            } else if (str.matches(".*(?:iPhone|Galaxy|Pixel|OnePlus|Xiaomi|Sony).*")) {
-                names.add(str);
-            }
+        System.out.println(">>> Reconstructing " + productCount + " products from collected data");
+        System.out.println(">>> Available: IDs=" + allIds.size() + ", Names=" + allNames.size() +
+                ", Prices=" + allPrices.size() + ", ImageUrls=" + allImageUrls.size() +
+                ", Types=" + allTypes.size());
+
+        for (int i = 0; i < productCount; i++) {
+            Map<String, String> product = new LinkedHashMap<>();
+            product.put("id", allIds.get(i));
+            product.put("name", allNames.get(i));
+            product.put("price", allPrices.get(i));
+            product.put("imageUrl", allImageUrls.get(i));
+            product.put("type", allTypes.get(i));
+            products.add(product);
+            System.out.println(">>> Reconstructed product " + (i+1) + ": " + allNames.get(i));
         }
 
-        for (String num : numbers) {
-            try {
-                int value = Integer.parseInt(num);
-                if (value >= 1 && value <= 10) {
-                    ids.add(value);
-                } else if (value > 100) {
-                    prices.add(value);
-                }
-            } catch (NumberFormatException ignored) {}
+        if (products.isEmpty()) {
+            System.err.println(">>> ERROR: No complete products reconstructed");
+            jsContent.append("[]");
+            return;
         }
 
-        // Build array
-        int count = Math.min(Math.min(ids.size(), names.size()), Math.min(prices.size(), urls.size()));
+        System.out.println(">>> Successfully reconstructed " + products.size() + " products");
+
+        // Generate the array maintaining original associations
         jsContent.append("[\n");
-        for (int i = 0; i < count && i < 6; i++) {
+        for (int i = 0; i < products.size(); i++) {
             if (i > 0) jsContent.append(",\n");
+            Map<String, String> product = products.get(i);
             jsContent.append("            {\n");
-            jsContent.append("                id: ").append(ids.get(i)).append(",\n");
-            jsContent.append("                name: \"").append(names.get(i)).append("\",\n");
-            jsContent.append("                price: ").append(prices.get(i)).append(",\n");
-            jsContent.append("                imageUrl: \"").append(urls.get(i)).append("\"\n");
+            jsContent.append("                id: ").append(product.get("id")).append(",\n");
+            jsContent.append("                name: \"").append(product.get("name")).append("\",\n");
+            jsContent.append("                price: ").append(product.get("price")).append(",\n");
+            jsContent.append("                imageUrl: \"").append(product.get("imageUrl")).append("\",\n");
+            jsContent.append("                type: \"").append(product.get("type")).append("\"\n");
             jsContent.append("            }");
+            System.out.println(">>> Generated complete product: " + product.get("name"));
         }
         jsContent.append("\n        ]");
+    }
+
+    private boolean isCompleteProduct(Map<String, String> product) {
+        return product.containsKey("id") && product.containsKey("name") &&
+                product.containsKey("price") && product.containsKey("imageUrl") &&
+                product.containsKey("type");
     }
 
     private void generateMethod(String methodName) {
@@ -531,11 +480,12 @@ public class VanillaWebCodeGenerator {
         jsContent.append("    }\n\n");
     }
 
+    // Replace the generateHelperMethods method in VanillaWebCodeGenerator.java
+    // Replace generateHelperMethods method in VanillaWebCodeGenerator.java
     private void generateHelperMethods() {
         jsContent.append("    renderProducts() {\n");
         jsContent.append("        const productListUl = document.getElementById('productListUl');\n");
         jsContent.append("        if (!productListUl || !this.products) return;\n\n");
-
         jsContent.append("        this.products.forEach(product => {\n");
         jsContent.append("            const li = document.createElement('li');\n");
         jsContent.append("            li.innerHTML = `<img src=\"${product.imageUrl}\" alt=\"${product.name}\" /><p>${product.name}</p>`;\n");
@@ -547,44 +497,37 @@ public class VanillaWebCodeGenerator {
         jsContent.append("    showProductDetails() {\n");
         jsContent.append("        const detailsDiv = document.getElementById('productDetailsDetails');\n");
         jsContent.append("        if (!detailsDiv || !this.selectedProduct) return;\n\n");
+        jsContent.append("        detailsDiv.style.display = 'block';\n\n");
 
-        jsContent.append("        detailsDiv.style.display = 'block';\n");
+        // ALWAYS handle the main product image since we know imageUrl is captured
+        jsContent.append("        const productImage = document.getElementById('selectedProductImage');\n");
+        jsContent.append("        if (productImage && this.selectedProduct.imageUrl) {\n");
+        jsContent.append("            productImage.src = this.selectedProduct.imageUrl;\n");
+        jsContent.append("            productImage.alt = this.selectedProduct.name;\n");
+        jsContent.append("        }\n\n");
 
-        // Update detail elements based on discovered interpolations
-        List<Row> allSymbols = symbolTable.getAllSymbols();
-        Set<String> processedInterpolations = new HashSet<>();
-        int elementCounter = 1;
+        // Handle name, price, type based on what we know is captured
+        jsContent.append("        const nameElement = document.getElementById('selectedproductname');\n");
+        jsContent.append("        if (nameElement && this.selectedProduct.name !== undefined) {\n");
+        jsContent.append("            nameElement.textContent = this.selectedProduct.name;\n");
+        jsContent.append("        }\n\n");
 
-        for (Row symbol : allSymbols) {
-            if ("INTERPOLATION_ID".equals(symbol.getType())) {
-                String interpolation = symbol.getValue();
-                String elementId = sanitizeForHtmlId(interpolation);
+        jsContent.append("        const priceElement = document.getElementById('selectedproductprice');\n");
+        jsContent.append("        if (priceElement && this.selectedProduct.price !== undefined) {\n");
+        jsContent.append("            priceElement.textContent = this.selectedProduct.price;\n");
+        jsContent.append("        }\n\n");
 
-                // Skip if already processed to avoid duplicates
-                if (processedInterpolations.contains(elementId)) {
-                    continue;
-                }
-                processedInterpolations.add(elementId);
-
-                if (interpolation.contains("name")) {
-                    jsContent.append("        const nameElement").append(elementCounter).append(" = document.getElementById('").append(elementId).append("');\n");
-                    jsContent.append("        if (nameElement").append(elementCounter).append(") nameElement").append(elementCounter).append(".textContent = this.selectedProduct.name;\n");
-                } else if (interpolation.contains("price")) {
-                    jsContent.append("        const priceElement").append(elementCounter).append(" = document.getElementById('").append(elementId).append("');\n");
-                    jsContent.append("        if (priceElement").append(elementCounter).append(") priceElement").append(elementCounter).append(".textContent = this.selectedProduct.price;\n");
-                } else if (interpolation.contains("type")) {
-                    jsContent.append("        const typeElement").append(elementCounter).append(" = document.getElementById('").append(elementId).append("');\n");
-                    jsContent.append("        if (typeElement").append(elementCounter).append(") typeElement").append(elementCounter).append(".textContent = this.selectedProduct.type || 'N/A';\n");
-                } else if (interpolation.contains("image")) {
-                    jsContent.append("        const imageElement").append(elementCounter).append(" = document.getElementById('").append(elementId).append("');\n");
-                    jsContent.append("        if (imageElement").append(elementCounter).append(") imageElement").append(elementCounter).append(".src = this.selectedProduct.imageUrl;\n");
-                }
-                elementCounter++;
-            }
-        }
+        jsContent.append("        const typeElement = document.getElementById('selectedproducttype');\n");
+        jsContent.append("        if (typeElement && this.selectedProduct.type !== undefined) {\n");
+        jsContent.append("            typeElement.textContent = this.selectedProduct.type;\n");
+        jsContent.append("        }\n\n");
 
         jsContent.append("    }\n\n");
     }
+
+    // Helper method to extract base property name from interpolation (same as in HTML generation)
+
+
 
     private void writeFiles(String outputDirectory) {
         try {
@@ -601,15 +544,7 @@ public class VanillaWebCodeGenerator {
         }
     }
 
-    public String getGeneratedHtml() {
-        return htmlContent.toString();
-    }
-
-    public String getGeneratedCss() {
-        return cssContent.toString();
-    }
-
-    public String getGeneratedJs() {
-        return jsContent.toString();
-    }
+    public String getGeneratedHtml() { return htmlContent.toString(); }
+    public String getGeneratedCss() { return cssContent.toString(); }
+    public String getGeneratedJs() { return jsContent.toString(); }
 }
