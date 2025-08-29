@@ -176,6 +176,7 @@ csselement : DOT_CSS ID_CSS+ LBRACE_CSS bodyelement+ RBRACE_CSS # CssElementRule
 
 bodyelement : ID_CSS COLON_CSS cssValue SEMICOLON_CSS # CssDeclaration ;
 
-cssValue : PERCENT (ID_CSS ID_CSS?)?     # PercentValue
-        | ID_CSS (ID_CSS ID_CSS?)?      # IdValue
-        ;
+cssValue : PERCENT (ID_CSS)*             # PercentValue
+         | ID_CSS (ID_CSS)*               # IdValue
+         | STRING_LIT                     # StringValue
+         ;

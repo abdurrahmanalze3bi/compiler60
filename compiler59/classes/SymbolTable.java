@@ -18,10 +18,18 @@ public class SymbolTable {
     private Stack<Scope> scopeStack;
     private List<Scope> allScopes;
     private int currentScopeId;
+    private Map<String, Map<String, String>> cssRules; // selector -> {property: value}
+    private Map<String, String> templateInterpolations; // interpolation -> property
+
 
     // Error management
-    private EnhancedSemanticErrorManager errorManager;
 
+    private String currentCSSSelector;
+    private StringBuilder currentCSSValue = new StringBuilder();
+    private String currentCSSProperty;
+
+    private EnhancedSemanticErrorManager errorManager;
+    private Map<String, List<String>> cssHierarchy = new HashMap<>();
     // Angular-specific component tracking
     private Set<String> componentProperties;
     private Map<String, String> propertyTypes;
@@ -35,7 +43,8 @@ public class SymbolTable {
         // Initialize Angular-aware error management
         this.componentProperties = new HashSet<>();
         this.propertyTypes = new HashMap<>();
-
+        this.cssRules = new HashMap<>();
+        this.templateInterpolations = new HashMap<>();
         // Create global scope
         enterScope("GLOBAL");
 
@@ -73,6 +82,36 @@ public class SymbolTable {
     public void exitScope() {
         if (!scopeStack.isEmpty() && scopeStack.size() > 1) {
             scopeStack.pop();
+        }
+    }
+    public void setCSSProperty(String property) {
+        this.currentCSSProperty = property;
+        this.currentCSSValue.setLength(0); // Reset value builder
+        System.out.println(">>> Set CSS property: " + property);
+    }
+    public void addCSSValueToken(String token) {
+        if (currentCSSValue.length() > 0) {
+            currentCSSValue.append(" ");
+        }
+        currentCSSValue.append(token);
+        System.out.println(">>> Added CSS value token: " + token + " (building: " + currentCSSValue.toString() + ")");
+    }
+    public void finalizeCSSProperty() {
+        if (currentCSSSelector != null && currentCSSProperty != null && currentCSSValue.length() > 0) {
+            String completeValue = currentCSSValue.toString().trim();
+
+            // Store in CSS rules
+            cssRules.get(currentCSSSelector).put(currentCSSProperty, completeValue);
+
+            // Add to symbol table
+            addSymbol("CSS_PROPERTY", currentCSSProperty);
+            addSymbol("CSS_VALUE", completeValue);
+
+            System.out.println(">>> FINALIZED CSS: " + currentCSSSelector + " { " + currentCSSProperty + ": " + completeValue + "; }");
+
+            // Reset for next property
+            currentCSSProperty = null;
+            currentCSSValue.setLength(0);
         }
     }
 
@@ -247,7 +286,53 @@ public class SymbolTable {
             enhanceVariableErrorContext(variableName);
         }
     }
+    // Add these methods to your existing SymbolTable class:
+    public void enterCSSRule(String selector) {
+        String cleanSelector = selector.replace(".", "").replace("#", "").trim();
+        this.currentCSSSelector = cleanSelector;
+        cssRules.computeIfAbsent(cleanSelector, k -> new HashMap<>());
+        addSymbol("CSS_SELECTOR", cleanSelector);
+        System.out.println(">>> Entered CSS rule: " + cleanSelector);
+    }
+    public void storeCSSHierarchy(String fullSelector) {
+        String[] parts = fullSelector.split(" ");
+        if (parts.length > 1) {
+            String mainSelector = parts[0];
+            List<String> hierarchy = new ArrayList<>();
+            for (int i = 1; i < parts.length; i++) {
+                hierarchy.add(parts[i]);
+            }
+            cssHierarchy.put(mainSelector, hierarchy);
+        }
+    }
+    public Map<String, List<String>> getCSSHierarchy() {
+        return cssHierarchy;
+    }
 
+
+
+    private boolean isValidCSSPropertyValuePair(String property, String value) {
+        if (property == null || value == null || value.trim().isEmpty()) {
+            return false;
+        }
+
+        // Allow all reasonable CSS values - don't be overly restrictive
+        boolean valid = !value.contains("undefined") &&
+                !value.contains("null") &&
+                value.length() > 0;
+
+        System.out.println(">>> CSS Validation: " + property + ": " + value + " -> " + valid);
+        return valid;
+    }
+
+    public void addTemplateInterpolation(String interpolation, String property) {
+        templateInterpolations.put(interpolation, property);
+        addSymbol("INTERPOLATION_ID", interpolation);
+    }
+
+    // Getters for new data:
+    public Map<String, Map<String, String>> getCSSRules() { return cssRules; }
+    public Map<String, String> getTemplateInterpolations() { return templateInterpolations; }
     /**
      * Report structural directive error - ENHANCED for Angular
      */
@@ -539,6 +624,72 @@ public class SymbolTable {
         }
     }
 
+    public void debugCSSParsing() {
+        System.out.println("\n=== CSS PARSING DEBUG ===");
+        System.out.println("CSS Rules stored: " + cssRules.size());
+
+        for (Map.Entry<String, Map<String, String>> rule : cssRules.entrySet()) {
+            System.out.println("\nCSS Selector: ." + rule.getKey());
+            Map<String, String> properties = rule.getValue();
+
+            if (properties.isEmpty()) {
+                System.out.println("  ❌ NO PROPERTIES STORED!");
+            } else {
+                for (Map.Entry<String, String> prop : properties.entrySet()) {
+                    System.out.println("  ✓ " + prop.getKey() + ": " + prop.getValue());
+                }
+            }
+        }
+
+        System.out.println("\n=== SYMBOL TABLE CSS ENTRIES ===");
+        List<Row> cssSymbols = getAllSymbols().stream()
+                .filter(row -> row.getType().startsWith("CSS_"))
+                .collect(java.util.stream.Collectors.toList());
+
+        for (Row symbol : cssSymbols) {
+            System.out.println(symbol.getType() + ": " + symbol.getValue());
+        }
+
+        System.out.println("========================\n");
+    }
+
+    public void validateStoredCSSData() {
+        System.out.println("\n=== CSS DATA VALIDATION ===");
+
+        boolean hasErrors = false;
+
+        for (Map.Entry<String, Map<String, String>> rule : cssRules.entrySet()) {
+            String selector = rule.getKey();
+            Map<String, String> properties = rule.getValue();
+
+            for (Map.Entry<String, String> prop : properties.entrySet()) {
+                String property = prop.getKey();
+                String value = prop.getValue();
+
+                // Check for common parsing errors
+                if (value.length() < 2) {
+                    System.out.println("❌ SUSPICIOUS: " + selector + " { " + property + ": " + value + " } - Value too short");
+                    hasErrors = true;
+                }
+
+                if (value.matches("^[0-9]+$") && !property.matches("(z-index|opacity|order|flex-grow|flex-shrink)")) {
+                    System.out.println("❌ SUSPICIOUS: " + selector + " { " + property + ": " + value + " } - Missing units");
+                    hasErrors = true;
+                }
+
+                if (property.matches("(width|height)") && value.matches("^[0-9]+(px)$") && Integer.parseInt(value.replaceAll("[^0-9]", "")) < 20) {
+                    System.out.println("❌ SUSPICIOUS: " + selector + " { " + property + ": " + value + " } - Unrealistically small");
+                    hasErrors = true;
+                }
+            }
+        }
+
+        if (!hasErrors) {
+            System.out.println("✓ CSS data validation passed");
+        }
+
+        System.out.println("========================\n");
+    }
     private static String formatScope(String scopeName) {
         if (scopeName == null) return "Unknown";
         switch (scopeName.toUpperCase()) {

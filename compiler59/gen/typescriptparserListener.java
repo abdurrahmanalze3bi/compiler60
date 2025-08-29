@@ -1251,4 +1251,16 @@ public interface typescriptparserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIdValue(typescriptparser.IdValueContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code StringValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
+	 * @param ctx the parse tree
+	 */
+	void enterStringValue(typescriptparser.StringValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code StringValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
+	 * @param ctx the parse tree
+	 */
+	void exitStringValue(typescriptparser.StringValueContext ctx);
 }

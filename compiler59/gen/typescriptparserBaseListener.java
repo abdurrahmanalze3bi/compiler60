@@ -1260,6 +1260,18 @@ public class typescriptparserBaseListener implements typescriptparserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIdValue(typescriptparser.IdValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterStringValue(typescriptparser.StringValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitStringValue(typescriptparser.StringValueContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

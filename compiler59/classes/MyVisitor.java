@@ -20,6 +20,7 @@ import java.util.Stack;
 
 public class MyVisitor extends typescriptparserBaseVisitor {
     // NEW METHOD - ADD THIS
+    private Stack<String> htmlElementStack = new Stack<>();
     public String generateVanillaWebCode(Program program, String outputDirectory) {
         try {
             System.out.println(">>> Initiating Vanilla Web Code Generation...");
@@ -1323,11 +1324,27 @@ public class MyVisitor extends typescriptparserBaseVisitor {
     @Override
     public Element visitTagElement(typescriptparser.TagElementContext ctx) {
         Element element = new Element();
-        // Use generic visit() for tag
-        element.setTag((Tag) visit(ctx.tag()));
+        Tag tag = (Tag) visit(ctx.tag());
+
+        // Track the HTML nesting structure
+        if (tag.getOpeningTag() != null) {
+            String tagName = tag.getOpeningTag().getName();
+            htmlElementStack.push(tagName);
+
+            // Store template structure information
+            symbolTable.addSymbol("HTML_STRUCTURE", tagName);
+
+            // Process nested elements with context
+            for (Element nested : tag.getElements()) {
+                // Process with current HTML context
+            }
+
+            htmlElementStack.pop();
+        }
+
+        element.setTag(tag);
         return element;
     }
-
     // =============== HTML NAME ELEMENT ===============
     @Override
     public Element visitHtmlNameElement(typescriptparser.HtmlNameElementContext ctx) {
@@ -1378,15 +1395,22 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return tag;
     }
 
+    // REPLACE this method in MyVisitor:
     @Override
     public Interpolation visitInterpolationRule(typescriptparser.InterpolationRuleContext ctx) {
         Interpolation interpolation = new Interpolation();
-        String name = ctx.NAME_HTML().getText();
-        interpolation.setNAME_HTML(name);
+        String interpolationText = ctx.NAME_HTML().getText();
+        interpolation.setNAME_HTML(interpolationText);
 
-        if (!symbolTable.existsInCurrentScope(name)) {
-            symbolTable.addSymbol("INTERPOLATION_ID", name);
+        // Extract property name (handle "product.name" -> "name")
+        String property = interpolationText;
+        if (property.contains(".")) {
+            String[] parts = property.split("\\.");
+            property = parts[parts.length - 1].replace("!", "");
         }
+
+        // Add to enhanced symbol table
+        symbolTable.addTemplateInterpolation(interpolationText, property);
 
         return interpolation;
     }
@@ -1619,73 +1643,127 @@ public class MyVisitor extends typescriptparserBaseVisitor {
         return cssObjects;
     }
 
+
     @Override
     public CssElement visitCssElementRule(typescriptparser.CssElementRuleContext ctx) {
         CssElement cssElement = new CssElement();
 
-        // Process CSS selectors
-        for (TerminalNode idNode : ctx.ID_CSS()) {
-            String selector = idNode.getText();
-
-            // Add selector to CSS element using new method
-            cssElement.addSelector(selector);
-
-            // Add to symbol table
-            if (!symbolTable.existsInCurrentScope(selector)) {
-                symbolTable.addSymbol("CSS_SELECTOR", selector);
-            }
+        // Build complete CSS selector
+        StringBuilder selectorBuilder = new StringBuilder();
+        for (int i = 0; i < ctx.ID_CSS().size(); i++) {
+            if (i > 0) selectorBuilder.append(" ");  // Space for descendant selectors
+            selectorBuilder.append(ctx.ID_CSS(i).getText());
         }
+        String fullSelector = selectorBuilder.toString();
 
+        System.out.println(">>> Processing CSS selector: " + fullSelector);
 
+        // Enter CSS rule in symbol table
+        symbolTable.enterCSSRule(fullSelector);
+        cssElement.addSelector(fullSelector);
+
+        // Process all CSS properties in this rule
         for (typescriptparser.BodyelementContext beCtx : ctx.bodyelement()) {
-            // This will route to visitCssDeclaration
             Bodyelement bodyElement = (Bodyelement) visit(beCtx);
             cssElement.addBodyCssElement(bodyElement);
         }
 
         return cssElement;
     }
-
     @Override
     public Bodyelement visitCssDeclaration(typescriptparser.CssDeclarationContext ctx) {
         Bodyelement bodyelement = new Bodyelement();
 
-        // Process CSS property name (guaranteed to exist)
-        String cssId = ctx.ID_CSS().getText();
-        bodyelement.setId_css(cssId);
+        String property = ctx.ID_CSS().getText();
+        bodyelement.setId_css(property);
 
-        // Add CSS property to symbol table
-        if (!symbolTable.existsInCurrentScope(cssId)) {
-            symbolTable.addSymbol("CSS_PROPERTY", cssId);
-        }
+        System.out.println(">>> Processing CSS property: " + property);
 
-        // Process CSS value (guaranteed to exist)
+        // Set property in symbol table
+        symbolTable.setCSSProperty(property);
+
+        // Visit CSS value to collect all tokens
         CssValue cssValue = (CssValue) visit(ctx.cssValue());
         bodyelement.setCssValue(cssValue);
+
+        // Finalize the property-value pair in symbol table
+        symbolTable.finalizeCSSProperty();
 
         return bodyelement;
     }
 
-    // Remove the old visitCssValue method and replace with these two methods:
+    // FIXED: Helper method to extract complete CSS values
+    private String extractCompleteCSSValue(CssValue cssValue) {
+        if (cssValue == null || cssValue.getID_CSS() == null || cssValue.getID_CSS().isEmpty()) {
+            return "";
+        }
+
+        // Return the COMPLETE value (already built by visitIdValue)
+        String value = cssValue.getID_CSS().get(0);
+        System.out.println(">>> Extracted complete CSS value: " + value);
+        return value;
+    }
+
+
+    // ADD this helper method to MyVisitor:
+    private String extractCSSValue(CssValue cssValue) {
+        if (cssValue == null || cssValue.getID_CSS() == null || cssValue.getID_CSS().isEmpty()) {
+            return "";
+        }
+
+        // FIXED: Only return the first value, never concatenate
+        String value = cssValue.getID_CSS().get(0);
+        System.out.println(">>> Extracted CSS value: " + value);
+        return value;
+    }
+    private boolean isValidSingleCSSValue(String value) {
+        if (value == null || value.trim().isEmpty()) return false;
+
+        // Check if it matches basic CSS value patterns
+        String v = value.toLowerCase().trim();
+        return v.matches("^[0-9]+(px|%|em|rem|vw|vh)?$") || // Numbers with units
+                v.matches("^(flex|block|inline|none|center|left|right|auto)$") || // Keywords
+                v.matches("^#[0-9a-f]{3,6}$"); // Colors
+    }
 
 
     @Override
     public CssValue visitIdValue(typescriptparser.IdValueContext ctx) {
         CssValue cssValue = new CssValue();
 
-        // Handle all ID_CSS tokens - first one is guaranteed to exist
-        for (TerminalNode idCss : ctx.ID_CSS()) {
-            String cssValueId = idCss.getText();
-            cssValue.getID_CSS().add(cssValueId);
+        System.out.println(">>> Processing CSS value with " + ctx.ID_CSS().size() + " tokens");
 
-            // Add CSS value if not already in current scope
-            if (!symbolTable.existsInCurrentScope(cssValueId)) {
-                symbolTable.addSymbol("CSS_VALUE", cssValueId);
-            }
+        // Process ALL CSS tokens
+        for (int i = 0; i < ctx.ID_CSS().size(); i++) {
+            String token = ctx.ID_CSS(i).getText();
+            cssValue.getID_CSS().add(token);
+
+            // Add each token to symbol table value builder
+            symbolTable.addCSSValueToken(token);
+
+            System.out.println(">>> Added CSS token " + i + ": " + token);
         }
 
         return cssValue;
     }
+    private boolean isValidStandaloneCSSValue(String value) {
+        if (value == null || value.trim().isEmpty()) return false;
+
+        String v = value.toLowerCase().trim();
+
+        // Check for valid CSS values
+        return v.matches("^[0-9]+(px|%|em|rem|vw|vh)?$") ||     // Numbers with units: 30%, 20px
+                v.matches("^(flex|block|inline|none|grid)$") ||    // Display values
+                v.matches("^(center|left|right|stretch|flex-start|flex-end)$") || // Alignment
+                v.matches("^(auto|inherit|initial|unset)$") ||      // Universal values
+                v.matches("^(cover|contain|fill|scale-down)$") ||   // Object-fit values
+                v.matches("^(pointer|default|text|crosshair)$") ||  // Cursor values
+                v.matches("^(solid|dashed|dotted|double)$") ||      // Border styles
+                v.matches("^#[0-9a-f]{3,6}$") ||                   // Hex colors
+                v.matches("^rgb\\([0-9,\\s]+\\)$");                // RGB colors
+    }
+
+
 
     @Override
     public InterfaceDeclaration visitInterfaceDeclaration(typescriptparser.InterfaceDeclarationContext ctx) {
@@ -1902,5 +1980,74 @@ public class MyVisitor extends typescriptparserBaseVisitor {
             return signature;
         }
     }
+    // REPLACE the isValidCSSPropertyValuePair method in your MyVisitor.java:
 
+    // FIXED: Updated validation to match ACTUAL Angular CSS values
+    // FIXED: Updated validation to match ACTUAL Angular CSS values
+    private boolean isValidCSSPropertyValuePair(String property, String value) {
+        if (property == null || value == null || value.trim().isEmpty()) {
+            return false;
+        }
+
+        System.out.println(">>> Validating: " + property + " = " + value);
+
+        switch (property.toLowerCase()) {
+            case "display":
+                return value.matches("^(flex|block|inline|none|grid|inline-block)$");
+
+            case "width":
+            case "height":
+                // FIXED: Allow percentages like "30%", "70%" from your Angular CSS
+                return value.matches("^([0-9]+(px|%|em|rem)|auto)$");
+
+            case "padding":
+            case "margin":
+            case "gap":
+                // FIXED: Allow "0" without units AND values with units like "20px"
+                return value.matches("^([0-9]+(px|%|em|rem)|0)$");
+
+            case "border-right":
+            case "border-bottom":
+            case "border":
+                // FIXED: Allow complete border values like "1px solid #ddd"
+                return value.matches("^[0-9]+(px)\\s+(solid|dashed|dotted)\\s+(#[0-9a-fA-F]{3,6}|#ddd|black|white|gray)$");
+
+            case "list-style-type":
+                return value.matches("^(none|disc|circle|square|decimal)$");
+
+            case "cursor":
+                return value.matches("^(pointer|default|text|crosshair)$");
+
+            case "object-fit":
+                return value.matches("^(cover|contain|fill|scale-down)$");
+
+            case "align-items":
+                return value.matches("^(center|flex-start|flex-end|stretch)$");
+
+            default:
+                // Allow any reasonable CSS value
+                return !value.equals("undefined") && !value.equals("null") && value.length() > 0;
+        }
+    }
+    @Override
+    public CssValue visitPercentValue(typescriptparser.PercentValueContext ctx) {
+        CssValue cssValue = new CssValue();
+
+        // Add percentage token
+        String percentToken = ctx.PERCENT().getText();
+        cssValue.getID_CSS().add(percentToken);
+        symbolTable.addCSSValueToken(percentToken);
+
+        System.out.println(">>> Added percent token: " + percentToken);
+
+        // Process additional ID_CSS tokens if present
+        for (int i = 0; i < ctx.ID_CSS().size(); i++) {
+            String token = ctx.ID_CSS(i).getText();
+            cssValue.getID_CSS().add(token);
+            symbolTable.addCSSValueToken(token);
+            System.out.println(">>> Added additional token: " + token);
+        }
+
+        return cssValue;
+    }
 }

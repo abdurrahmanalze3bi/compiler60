@@ -736,4 +736,11 @@ public interface typescriptparserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIdValue(typescriptparser.IdValueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StringValue}
+	 * labeled alternative in {@link typescriptparser#cssValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStringValue(typescriptparser.StringValueContext ctx);
 }
