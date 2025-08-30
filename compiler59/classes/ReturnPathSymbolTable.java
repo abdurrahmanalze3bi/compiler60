@@ -2,16 +2,9 @@ package classes;
 
 import java.util.*;
 
-/**
- * Return Path Symbol Table using BINARY TREE
- * Optimized for tracking code paths and return coverage analysis
- */
 public class ReturnPathSymbolTable implements ErrorSymbolTable {
-    // BINARY TREE: For tracking code paths (TreeMap for ordered path analysis)
     private TreeMap<String, CodePath> codePaths;
-    // LIST: For tracking missing return paths
     private List<String> missingReturnPaths;
-    // MAP: For default return values by type
     private Map<String, String> defaultReturnValues;
 
     public ReturnPathSymbolTable() {
@@ -23,8 +16,7 @@ public class ReturnPathSymbolTable implements ErrorSymbolTable {
 
     @Override
     public void addSymbol(String symbol, String type, String scope, int line, int column) {
-        // symbol represents a code path, type indicates if it has return
-        CodePath path = new CodePath(symbol, type.equals("HAS_RETURN"), scope, line, column);
+                CodePath path = new CodePath(symbol, type.equals("HAS_RETURN"), scope, line, column);
         codePaths.put(symbol, path);
 
         if (!path.hasReturn) {

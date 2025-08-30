@@ -2,14 +2,10 @@ package classes;
 
 import java.util.*;
 
-/**
- * Void Method Symbol Table using LIST
- * Optimized for tracking return statements in void methods
- */
 public class VoidMethodSymbolTable implements ErrorSymbolTable {
-    // LIST: For tracking return statements in order
+
     private List<ReturnStatementInfo> returnStatements;
-    // LIST: For tracking patterns that suggest non-void intent
+
     private List<String> nonVoidPatterns;
 
     public VoidMethodSymbolTable() {
@@ -22,7 +18,7 @@ public class VoidMethodSymbolTable implements ErrorSymbolTable {
 
     @Override
     public void addSymbol(String symbol, String type, String scope, int line, int column) {
-        // For void methods, we mainly track return statements
+
         ReturnStatementInfo info = new ReturnStatementInfo(symbol, type, scope, line, column);
         returnStatements.add(info);
     }
@@ -37,7 +33,6 @@ public class VoidMethodSymbolTable implements ErrorSymbolTable {
     }
 
     public boolean suggestsNonVoidMethod() {
-        // Check if return statements suggest the method should not be void
         for (ReturnStatementInfo stmt : returnStatements) {
             if (stmt.returnValue != null) {
                 for (String pattern : nonVoidPatterns) {

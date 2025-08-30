@@ -2,16 +2,11 @@ package classes;
 
 import java.util.*;
 
-/**
- * Variable Symbol Table using MAP
- * Optimized for fast variable lookups and scope resolution
- */
 public class VariableSymbolTable implements ErrorSymbolTable {
-    // MAP: Variable name -> VariableInfo for O(1) lookups
+
     private Map<String, VariableInfo> variableMap;
-    // MAP: Scope -> Set of variables for scope-based queries
     private Map<String, Set<String>> scopeToVariables;
-    // MAP: For typo detection - similar names
+
     private Map<String, List<String>> similarNameCache;
 
     public VariableSymbolTable() {
@@ -25,13 +20,9 @@ public class VariableSymbolTable implements ErrorSymbolTable {
         VariableInfo info = new VariableInfo(symbol, type, scope, line, column);
         variableMap.put(symbol, info);
 
-        // Add to scope mapping
         scopeToVariables.computeIfAbsent(scope, k -> new HashSet<>()).add(symbol);
     }
 
-    /**
-     * Find variables with similar names (typo detection)
-     */
     public List<String> findSimilarVariables(String variableName) {
         if (similarNameCache.containsKey(variableName)) {
             return similarNameCache.get(variableName);
@@ -47,9 +38,6 @@ public class VariableSymbolTable implements ErrorSymbolTable {
         return similar;
     }
 
-    /**
-     * Check for common programming typos
-     */
     public String checkCommonTypos(String variableName) {
         Map<String, String> commonTypos = Map.of(
                 "lenght", "length",
@@ -61,17 +49,13 @@ public class VariableSymbolTable implements ErrorSymbolTable {
         return commonTypos.get(variableName.toLowerCase());
     }
 
-    /**
-     * Check if variable is defined in accessible scope
-     */
     public boolean isVariableDefined(String variableName, String currentScope) {
-        // Check current scope first
+
         Set<String> currentScopeVars = scopeToVariables.get(currentScope);
         if (currentScopeVars != null && currentScopeVars.contains(variableName)) {
             return true;
         }
 
-        // Check parent scopes (simplified - you'd implement proper scope hierarchy)
         return variableMap.containsKey(variableName);
     }
 
@@ -116,9 +100,6 @@ public class VariableSymbolTable implements ErrorSymbolTable {
         return variableMap.size();
     }
 
-    /**
-     * Information about a variable
-     */
     static class VariableInfo {
         String name;
         String type;

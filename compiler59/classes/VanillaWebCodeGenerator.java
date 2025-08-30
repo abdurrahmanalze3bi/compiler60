@@ -6,10 +6,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-/**
- * FIXED VanillaWebCodeGenerator - Generates correct CSS and HTML structure
- * Based ONLY on symbol table data, no hardcoded values
- */
 public class VanillaWebCodeGenerator {
     private SymbolTable symbolTable;
     private StringBuilder htmlContent;
@@ -49,13 +45,10 @@ public class VanillaWebCodeGenerator {
         htmlContent.append("</head>\n");
         htmlContent.append("<body>\n");
 
-        // Get discovered CSS selectors and template interpolations
         Map<String, Map<String, String>> cssRules = symbolTable.getCSSRules();
         Map<String, String> interpolations = symbolTable.getTemplateInterpolations();
 
-        // Process only main structural selectors (no descendant selectors)
         Set<String> mainSelectors = new HashSet<>();
-        // Extract main selectors and filter out descendant selectors
         for (String selector : cssRules.keySet()) {
             if (!selector.contains(" ") && !selector.contains(":") && !selector.contains("::")) {
                 mainSelectors.add(selector);
@@ -64,7 +57,6 @@ public class VanillaWebCodeGenerator {
 
         System.out.println(">>> Found main selectors: " + mainSelectors);
 
-        // Generate structure based on discovered selectors
         boolean hasContainer = mainSelectors.stream().anyMatch(s -> s.contains("container"));
         if (hasContainer) {
             String containerSelector = mainSelectors.stream()
@@ -72,7 +64,6 @@ public class VanillaWebCodeGenerator {
                     .findFirst().orElse("container");
             htmlContent.append("    <div class=\"").append(containerSelector).append("\">\n");
 
-            // Process remaining structural selectors
             List<String> structuralOrder = determineStructuralOrder(mainSelectors, Set.of(containerSelector));
             for (String selector : structuralOrder) {
                 generateStructureForSelector(selector, interpolations, "        ");
@@ -89,7 +80,6 @@ public class VanillaWebCodeGenerator {
     private List<String> determineStructuralOrder(Set<String> mainSelectors, Set<String> processedSelectors) {
         List<String> orderedSelectors = new ArrayList<>();
 
-        // Order selectors by structural importance based on discovered names
         String[] preferredOrder = {"header", "nav", "main", "list", "details", "content", "sidebar", "footer"};
         for (String preferred : preferredOrder) {
             for (String selector : mainSelectors) {
@@ -99,7 +89,6 @@ public class VanillaWebCodeGenerator {
             }
         }
 
-        // Add remaining selectors
         for (String selector : mainSelectors) {
             if (!orderedSelectors.contains(selector) && !processedSelectors.contains(selector)) {
                 orderedSelectors.add(selector);
@@ -112,17 +101,14 @@ public class VanillaWebCodeGenerator {
     private void generateStructureForSelector(String selector, Map<String, String> interpolations, String indent) {
         System.out.println(">>> Generating structure for: " + selector);
 
-        // Create the main element
         htmlContent.append(indent).append("<div class=\"").append(selector).append("\"");
 
-        // Add ID for interactive elements
         String elementId = generateElementId(selector);
         if (needsId(selector)) {
             htmlContent.append(" id=\"").append(elementId).append("\"");
         }
         htmlContent.append(">\n");
 
-        // Generate content based on selector semantics and discovered interpolations
         String content = generateContentForSelector(selector, interpolations, indent + "    ");
         htmlContent.append(content);
 
@@ -132,13 +118,11 @@ public class VanillaWebCodeGenerator {
     private String generateContentForSelector(String selector, Map<String, String> interpolations, String indent) {
         StringBuilder content = new StringBuilder();
 
-        // Generate title based on selector name
         String title = generateTitleFromSelector(selector);
         if (title != null) {
             content.append(indent).append("<h3>").append(title).append("</h3>\n");
         }
 
-        // Generate content based on selector type and discovered data
         if (selector.contains("list")) {
             content.append(generateListContent(selector, interpolations, indent));
         } else if (selector.contains("detail")) {
@@ -151,7 +135,6 @@ public class VanillaWebCodeGenerator {
     private String generateListContent(String selector, Map<String, String> interpolations, String indent) {
         StringBuilder listContent = new StringBuilder();
 
-        // Check if products array was discovered
         List<Row> allSymbols = symbolTable.getAllSymbols();
         boolean hasProductsArray = allSymbols.stream()
                 .anyMatch(row -> "COMPONENT_PROPERTY".equals(row.getType()) && "products".equals(row.getValue()));
@@ -169,9 +152,8 @@ public class VanillaWebCodeGenerator {
         if (interpolation == null || interpolation.isEmpty()) {
             return null;
         }
-        // Remove non-null assertion and spaces
         String cleaned = interpolation.replace("!", "").trim();
-        // Extract property after the dot
+
         if (cleaned.contains(".")) {
             String[] parts = cleaned.split("\\.");
             return parts[parts.length - 1]; // Return the last part (property name)
@@ -179,18 +161,14 @@ public class VanillaWebCodeGenerator {
         return cleaned;
     }
 
-    // Replace the generateDetailsContent method in VanillaWebCodeGenerator.java
-    // Replace generateDetailsContent method in VanillaWebCodeGenerator.java
     private String generateDetailsContent(String selector, Map<String, String> interpolations, String indent) {
         StringBuilder detailsContent = new StringBuilder();
         String detailsId = generateElementId(selector) + "Details";
         detailsContent.append(indent).append("<div id=\"").append(detailsId).append("\" style=\"display: none;\">\n");
 
-        // ALWAYS generate the main product image since we know from debug output that imageUrl is captured
         detailsContent.append(indent).append("    <img id=\"selectedProductImage\" alt=\"Product\" />\n");
         System.out.println(">>> Generated main product image element");
 
-        // Extract properties from INTERPOLATION_ID symbols only
         List<Row> allSymbols = symbolTable.getAllSymbols();
         Set<String> uniqueProperties = new LinkedHashSet<>();
 
@@ -206,7 +184,6 @@ public class VanillaWebCodeGenerator {
             }
         }
 
-        // Generate elements for each discovered property
         for (String property : uniqueProperties) {
             String elementId = "selectedproduct" + property.toLowerCase();
             String labelText = generateLabelFromProperty(property);
@@ -264,16 +241,13 @@ public class VanillaWebCodeGenerator {
         if (property.contains("type")) return "Type";
         if (property.contains("id")) return "ID";
 
-        // Capitalize first letter and clean up
         String cleaned = property.replaceAll("[^a-zA-Z]", "");
         return cleaned.substring(0, 1).toUpperCase() + cleaned.substring(1);
     }
 
-    // FIXED: CSS Generator using validated symbol table data
     private void generateCSS() {
         System.out.println(">>> Generating CSS from validated symbol table...");
 
-        // Debug the CSS data before generation
         symbolTable.debugCSSParsing();
         symbolTable.validateStoredCSSData();
 
@@ -285,7 +259,6 @@ public class VanillaWebCodeGenerator {
             return;
         }
 
-        // Generate CSS rules using validated data only
         for (Map.Entry<String, Map<String, String>> rule : cssRules.entrySet()) {
             String selector = rule.getKey();
             Map<String, String> properties = rule.getValue();
@@ -293,12 +266,10 @@ public class VanillaWebCodeGenerator {
             if (!properties.isEmpty()) {
                 cssContent.append(".").append(selector).append(" {\n");
 
-                // Use ONLY the validated properties from symbol table
                 for (Map.Entry<String, String> prop : properties.entrySet()) {
                     String property = prop.getKey();
                     String value = prop.getValue();
 
-                    // Final validation before output
                     if (property != null && value != null && value.length() > 0) {
                         cssContent.append("    ").append(property).append(": ").append(value).append(";\n");
                         System.out.println(">>> Generated CSS: " + property + ": " + value);
@@ -319,7 +290,6 @@ public class VanillaWebCodeGenerator {
         jsContent.append("class AppComponent {\n");
         jsContent.append("    constructor() {\n");
 
-        // Initialize properties from Symbol Table
         List<Row> allSymbols = symbolTable.getAllSymbols();
         Set<String> addedProperties = new HashSet<>();
 
@@ -346,7 +316,6 @@ public class VanillaWebCodeGenerator {
         jsContent.append("        this.renderProducts();\n");
         jsContent.append("    }\n\n");
 
-        // Generate methods from Symbol Table
         for (Row symbol : allSymbols) {
             if ("METHOD".equals(symbol.getType())) {
                 String methodName = symbol.getValue();
@@ -354,25 +323,20 @@ public class VanillaWebCodeGenerator {
             }
         }
 
-        // Generate helper methods
         generateHelperMethods();
 
         jsContent.append("}\n\n");
 
-        // Initialize app
         jsContent.append("document.addEventListener('DOMContentLoaded', function() {\n");
         jsContent.append("    const app = new AppComponent();\n");
         jsContent.append("});\n");
     }
 
-    // Replace generateProductsArray method in VanillaWebCodeGenerator.java
-    // Replace generateProductsArray method in VanillaWebCodeGenerator.java
     private void generateProductsArray() {
         List<Row> allSymbols = symbolTable.getAllSymbols();
         List<Map<String, String>> products = new ArrayList<>();
         Map<String, String> currentProduct = null;
 
-        // Collect all data by type first to handle parsing order issues
         List<String> allIds = new ArrayList<>();
         List<String> allNames = new ArrayList<>();
         List<String> allPrices = new ArrayList<>();
@@ -412,7 +376,6 @@ public class VanillaWebCodeGenerator {
             }
         }
 
-        // Now reconstruct products using collected data in order
         int productCount = Math.min(Math.min(allIds.size(), allNames.size()),
                 Math.min(Math.min(allPrices.size(), allImageUrls.size()), allTypes.size()));
 
@@ -440,7 +403,6 @@ public class VanillaWebCodeGenerator {
 
         System.out.println(">>> Successfully reconstructed " + products.size() + " products");
 
-        // Generate the array maintaining original associations
         jsContent.append("[\n");
         for (int i = 0; i < products.size(); i++) {
             if (i > 0) jsContent.append(",\n");
@@ -480,8 +442,6 @@ public class VanillaWebCodeGenerator {
         jsContent.append("    }\n\n");
     }
 
-    // Replace the generateHelperMethods method in VanillaWebCodeGenerator.java
-    // Replace generateHelperMethods method in VanillaWebCodeGenerator.java
     private void generateHelperMethods() {
         jsContent.append("    renderProducts() {\n");
         jsContent.append("        const productListUl = document.getElementById('productListUl');\n");
@@ -524,8 +484,6 @@ public class VanillaWebCodeGenerator {
 
         jsContent.append("    }\n\n");
     }
-
-    // Helper method to extract base property name from interpolation (same as in HTML generation)
 
 
 

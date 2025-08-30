@@ -1,13 +1,12 @@
 package classes;
 
 public class Row {
-    private String type;        // Kind (VARIABLE, METHOD, etc.)
-    private String value;       // Symbol name
+    private String type;
+    private String value;
     private int scopeId;
     private String scopeName;
-    private String dataType;    // NEW: Actual data type (string, number, boolean, etc.)
-    private Object initialValue; // NEW: Store initial value for type inference
-
+    private String dataType;
+    private Object initialValue;
     public Row() {
         this.scopeId = -1;
         this.scopeName = "UNKNOWN";
@@ -17,7 +16,7 @@ public class Row {
         this.value = value;
         this.scopeId = scopeId;
         this.scopeName = scopeName;
-        this.dataType = inferTypeFromKind(type); // Infer data type from the kind
+        this.dataType = inferTypeFromKind(type);
     }
 
     public Row(String type, String value, int scopeId, String scopeName, String dataType) {

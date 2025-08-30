@@ -1,8 +1,5 @@
 package classes;
 
-/**
- * Abstract base class implementing common functionality
- */
 public abstract class AbstractSemanticError implements SemanticErrorBase {
     protected SemanticErrorType errorType;
     protected String message;
@@ -22,9 +19,6 @@ public abstract class AbstractSemanticError implements SemanticErrorBase {
         this.symbolTable = createSymbolTable();
     }
 
-    /**
-     * Each error type creates its own specialized symbol table
-     */
     protected abstract ErrorSymbolTable createSymbolTable();
 
     @Override

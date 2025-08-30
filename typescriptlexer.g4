@@ -26,31 +26,28 @@ CONST     : 'const';
 LET       : 'let';
 VAR       : 'var';
 FROM      : 'from';
-COMPONENT : 'Component'; // Already defined
+COMPONENT : 'Component';
 
-// Angular-specific Keywords
-SELECTOR  : 'selector';   // Add 'selector' as a keyword
-STANDALONE: 'standalone';  // Add 'standalone' as a keyword
+SELECTOR  : 'selector';
+STANDALONE: 'standalone';
 IMPORTS   : 'imports';
 TEMPLATE : 'template' ->pushMode(HTML);
 STYLES : 'styles' ->pushMode(CSS);
 
 
-// Type annotations
 STRING_TYPE : 'string';
 NUMBER_TYPE : 'number';
 BOOLEAN_TYPE: 'boolean';
 ANY_TYPE    : 'any';
 VOID_TYPE   : 'void';
 
-// Punctuation
 COMMA      : ',';
 COLON      : ':';
 DOT        : '.';
 SEMICOLON  : ';';
 EQUALS     : '==';
 THIS: 'this';
-// Operators
+
 ASSIGN     : '=';
 PLUS       : '+';
 MINUS      : '-';
@@ -61,29 +58,25 @@ GREATER    : '>';
 EQUAL      : '==';
 NOT_EQUAL  : '!=';
 
-// Parentheses and Braces
 LPAREN     : '(';
 RPAREN     : ')';
 LBRACE     : '{';
 RBRACE     : '}';
-// Identifiers (variables, functions, etc.)
 
 TRUE : 'true';
 FALSE : 'false';
 ID  : [a-zA-Z_][a-zA-Z0-9_]*;
 
 // Literals
-STRING_LIT : '\'' (~['\\])* '\''   // Single-quoted strings like 'module'
-           | '"' (~["\\])* '"' ;   // Double-quoted strings like "module"
+STRING_LIT : '\'' (~['\\])* '\''
+           | '"' (~["\\])* '"' ;
 
 NUMBER_LIT : [0-9]+;
 
-// Whitespace and comments
 WS         : [ \t\r\n]+ -> skip;
 LINE_COMMENT: '//' ~[\r\n]* -> skip;
 BLOCK_COMMENT: '/*' .*? '*/' -> skip;
 
-// Angular/TypeScript specific
 DECORATOR  : '@';
 AS         : 'as';
 TYPE       : 'type';
@@ -97,31 +90,26 @@ mode HTML ;
 
 LINE_COMMENT_HTML: '//' ~[\r\n]* -> skip;
 BLOCK_COMMENT_HTML: '/*' .*? '*/' -> skip;
-// Start of the template block                // End of the template block
 
-// Tag-related tokens
-TAG_OPEN_START_HTML    : '<' NAME_HTML;                     // Opening tag start: <div
-TAG_CLOSE_START_HTML   : '</' ;                    // Closing tag start: </div
-TAG_CLOSE_END_HTML     : '>';                          // End of a tag: >
-TAG_END_HTML           : '/>';                         // Self-closing tag: />
+TAG_OPEN_START_HTML    : '<' NAME_HTML;
+TAG_CLOSE_START_HTML   : '</' ;
+TAG_CLOSE_END_HTML     : '>';
+TAG_END_HTML           : '/>';
 
-// Attribute-related tokens
-ATTRIBUTE_EQUALS_HTML  : '=';                          // Equals sign for attributes
-STRING_HTML            : '"' (~["\r\n])* '"';          // Quoted string values
-STRUCTURAL_DIR_HTML    : '*' NAME_HTML;                     // Structural directive (e.g., *ngFor)
-BINDING_HTML           : '[' NAME_HTML ']';                 // Property binding (e.g., [src])
-EVENT_BINDING_HTML     : '(' NAME_HTML ')';                 // Event binding (e.g., (click))
+ATTRIBUTE_EQUALS_HTML  : '=';
+STRING_HTML            : '"' (~["\r\n])* '"';
+STRUCTURAL_DIR_HTML    : '*' NAME_HTML;
+BINDING_HTML           : '[' NAME_HTML ']';
+EVENT_BINDING_HTML     : '(' NAME_HTML ')';
 
-// Angular-specific characters
-NEGATION_HTML          : '!';                          // Angular negation (e.g., *ngIf="!condition")
-COLON_HTML             : ':';                          // Colon for event and property bindings (e.g., (click), [src])
+NEGATION_HTML          : '!';
+COLON_HTML             : ':';
 
-// Object path and interpolation
-INTERPOLATION_START_HTML : '{{';                         // Start of Angular interpolation
-INTERPOLATION_END_HTML  : '}}';                         // End of Angular interpolation
-DOT_HTML               : '.';                          // Dot for object path access (e.g., product.name)
+INTERPOLATION_START_HTML : '{{';
+INTERPOLATION_END_HTML  : '}}';
+DOT_HTML               : '.';
 NAME_HTML: [a-zA-Z_][a-zA-Z0-9_!.-]*;
-WS_HTML                : [ \t\r\n]+ -> skip;           // Ignore whitespace globally
+WS_HTML                : [ \t\r\n]+ -> skip;
 END_TEMPLATE : '`,' -> popMode;
 
 BACKTICK_HTML: '`';

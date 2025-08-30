@@ -1,4 +1,3 @@
-// Generated from Angular Component
 
 class AppComponent {
     constructor() {

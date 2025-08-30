@@ -16,14 +16,12 @@ statement   : componentDeclaration      # ComponentStmt
             | importDeclaration        # ImportStmt
             ;
 
-// to do class and visitor
 assignmentStatement : ID ASSIGN expression SEMICOLON? # AssignmentRule ;
 
 componentDeclaration : DECORATOR COMPONENT LPAREN LBRACE componentDeclarationBody RBRACE RPAREN # ComponentDeclarationRule ;
 
 componentDeclarationBody : (componentBodyElement (COMMA componentBodyElement)*)? # ComponentBody ;
 
-// ====================== MAIN RULES ======================
 selector : SELECTOR COLON STRING_LIT # SelectorDeclaration ;
 
 standalone : STANDALONE COLON isboolean # StandaloneProperty ;
@@ -37,7 +35,6 @@ importDeclaration : IMPORT LBRACE ID RBRACE FROM STRING_LIT SEMICOLON     # Stan
                   | IMPORTS COLON LBRACKET ID? RBRACKET                   # ImportArrayDecl
                   ;
 
-// ================= COMPONENT BODY ELEMENT =================
 componentBodyElement : selector             # ComponentSelector
                     | standalone           # ComponentStandalone
                     | importDeclaration    # ComponentImportElement

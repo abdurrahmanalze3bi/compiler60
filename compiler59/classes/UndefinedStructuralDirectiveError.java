@@ -1,9 +1,5 @@
 package classes;
 
-/**
- * Undefined Structural Directive Variable Error
- * Uses LIST data structure for tracking directive variable chains
- */
 public class UndefinedStructuralDirectiveError extends AbstractSemanticError {
     private String directiveType;
 
@@ -23,14 +19,12 @@ public class UndefinedStructuralDirectiveError extends AbstractSemanticError {
     public void processError() {
         DirectiveSymbolTable dirTable = (DirectiveSymbolTable) symbolTable;
 
-        // Check directive-specific rules
         if ("ngFor".equals(directiveType)) {
             dirTable.validateNgForVariable(context);
         } else if ("ngIf".equals(directiveType)) {
             dirTable.validateNgIfCondition(context);
         }
 
-        // Check for component property availability
         if (!dirTable.isComponentPropertyAvailable(context)) {
             message += ". Make sure '" + context + "' is declared as a component property";
         }
